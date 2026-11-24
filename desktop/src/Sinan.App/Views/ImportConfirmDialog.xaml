@@ -1,0 +1,314 @@
+<ui:ChromeDialogWindow x:Class="Sinan.App.Views.ImportConfirmDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:Kaleidoscope.UI.Views;assembly=Kaleidoscope.UI"
+        Title="确认导入"
+        Subtitle="{Binding HeaderSubtitle}"
+        TitleIconChar="⇥"
+        Width="700" Height="620"
+        Resizeable="False"
+        CaptionHeight="40"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{DynamicResource Font.Ui}"
+        FontSize="{DynamicResource Text.Size.Body}"
+        Foreground="{DynamicResource Brush.Fg}">
+
+    <!--
+      ============================================================================
+      确认导入 / 冲突处置（设计稿 dlg-import-conflict，680×600）
+      写库前最后一道"看得见"的闸：
+        1) 顶部五格真实计数（将写入 / 按 ID 更新 / 倒挂提示 / 文本计划 / 机台号异常）；
+        2) 冲突行逐条选"用原表覆盖 / 保留系统值"——两边都有价值时必须让人一条条判；
+        3) 写入范围三选一（新增+更新 / 仅新增 / 以 Excel 为准）。
+      纪律：数字全部来自 ImportPreview 的真实统计，弹窗不自己再算一套；
+            倒挂与文本计划的判据复用 StageRules / RawDateParser。
+      ============================================================================
+    -->
+
+    <Grid Margin="24,14,24,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ============ 五格计数（设计稿 .imp-sum） ============ -->
+        <Border Grid.Row="0" Style="{StaticResource Card.Inset}" Padding="0">
+            <Grid Height="58">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 将写入 -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding WillWriteText}" FontFamily="{DynamicResource Font.Mono}"
+                               FontSize="19" FontWeight="Bold" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource Brush.Primary}"/>
+                    <TextBlock Text="将写入" FontSize="9.5" HorizontalAlignment="Center" Margin="0,1,0,0"
+                               Foreground="{DynamicResource Brush.Muted}"/>
+                </StackPanel>
+
+                <!-- 按 ID 更新 -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding WillUpdateText}" FontFamily="{DynamicResource Font.Mono}"
+                               FontSize="19" FontWeight="Bold" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource Brush.Fg}"/>
+                    <TextBlock Text="按 ID 更新" FontSize="9.5" HorizontalAlignment="Center" Margin="0,1,0,0"
+                               Foreground="{DynamicResource Brush.Muted}"/>
+                </StackPanel>
+
+                <!-- 倒挂提示：有值转黄 -->
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock FontFamily="{DynamicResource Font.Mono}" FontSize="19" FontWeight="Bold"
+                               HorizontalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="{Binding InvertedText}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasInverted}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource Brush.Warn}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="倒挂提示" FontSize="9.5" HorizontalAlignment="Center" Margin="0,1,0,0"
+                               Foreground="{DynamicResource Brush.Muted}"/>
+                </StackPanel>
+
+                <!-- 文本计划 -->
+                <StackPanel Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock FontFamily="{DynamicResource Font.Mono}" FontSize="19" FontWeight="Bold"
+                               HorizontalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="{Binding TextPlanText}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasTextPlan}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource Brush.Warn}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="文本计划" FontSize="9.5" HorizontalAlignment="Center" Margin="0,1,0,0"
+                               Foreground="{DynamicResource Brush.Muted}"/>
+                </StackPanel>
+
+                <!-- 机台号异常 -->
+                <StackPanel Grid.Column="4" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock FontFamily="{DynamicResource Font.Mono}" FontSize="19" FontWeight="Bold"
+                               HorizontalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="{Binding MachineWarningText}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasMachineWarning}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource Brush.Warn}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="机台号异常" FontSize="9.5" HorizontalAlignment="Center" Margin="0,1,0,0"
+                               Foreground="{DynamicResource Brush.Muted}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ============ 中部：冲突 + 写入范围（可滚动） ============ -->
+        <ScrollViewer Grid.Row="1" Margin="0,14,0,0"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+
+                <!-- 冲突区 -->
+                <TextBlock Text="重复与冲突" Style="{StaticResource T.Label}" Margin="2,0,0,7"/>
+
+                <Border Style="{StaticResource Card.Inset}" Padding="13,11">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,8">
+                            <StackPanel Orientation="Horizontal">
+                                <ContentControl Style="{StaticResource Chip}" Tag="warn" MinHeight="19">
+                                    <TextBlock Text="同 ID 已存在" FontSize="9"/>
+                                </ContentControl>
+                                <TextBlock Text="{Binding ConflictHeadText}" FontWeight="Bold" FontSize="11.5"
+                                           Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding ConflictSourceText}" FontSize="9.5"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Muted}"/>
+                        </Grid>
+
+                        <!-- 无冲突：直接说清"不需要你判断"，不摆一个空列表 -->
+                        <Border Padding="10,9" CornerRadius="9"
+                                Background="{DynamicResource Brush.OkSoft}"
+                                BorderBrush="{DynamicResource Brush.OkLine}" BorderThickness="1"
+                                Visibility="{Binding HasNoConflict, Converter={StaticResource TrueToVisibility}}">
+                            <TextBlock FontSize="10.5" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource Brush.Ok}"
+                                       Text="没有同 ID 冲突：本次全部是新增行，或已有行与系统内完全一致。"/>
+                        </Border>
+
+                        <!-- 冲突逐条 -->
+                        <ItemsControl ItemsSource="{Binding Conflicts}"
+                                      Visibility="{Binding HasConflict, Converter={StaticResource TrueToVisibility}}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource Brush.CardWell}"
+                                            BorderBrush="{DynamicResource Brush.Border}"
+                                            BorderThickness="1" CornerRadius="9"
+                                            Padding="10,8" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Grid.Column="0" Text="{Binding IssueCode}"
+                                                       FontFamily="{DynamicResource Font.Mono}" FontSize="11"
+                                                       FontWeight="Bold" VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource Brush.Fg}"/>
+
+                                            <StackPanel Grid.Column="1" Margin="12,0,10,0"
+                                                        VerticalAlignment="Center">
+                                                <TextBlock FontSize="9.5"
+                                                           Foreground="{DynamicResource Brush.Muted}">
+                                                    <Run Text="系统 "/><Run Text="{Binding SystemText, Mode=OneWay}"/>
+                                                </TextBlock>
+                                                <TextBlock FontSize="10.5" Margin="0,1,0,0"
+                                                           Foreground="{DynamicResource Brush.Primary}">
+                                                    <Run Text="原表 "/><Run Text="{Binding ExcelText, Mode=OneWay}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+
+                                            <!-- 逐条勾选：勾 = 用原表覆盖 -->
+                                            <CheckBox Grid.Column="2" Style="{StaticResource Check.Box}"
+                                                      VerticalAlignment="Center"
+                                                      AutomationProperties.Name="{Binding AccessibleName}"
+                                                      IsChecked="{Binding TakeExcel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                      Content="{Binding DecisionText}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Text="{Binding ConflictHint}" FontSize="9.5" TextWrapping="Wrap"
+                                   Margin="0,4,0,0" Foreground="{DynamicResource Brush.Muted}"
+                                   Visibility="{Binding HasConflict, Converter={StaticResource TrueToVisibility}}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 写入范围 -->
+                <TextBlock Text="写入范围" Style="{StaticResource T.Label}" Margin="2,14,0,7"/>
+                <!--
+                  用 ListBox + ItemContainerStyle 而不是三个 RadioButton：
+                  自绘 RadioButton 模板在 UIA 里 IsOffscreen 返回 unknown，读屏与自动化都点不到；
+                  ListBoxItem 有 SelectionItemPattern，与导出页"范围/版式"同一套交互，视觉也一致。
+                -->
+                <ListBox ItemsSource="{Binding Strategies}"
+                         SelectedItem="{Binding Strategy, Mode=TwoWay}"
+                         Background="Transparent" BorderThickness="0"
+                         AutomationProperties.AutomationId="ImportStrategyList"
+                         ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="3"/>
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0,0,6,0"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                            <!-- 三张卡等高：hint 文案长短不一，不固定高度会参差不齐 -->
+                            <Setter Property="Height" Value="58"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="Bd" CornerRadius="9" Padding="10,7"
+                                                Background="{DynamicResource Brush.CardWell}"
+                                                BorderBrush="{DynamicResource Brush.Border}"
+                                                BorderThickness="1">
+                                            <ContentPresenter VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="BorderBrush"
+                                                        Value="{DynamicResource Brush.PrimaryLine}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Bd" Property="Background"
+                                                        Value="{DynamicResource Brush.PrimaryDim}"/>
+                                                <Setter TargetName="Bd" Property="BorderBrush"
+                                                        Value="{DynamicResource Brush.Primary}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel AutomationProperties.Name="{Binding AccessibleName}">
+                                <TextBlock Text="{Binding Label}" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource Brush.Fg}"/>
+                                <!-- 两行封顶：第三条 hint 较长，不限制会把卡片撑破 -->
+                                <TextBlock Text="{Binding Hint}" FontSize="9.5" TextWrapping="Wrap"
+                                           MaxHeight="28" TextTrimming="CharacterEllipsis"
+                                           Margin="0,2,0,0" Foreground="{DynamicResource Brush.Muted}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- 覆盖警示：选了"以 Excel 为准"才出现，红字但不阻断 -->
+                <Border Margin="0,10,0,0" Padding="11,8" CornerRadius="9"
+                        Background="{DynamicResource Brush.NgSoft}"
+                        BorderBrush="{DynamicResource Brush.NgLine}" BorderThickness="1"
+                        Visibility="{Binding IsOverwriteWarningVisible, Converter={StaticResource TrueToVisibility}}">
+                    <TextBlock FontSize="10.5" TextWrapping="Wrap"
+                               Foreground="{DynamicResource Brush.Ng}"
+                               Text="「以 Excel 为准」会把系统内的人工修改一并覆盖。建议先导出一份当前数据做备份。"/>
+                </Border>
+
+                <!-- 仅新增：冲突行的逐条勾选不生效，必须明说 -->
+                <Border Margin="0,10,0,0" Padding="11,8" CornerRadius="9"
+                        Background="{DynamicResource Brush.WarnSoft}"
+                        BorderBrush="{DynamicResource Brush.WarnLine}" BorderThickness="1"
+                        Visibility="{Binding IsOnlyNewHintVisible, Converter={StaticResource TrueToVisibility}}">
+                    <TextBlock FontSize="10.5" TextWrapping="Wrap"
+                               Foreground="{DynamicResource Brush.Warn}"
+                               Text="「仅新增」下冲突行一律跳过，上面的逐条勾选本次不生效。要让某条按原表更新，请改用「新增 + 更新」。"/>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ============ 底部 ============ -->
+        <Grid Grid.Row="2" Margin="0,14,0,0">
+            <TextBlock Text="{Binding FooterHint}" Style="{StaticResource T.Tiny}" FontSize="9.5"
+                       VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="返回校验" Style="{StaticResource Btn.Ghost}" Height="34" Width="92"
+                        AutomationProperties.AutomationId="ImportConfirmBackButton"
+                        Command="{Binding CancelCommand}"/>
+                <Button Content="{Binding ConfirmButtonText}" Style="{StaticResource Btn.Primary}"
+                        Height="34" MinWidth="132" Margin="10,0,0,0" Padding="14,0"
+                        AutomationProperties.AutomationId="ImportConfirmWriteButton"
+                        Command="{Binding ConfirmCommand}"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</ui:ChromeDialogWindow>

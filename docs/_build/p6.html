@@ -1,0 +1,349 @@
+  <!-- ======================== 弹窗层 ======================== -->
+  <div class="modal-layer" id="modalLayer">
+
+    <!-- 新建问题 -->
+    <div class="dlg-modal" data-dialog="dlg-new" data-title="新建问题" data-w="620" data-h="560" data-parent="issues" style="display:none">
+      <div class="dlg" style="--dw:620px">
+        <div class="dlg-title"><span class="ic">＋</span>新建问题<span class="sub">手工补录 · 会写审计</span><span class="winbtns"><i class="cl" data-close>✕</i></span></div>
+        <div class="dlg-body">
+          <div class="formrow"><label>机台号 <span style="color:var(--ng)">*</span></label><div class="tin mono">P7391106</div><button class="btn ghost sm">从台账选</button></div>
+          <div class="formrow"><label>存在问题 <span style="color:var(--ng)">*</span></label><div class="tin">接近开关信号偶发丢失</div></div>
+          <div class="formrow"><label>解决措施</label><div class="tin">更换大行程夹爪</div></div>
+          <div class="formrow"><label>责任阶段</label><div class="tin sel">装配调试 ▾</div><div class="tin sel" style="flex:0 0 120px">责任人 ▾</div></div>
+          <div class="formrow"><label>计划完成</label><div class="tin mono">2026-11-25</div><div class="tin sel" style="flex:0 0 110px">装配中 ▾</div></div>
+          <div class="formrow" style="align-items:flex-start"><label style="padding-top:6px">备注</label><div class="tin" style="height:74px;align-items:flex-start;padding:8px 9px;line-height:1.6">夹爪行程不足，需多等 1.2 s；新夹爪今天下午到货。</div></div>
+          <div class="dlg-hint"><span class="tag warn">提示</span>保存后如检测到“设计计划晚于装配计划”，会立即提示倒挂，但不会阻止保存。</div>
+          <div class="dlg-check"><label class="chk on"><i>✓</i>保存后继续新建下一条</label><span class="sp"></span><span class="tiny muted">ID 将由系统生成：P7391-058</span></div>
+        </div>
+        <div class="dlg-foot">
+          <span class="footnote">手工新增不改变源 Excel</span><span class="sp"></span>
+          <button class="btn ghost" data-close>取消</button>
+          <button class="btn primary" data-close>保存问题</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 更新阶段 -->
+    <div class="dlg-modal" data-dialog="dlg-stage" data-title="更新阶段" data-w="560" data-h="520" data-parent="detail" style="display:none">
+      <div class="dlg" style="--dw:560px">
+        <div class="dlg-title"><span class="ic">◷</span>更新阶段<span class="sub">P7391-009 · 设计下图</span><span class="winbtns"><i class="cl" data-close>✕</i></span></div>
+        <div class="dlg-body">
+          <div class="segline">
+            <span class="seg on">设计下图</span><span class="seg">物料准备</span><span class="seg">装配调试</span>
+          </div>
+          <div class="formrow"><label>阶段结果</label>
+            <label class="chk on"><i>✓</i>已完成</label>
+            <label class="chk"><i></i>不适用（/）</label>
+            <label class="chk"><i></i>未开始</label>
+          </div>
+          <div class="formrow"><label>实际完成日</label><div class="tin mono">2026-11-05</div><span class="tiny muted">计划 11-05，按期</span></div>
+          <div class="formrow"><label>责任人</label><div class="tin">何工</div><button class="btn ghost sm">选人</button></div>
+          <div class="formrow"><label>调整计划日</label><div class="tin mono">2026-11-05</div><span class="tag">未改动</span></div>
+          <div class="formrow" style="align-items:flex-start"><label style="padding-top:6px">变更原因</label><div class="tin" style="height:64px;align-items:flex-start;padding:8px 9px;color:var(--muted)">修改计划日时必填；仅推进阶段可留空。</div></div>
+          <div class="dlg-hint"><span class="tag ng">仍倒挂</span>装配计划日为 11-01，早于本阶段实际完成日 11-05。保存后倒挂标记不会消失，需同时调整装配计划。</div>
+          <div class="dlg-check"><label class="chk on"><i>✓</i>同步到手机端（下次联网）</label><span class="sp"></span><span class="tiny muted">审计：修改人 + 时间 + 原因</span></div>
+        </div>
+        <div class="dlg-foot">
+          <button class="btn ghost sm" data-open="dlg-del">删除这条问题</button><span class="sp"></span>
+          <button class="btn ghost" data-close>取消</button>
+          <button class="btn primary" data-close>保存并留痕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导入确认 / 冲突 -->
+    <div class="dlg-modal" data-dialog="dlg-import-conflict" data-title="确认导入" data-w="680" data-h="600" data-parent="import" style="display:none">
+      <div class="dlg" style="--dw:680px">
+        <div class="dlg-title"><span class="ic">⇥</span>确认导入<span class="sub">批次 IMP-20261123-02</span><span class="winbtns"><i class="cl" data-close>✕</i></span></div>
+        <div class="dlg-body">
+          <div class="imp-sum">
+            <div class="is-cell"><b>36</b><span>将写入</span></div>
+            <div class="is-cell"><b>0</b><span>按 ID 更新</span></div>
+            <div class="is-cell warn"><b>5</b><span>倒挂提示</span></div>
+            <div class="is-cell warn"><b>4</b><span>文本计划</span></div>
+            <div class="is-cell"><b>1</b><span>机台号异常</span></div>
+          </div>
+
+          <div class="dlg-sec">重复与冲突</div>
+          <div class="conflict">
+            <div class="cf-h"><span class="tag warn">同 ID 已存在</span><b>3 条</b><span class="sp"></span><span class="tiny muted">来自上次导入 IMP-20261123-01</span></div>
+            <div class="cf-row"><span class="mono">P7391-009</span><span>装配计划 11-15</span><span style="color:var(--muted)">→ 原表 11-01</span><span class="sp"></span><label class="chk on"><i>✓</i>用原表覆盖</label></div>
+            <div class="cf-row"><span class="mono">P7391-013</span><span>设计计划 11-07</span><span style="color:var(--muted)">→ 原表 已下图</span><span class="sp"></span><label class="chk"><i></i>保留系统值</label></div>
+            <div class="cf-row"><span class="mono">P7391-034</span><span>设计计划 11-05</span><span style="color:var(--muted)">→ 原表 已下图</span><span class="sp"></span><label class="chk"><i></i>保留系统值</label></div>
+            <div class="tiny muted" style="margin-top:6px">默认策略：以 Excel 原表为准；若系统内已有手工修改，勾选“保留系统值”。</div>
+          </div>
+
+          <div class="dlg-sec">写入范围</div>
+          <div class="row" style="gap:8px;flex-wrap:wrap">
+            <label class="opt on" style="flex:1 1 180px"><span class="rd"></span><div><b>新增 + 更新</b><div class="tiny muted">按 ID 匹配</div></div></label>
+            <label class="opt" style="flex:1 1 180px"><span class="rd"></span><div><b>仅新增</b><div class="tiny muted">跳过已存在</div></div></label>
+            <label class="opt" style="flex:1 1 180px"><span class="rd"></span><div><b>先清空再导入</b><div class="tiny muted" style="color:var(--ng)">会丢失手工修改</div></div></label>
+          </div>
+
+          <div class="dlg-hint" style="margin-top:10px"><span class="tag ok">可回滚</span>整批导入会生成回滚点 RB-20261123-02，可在“导入历史”一键撤销。原 xls 文件不会被修改。</div>
+        </div>
+        <div class="dlg-foot">
+          <span class="footnote">写库前最后一步</span><span class="sp"></span>
+          <button class="btn ghost" data-close>返回校验</button>
+          <button class="btn primary" data-go="main">确认写入 36 条</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出确认 -->
+    <div class="dlg-modal" data-dialog="dlg-export" data-title="开始导出" data-w="560" data-h="440" data-parent="export" style="display:none">
+      <div class="dlg" style="--dw:560px">
+        <div class="dlg-title"><span class="ic">⇤</span>开始导出<span class="sub">原表版式 · 36 条</span><span class="winbtns"><i class="cl" data-close>✕</i></span></div>
+        <div class="dlg-body">
+          <div class="formrow"><label>文件名</label><div class="tin mono" style="font-size:10.5px">P7391安装调试问题_20261123.xlsx</div></div>
+          <div class="formrow"><label>保存到</label><div class="tin mono" style="font-size:10.5px">D:\Sinan\outbox\</div><button class="btn ghost sm">浏览…</button></div>
+          <div class="formrow"><label>工作表</label><div class="tin sel">问题台账 / 修改留痕 / 字段说明 ▾</div></div>
+          <div class="dlg-sec">将包含</div>
+          <div class="exp-list">
+            <div class="el"><span class="tag ok">✓</span>36 条问题，列序与原表一致</div>
+            <div class="el"><span class="tag ok">✓</span>5 条倒挂行标红，4 处“已下图”标黄</div>
+            <div class="el"><span class="tag ok">✓</span>“/”与空白分别保留，不统一成空</div>
+            <div class="el"><span class="tag">○</span>不包含：人员权限、操作日志明细</div>
+          </div>
+          <div class="dlg-check" style="margin-top:10px"><label class="chk on"><i>✓</i>导出完成后打开文件夹</label><span class="sp"></span><span class="tiny muted">预计 2 秒</span></div>
+        </div>
+        <div class="dlg-foot">
+          <span class="footnote">不会修改数据库</span><span class="sp"></span>
+          <button class="btn ghost" data-close>取消</button>
+          <button class="btn primary" data-close>导出</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除确认 -->
+    <div class="dlg-modal" data-dialog="dlg-del" data-title="删除问题" data-w="480" data-h="300" data-parent="detail" style="display:none">
+      <div class="dlg" style="--dw:480px">
+        <div class="dlg-title"><span class="ic">⚠</span>删除问题<span class="sub">不可撤销</span><span class="winbtns"><i class="cl" data-close>✕</i></span></div>
+        <div class="dlg-body">
+          <div class="del-warn">
+            <div style="font-size:12.5px;line-height:1.8">确定删除 <b class="mono">P7391-009</b>「接近开关信号偶发丢失」？</div>
+            <div class="tiny muted" style="margin-top:5px">该问题有 4 条修改留痕、2 张现场照片。删除后统计、导出与手机端同步都会移除它。</div>
+          </div>
+          <div class="dlg-sec">二次确认</div>
+          <div class="formrow"><label>输入 ID</label><div class="tin mono" style="border-color:var(--ng)">P7391-009</div><span class="tag ng">匹配</span></div>
+          <label class="chk"><i></i>同时删除关联照片文件（不可恢复）</label>
+        </div>
+        <div class="dlg-foot">
+          <span class="footnote">建议改用“标记作废”保留追溯</span><span class="sp"></span>
+          <button class="btn ghost" data-close>取消</button>
+          <button class="btn" style="background:var(--ng)" data-close>确认删除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 移动端配对 -->
+    <div class="dlg-modal" data-dialog="dlg-bind" data-title="移动端配对" data-w="620" data-h="520" data-parent="settings" style="display:none">
+      <div class="dlg" style="--dw:620px">
+        <div class="dlg-title"><span class="ic">⌗</span>移动端配对<span class="sub">一次性二维码 · 10 分钟有效</span><span class="winbtns"><i class="cl" data-close>✕</i></span></div>
+        <div class="dlg-body" style="display:flex;gap:18px">
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+            <div class="qrbox" style="width:172px;height:172px" title="演示二维码">
+              <svg viewBox="0 0 25 25" shape-rendering="crispEdges"><rect width="25" height="25" fill="#fff"/><g fill="#111">
+                <rect x="0" y="0" width="7" height="7"/><rect x="1" y="1" width="5" height="5" fill="#fff"/><rect x="2" y="2" width="3" height="3"/>
+                <rect x="18" y="0" width="7" height="7"/><rect x="19" y="1" width="5" height="5" fill="#fff"/><rect x="20" y="2" width="3" height="3"/>
+                <rect x="0" y="18" width="7" height="7"/><rect x="1" y="19" width="5" height="5" fill="#fff"/><rect x="2" y="20" width="3" height="3"/>
+                <rect x="9" y="0" width="1" height="1"/><rect x="11" y="1" width="1" height="1"/><rect x="13" y="0" width="1" height="1"/><rect x="15" y="2" width="1" height="1"/>
+                <rect x="8" y="3" width="1" height="1"/><rect x="10" y="4" width="1" height="1"/><rect x="12" y="5" width="1" height="1"/><rect x="14" y="6" width="1" height="1"/>
+                <rect x="8" y="8" width="1" height="1"/><rect x="10" y="9" width="1" height="1"/><rect x="12" y="8" width="1" height="1"/><rect x="14" y="10" width="1" height="1"/><rect x="16" y="9" width="1" height="1"/>
+                <rect x="9" y="11" width="1" height="1"/><rect x="11" y="12" width="1" height="1"/><rect x="13" y="11" width="1" height="1"/><rect x="15" y="13" width="1" height="1"/><rect x="17" y="12" width="1" height="1"/>
+                <rect x="8" y="14" width="1" height="1"/><rect x="10" y="15" width="1" height="1"/><rect x="12" y="14" width="1" height="1"/><rect x="14" y="16" width="1" height="1"/><rect x="16" y="15" width="1" height="1"/>
+                <rect x="9" y="17" width="1" height="1"/><rect x="11" y="18" width="1" height="1"/><rect x="13" y="19" width="1" height="1"/><rect x="15" y="17" width="1" height="1"/>
+                <rect x="18" y="9" width="1" height="1"/><rect x="20" y="11" width="1" height="1"/><rect x="22" y="9" width="1" height="1"/><rect x="19" y="14" width="1" height="1"/><rect x="21" y="16" width="1" height="1"/><rect x="23" y="19" width="1" height="1"/><rect x="10" y="21" width="1" height="1"/><rect x="13" y="22" width="1" height="1"/><rect x="16" y="21" width="1" height="1"/><rect x="19" y="23" width="1" height="1"/>
+              </g></svg>
+            </div>
+            <div class="mono" style="font-size:18px;letter-spacing:4px;font-weight:700">8 2 4 7 1 6</div>
+            <div class="tiny muted">扫码无效时手工输入配对码</div>
+          </div>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:9px">
+            <div class="dlg-sec" style="margin-top:0">配对信息</div>
+            <div class="kv">
+              <span class="k">本机地址</span><span class="v mono">192.168.1.26:5180</span>
+              <span class="k">有效期至</span><span class="v mono">11-23 10:12</span>
+              <span class="k">可绑定</span><span class="v">调试组 · 装配调试权限</span>
+            </div>
+            <div class="dlg-sec">已配对设备</div>
+            <div class="dev">
+              <span class="dv-ic">📱</span>
+              <div style="flex:1;min-width:0"><b>王工的手机</b><div class="tiny muted">Pixel 7 · 11-22 18:02 配对 · 最近同步 09:41</div></div>
+              <span class="tag ok">在线</span>
+            </div>
+            <div class="dev">
+              <span class="dv-ic">📱</span>
+              <div style="flex:1;min-width:0"><b>冯工的手机</b><div class="tiny muted">Redmi Note · 11-20 08:15 配对 · 最近同步 昨天</div></div>
+              <span class="tag">离线</span>
+            </div>
+            <div class="dlg-hint" style="margin-top:2px"><span class="tag warn">安全</span>二维码只在局域网内有效；配对请求需桌面端确认，过期自动作废。</div>
+          </div>
+        </div>
+        <div class="dlg-foot">
+          <span class="footnote">手机与桌面共用同一份台账</span><span class="sp"></span>
+          <button class="btn ghost" data-close>关闭</button>
+          <button class="btn primary" data-close>刷新二维码</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 手机端：推进阶段 -->
+    <div class="dlg-modal" data-dialog="dlg-m-note" data-title="推进阶段" data-w="366" data-h="560" data-parent="m-detail" style="display:none">
+      <div class="dlg" style="--dw:366px">
+        <div class="dlg-title"><span class="ic">◷</span>推进阶段<span class="sub">P7391-009</span><span class="winbtns"><i class="cl" data-close>✕</i></span></div>
+        <div class="dlg-body" style="padding:12px">
+          <div class="mseg">
+            <span class="ms">方案</span><span class="ms">设计</span><span class="ms on">物料</span><span class="ms">装配</span>
+          </div>
+          <div class="ph-sec" style="margin:8px 0 0">阶段结果</div>
+          <div class="mopts">
+            <span class="mopt on">已完成</span><span class="mopt">不适用 /</span><span class="mopt">未开始</span>
+          </div>
+          <div class="ph-sec" style="margin:10px 0 0">实际完成</div>
+          <div class="ph-input" style="min-height:38px"><span>◷</span>2026-11-23</div>
+          <div class="ph-sec" style="margin:10px 0 0">备注</div>
+          <div class="ph-input ph-textarea" style="min-height:70px;color:var(--fg)">夹爪已换，复测节拍 6.6 s，满足要求。</div>
+          <div class="ph-sec" style="margin:10px 0 0">现场照片</div>
+          <div class="ph-row" style="gap:7px">
+            <div class="ph-photo" style="flex:1;height:62px"><span class="pic">▣</span><span>IMG_2842</span></div>
+            <a class="ph-photo" style="flex:1;height:62px;text-decoration:none;color:var(--muted)" data-open="dlg-m-photo"><span class="pic">＋</span><span>拍照</span></a>
+          </div>
+          <div class="dlg-hint" style="margin-top:10px"><span class="tag warn">离线</span>先存本机，联网后补传；若桌面端已改同一阶段，将转成冲突由你选择。</div>
+        </div>
+        <div class="dlg-foot">
+          <button class="btn ghost" data-close>取消</button><span class="sp"></span>
+          <button class="btn primary" data-go="m-sync">保存并去同步</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 手机端：拍照 -->
+    <div class="dlg-modal" data-dialog="dlg-m-photo" data-title="添加照片" data-w="366" data-h="470" data-parent="m-new" style="display:none">
+      <div class="dlg" style="--dw:366px">
+        <div class="dlg-title"><span class="ic">📷</span>添加照片<span class="sub">自动压缩到 1600px</span><span class="winbtns"><i class="cl" data-close>✕</i></span></div>
+        <div class="dlg-body" style="padding:12px;gap:9px">
+          <div class="cam-preview">
+            <div class="cam-frame"><span class="c1"></span><span class="c3"></span><span class="c4"></span></div>
+            <div class="cam-hint">对准夹爪与工件间隙</div>
+          </div>
+          <div class="ph-row" style="gap:8px">
+            <a class="ph-btn ghost sm" style="flex:1" data-close>相册选择</a>
+            <a class="ph-btn sm" style="flex:1" data-close>拍摄并使用</a>
+          </div>
+          <div class="ph-card flat" style="padding:8px 10px">
+            <div class="ph-sub">原图 3.8 MB → 上传 1.2 MB<br>原图保留在本机相册，不删除。</div>
+          </div>
+        </div>
+        <div class="dlg-foot">
+          <span class="footnote">最多 9 张</span><span class="sp"></span>
+          <button class="btn ghost" data-close>取消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 桌面端：查看现场照片 -->
+    <div class="dlg-modal" data-dialog="dlg-photo" data-title="查看现场照片" data-w="860" data-h="560" data-parent="detail" style="display:none">
+      <div class="dlg" style="--dw:860px">
+        <div class="dlg-title"><span class="ic">▣</span>现场照片<span class="sub">P7391-009 · P7391106 · 1 / 2</span><span class="winbtns"><i class="cl" data-close>✕</i></span></div>
+        <div class="dlg-body" style="padding:14px 16px;gap:10px">
+          <div class="shot-view">
+            <div class="photo-thumb a shot-main">
+              <i class="pt-ico">▣</i><span class="pt-n">IMG_2841</span>
+              <span class="pt-cap">夹爪与工件间隙 · 3.2 mm</span>
+            </div>
+            <div class="shot-side">
+              <div class="shot-kv">
+                <span>关联问题</span><b class="mono">P7391-009</b>
+                <span style="color:var(--muted)">接近开关信号偶发丢失</span>
+              </div>
+              <div class="shot-kv">
+                <span>拍摄人 / 时间</span><b>王工 · 11-22 15:52</b>
+                <span>Android 手机 · 离线补传</span>
+              </div>
+              <div class="shot-kv">
+                <span>原始文件</span><b class="mono">IMG_2841.jpg</b>
+                <span>1600 × 1200 · 1.2 MB</span>
+              </div>
+              <div class="shot-kv">
+                <span>设备 / 分项目</span><b class="mono">P7391106</b>
+                <span class="mono">P7391-01</span>
+              </div>
+              <div class="dlg-hint" style="margin-top:2px"><span class="tag ok">已同步</span>桌面端与手机端共用同一份附件记录；缩略图 320px，原图按需下载。</div>
+              <div class="row" style="gap:6px;margin-top:auto;flex-wrap:wrap">
+                <button class="btn ghost sm">下载原图</button>
+                <button class="btn ghost sm">设为封面</button>
+                <button class="btn ghost sm" style="color:var(--ng)">删除照片</button>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="gap:6px">
+            <span class="tag">演示照片（CSS 示意）</span>
+            <span class="tiny muted">实际部署时读取附件表与缩略图文件，不把图片二进制塞进数据库。</span>
+            <span class="sp"></span>
+            <button class="btn ghost sm">‹ 上一张</button>
+            <button class="btn ghost sm">下一张 ›</button>
+          </div>
+        </div>
+        <div class="dlg-foot">
+          <span class="footnote">附件表：issue_id + file_name + sha256 + taken_at</span>
+          <span class="sp"></span>
+          <button class="btn ghost" data-close>关闭</button>
+          <button class="btn primary" data-close>完成</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 桌面端：新建 / 编辑分项目 -->
+    <div class="dlg-modal" data-dialog="dlg-subproject" data-title="新建分项目" data-w="620" data-h="560" data-parent="projects" style="display:none">
+      <div class="dlg" style="--dw:620px">
+        <div class="dlg-title"><span class="ic">◱</span>新建分项目<span class="sub">P7391 · 总项目下挂分项目</span><span class="winbtns"><i class="cl" data-close>✕</i></span></div>
+        <div class="dlg-body">
+          <div class="segline"><span class="seg on">新建分项目</span><span class="seg">编辑现有</span></div>
+          <div class="formrow"><label>总项目</label><div class="tin mono">P7391</div><span class="tiny muted">不可改</span></div>
+          <div class="formrow"><label>分项目号 <span style="color:var(--ng)">*</span></label><div class="tin mono">P7391-04</div><span class="tiny muted">总项目号 + 两位流水</span></div>
+          <div class="formrow"><label>分项目名称</label><div class="tin">机台 4xx 段</div></div>
+          <div class="formrow"><label>负责人</label><div class="tin">王工</div><button class="btn ghost sm">选人</button></div>
+          <div class="dlg-sec" style="display:flex;align-items:center;gap:6px">设备绑定<span class="sp"></span><span class="tiny muted">已选 0 台 / 31 台</span></div>
+          <div class="dlg-hint"><span class="tag">规则</span>一台设备只能属于一个分项目；分项目号保存后不可修改，避免历史问题归属错位。设备可随时调整。</div>
+          <div class="row" style="gap:6px;margin-top:9px;flex-wrap:wrap">
+            <span class="chip">P7391101 ×</span><span class="chip">P7391102 ×</span><span class="chip">P7391103 ×</span>
+            <span class="chip">P7391104 ×</span><span class="chip">P7391106 ×</span>
+            <span class="chip on">＋ 选择设备</span>
+          </div>
+          <div class="dlg-check"><label class="chk on"><i>✓</i>保存后同步到手机端项目列表</label><span class="sp"></span><span class="tiny muted">审计：创建人 + 时间</span></div>
+        </div>
+        <div class="dlg-foot">
+          <span class="footnote">分项目号示例：P7391-01 / P7391-02</span>
+          <span class="sp"></span>
+          <button class="btn ghost" data-close>取消</button>
+          <button class="btn primary" data-close>保存分项目</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 手机端：查看现场照片 -->
+    <div class="dlg-modal" data-dialog="dlg-m-view" data-title="查看照片" data-w="366" data-h="520" data-parent="m-detail" style="display:none">
+      <div class="dlg" style="--dw:366px">
+        <div class="dlg-title"><span class="ic">▣</span>现场照片<span class="sub">P7391-009 · 1 / 2</span><span class="winbtns"><i class="cl" data-close>✕</i></span></div>
+        <div class="dlg-body" style="padding:12px;gap:8px">
+          <div class="photo-thumb a" style="height:236px">
+            <i class="pt-ico">▣</i><span class="pt-n">IMG_2841</span><span class="pt-cap">夹爪与工件间隙 · 3.2 mm</span>
+          </div>
+          <div class="ph-row" style="gap:6px;flex-wrap:wrap">
+            <span class="ph-badge plain">P7391-01</span><span class="ph-badge plain">P7391106</span><span class="ph-badge info">P7391-009</span>
+          </div>
+          <div class="shot-kv">
+            <span>拍摄人 / 时间</span><b>王工 · 11-22 15:52</b>
+            <span>原始文件 · 1600 × 1200 · 1.2 MB</span><b class="mono">IMG_2841.jpg</b>
+          </div>
+          <div class="ph-sub">缩略图 320px，原图按需下载；离线时先存本机。</div>
+        </div>
+        <div class="dlg-foot">
+          <button class="btn ghost sm">‹ 上一张</button><button class="btn ghost sm">下一张 ›</button>
+          <span class="sp"></span><button class="btn primary sm" data-close>关闭</button>
+        </div>
+      </div>
+    </div>
+
+  </div>

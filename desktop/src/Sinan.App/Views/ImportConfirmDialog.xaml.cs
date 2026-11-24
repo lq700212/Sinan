@@ -1,0 +1,42 @@
+using System.Windows;
+using Kaleidoscope.UI.Views;
+using Sinan.App.Services;
+using Sinan.App.ViewModels;
+
+namespace Sinan.App.Views;
+
+/// <summary>
+/// 导入确认 / 冲突处置弹窗（设计稿 dlg-import-conflict）。
+/// code-behind 只做两件 glue：把请求 DTO 交给 ViewModel、把事件翻成 DialogResult；
+/// 计数、冲突逐条决策、写入范围全部在 ViewModel。
+/// </summary>
+public partial class ImportConfirmDialog : ChromeDialogWindow
+{
+    private ImportConfirmDialogViewModel? _viewModel;
+
+    public ImportConfirmDialog()
+    {
+        InitializeComponent();
+    }
+
+    /// <summary>由 DialogService 在 ShowDialog 之前调用。</summary>
+    public void Load(ImportConfirmRequest request)
+    {
+        _viewModel = new ImportConfirmDialogViewModel(request);
+        DataContext = _viewModel;
+
+        _viewModel.Confirmed += (_, _) =>
+        {
+            DialogResult = true;
+            Close();
+        };
+        _viewModel.Cancelled += (_, _) =>
+        {
+            DialogResult = false;
+            Close();
+        };
+    }
+
+    /// <summary>用户点"确认写入"后的结果；"返回校验"时为 null。</summary>
+    public ImportConfirmResult? Result => _viewModel?.BuildResult();
+}

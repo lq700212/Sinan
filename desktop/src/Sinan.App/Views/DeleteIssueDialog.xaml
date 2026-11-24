@@ -1,0 +1,104 @@
+<ui:ChromeDialogWindow x:Class="Sinan.App.Views.DeleteIssueDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:Kaleidoscope.UI.Views;assembly=Kaleidoscope.UI"
+        Title="删除问题"
+        Subtitle="不可撤销 · 软删除"
+        TitleIconChar="⚠"
+        Width="520" Height="380"
+        Resizeable="False"
+        CaptionHeight="40"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{DynamicResource Font.Ui}"
+        FontSize="{DynamicResource Text.Size.Body}"
+        Foreground="{DynamicResource Brush.Fg}">
+
+    <!--
+      ============================================================================
+      删除问题确认（设计稿 dlg-del）
+      第二道闸：必须手抄问题号才能点确认。删除是软删除（写 deleted_at），
+      但界面感知上不可逆，所以不提供"一键确认"。
+      附件原文件按 AGENTS 第 10 节第 11 条不删，界面明确说明而不是给个做不到的勾选框。
+      ============================================================================
+    -->
+
+    <Grid Margin="24,14,24,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 影响面警示 -->
+        <Border Grid.Row="0" Padding="14,12" CornerRadius="12"
+                Background="{DynamicResource Brush.NgSoft}"
+                BorderBrush="{DynamicResource Brush.NgLine}" BorderThickness="1">
+            <StackPanel>
+                <TextBlock Text="{Binding WarningText}" TextWrapping="Wrap" FontSize="12.5"
+                           Foreground="{DynamicResource Brush.Fg}"/>
+                <TextBlock Text="{Binding ImpactText}" TextWrapping="Wrap" FontSize="11"
+                           Margin="0,6,0,0" Foreground="{DynamicResource Brush.Muted}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- 二次确认：手抄问题号 -->
+        <StackPanel Grid.Row="1" Margin="0,18,0,0">
+            <TextBlock Text="二次确认" Style="{StaticResource T.Label}" Margin="2,0,0,8"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="输入问题号" Style="{StaticResource T.Small}"
+                           VerticalAlignment="Center" Margin="2,0,12,0"/>
+                <TextBox Grid.Column="1" Style="{StaticResource Input.Text}" Height="34"
+                         AutomationProperties.AutomationId="DeleteConfirmBox"
+                         FontFamily="{DynamicResource Font.Mono}"
+                         Text="{Binding TypedCode, UpdateSourceTrigger=PropertyChanged}"/>
+                <Border Grid.Column="2" Margin="10,0,0,0" Padding="9,3" CornerRadius="8"
+                        BorderThickness="1" VerticalAlignment="Center"
+                        Background="{DynamicResource Brush.CardWell}"
+                        BorderBrush="{DynamicResource Brush.Border}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{DynamicResource Brush.CardWell}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Matched}" Value="True">
+                                    <Setter Property="Background" Value="{DynamicResource Brush.OkSoft}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource Brush.OkLine}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding MatchTag}" FontSize="9.5"
+                               Foreground="{DynamicResource Brush.Muted}"/>
+                </Border>
+            </Grid>
+            <TextBlock Text="{Binding MatchText}" Style="{StaticResource T.Tiny}" FontSize="10"
+                       Margin="2,6,0,0"/>
+
+            <Border Style="{StaticResource Card.Inset}" Padding="11,9" Margin="0,16,0,0">
+                <TextBlock TextWrapping="Wrap" FontSize="10.5"
+                           Foreground="{DynamicResource Brush.Muted}"
+                           Text="删除只标记问题为作废（写 deleted_at），不物理删除记录；附件原文件保留，等归档策略统一处理。如需保留追溯，建议改用「已取消」状态。"/>
+            </Border>
+        </StackPanel>
+
+        <!-- 底部 -->
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+            <TextBlock Text="建议改用「已取消」保留追溯" Style="{StaticResource T.Tiny}"
+                       FontSize="9.5" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="取消" Style="{StaticResource Btn.Ghost}" Height="34" Width="82"
+                        AutomationProperties.AutomationId="DeleteCancelButton"
+                        Command="{Binding CancelCommand}"/>
+                <Button Content="确认删除" Style="{StaticResource Btn.Danger}" Height="34" Width="112"
+                        Margin="10,0,0,0"
+                        AutomationProperties.AutomationId="DeleteConfirmButton"
+                        Command="{Binding ConfirmCommand}"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</ui:ChromeDialogWindow>

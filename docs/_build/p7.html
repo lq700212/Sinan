@@ -1,0 +1,308 @@
+      <!-- ==================== 01A 总项目总览 ==================== -->
+      <section class="page" data-page="projects" data-title="总项目总览" data-group="项目"
+               data-w="1440" data-h="900" data-states="default"
+               data-galaxy="Cards,Data-tables,Badges,Progress,Steps"
+               data-desc="先看总项目 P7391 的整体盘面，再点分项目号进入设备与问题点预览。"
+               data-points="总项目号放最显眼的位置，分项目号用等宽字体逐个列出|分项目卡片直接带设备/问题/倒挂/照片四个数，点卡片进预览|照片数单独标注“演示值”，不把历史 Excel 数据说成有照片">
+        <div class="app">
+          <header class="app-bar">
+            <div class="app-logo">⌂</div>
+            <div class="app-title">总项目总览<span>P7391 · Program Overview</span></div>
+            <div class="app-status">
+              <span class="st info"><i class="dot"></i>3 个分项目</span>
+              <span class="st ok"><i class="dot"></i>31 台设备</span>
+              <span class="st warn"><i class="dot"></i>5 条倒挂</span>
+            </div>
+            <div class="app-right">
+              <button class="btn ghost sm" data-go="main">← 工作台</button>
+              <button class="btn ghost sm" data-open="dlg-subproject">＋ 新建分项目</button>
+              <button class="btn primary sm" data-open="dlg-new">＋ 新建问题</button>
+              <div class="user-chip"><span class="av">刘</span>王工</div>
+            </div>
+          </header>
+          <div class="app-body">
+            <nav class="app-nav">
+              <a class="nav-i active"><span>⌂</span>项目总览</a>
+              <a class="nav-i" data-go="main"><span>◈</span>工作台</a>
+              <a class="nav-i" data-go="issues"><span>▤</span>问题台账<span class="n">36</span></a>
+              <a class="nav-i" data-go="import"><span>⇥</span>数据交换</a>
+              <a class="nav-i" data-go="report"><span>▦</span>统计报表</a>
+              <a class="nav-i" style="margin-top:auto" data-go="settings"><span>⚙</span>系统设置</a>
+            </nav>
+            <main class="app-main" style="gap:12px">
+              <!-- 总项目头卡 -->
+              <div class="proj-hero">
+                <div class="proj-seal">P7391</div>
+                <div style="min-width:0;position:relative;z-index:1">
+                  <div class="proj-name">P7391 安装调试问题闭环<span class="tag on">进行中</span></div>
+                  <div class="proj-meta">
+                    <span>总项目号 <b class="mono">P7391</b></span>
+                    <span>3 个分项目 · 31 台设备 · 36 条问题</span>
+                    <span>最后导入 11-23 09:12</span>
+                    <span class="tag warn">照片为演示值</span>
+                  </div>
+                </div>
+                <div class="proj-kpis">
+                  <div class="pk"><b>3</b><span>分项目</span></div>
+                  <div class="pk"><b>30</b><span>设备（台）</span></div>
+                  <div class="pk"><b>36</b><span>问题（条）</span></div>
+                  <div class="pk warn"><b>5</b><span>计划倒挂</span></div>
+                </div>
+              </div>
+
+              <div class="crumbbar">
+                <b>P7391</b><span class="sep">/</span><span>分项目预览</span>
+                <span class="sp" style="flex:1"></span>
+                <span class="tiny muted">点击分项目卡片 → 设备清单 → 问题点</span>
+              </div>
+
+              <!-- 分项目预览 -->
+              <div class="proj-grid">
+                <article class="spcard" data-go="project">
+                  <span class="sp-tag tag on">进行中</span>
+                  <div class="sp-top"><span class="sp-code">P7391-01</span><span class="sp-name">机台 1xx 段</span></div>
+                  <div class="sp-metrics">
+                    <div><b>10</b><span>设备</span></div>
+                    <div><b>15</b><span>问题</span></div>
+                    <div class="ng"><b>2</b><span>倒挂</span></div>
+                    <div class="ok"><b>7</b><span>照片</span></div>
+                  </div>
+                  <div class="sp-foot"><span>14 位责任人</span><span class="go">预览设备问题 →</span></div>
+                </article>
+
+                <article class="spcard" data-go="project">
+                  <span class="sp-tag tag on">进行中</span>
+                  <div class="sp-top"><span class="sp-code">P7391-02</span><span class="sp-name">机台 2xx 段</span></div>
+                  <div class="sp-metrics">
+                    <div><b>8</b><span>设备</span></div>
+                    <div><b>8</b><span>问题</span></div>
+                    <div class="ng"><b>1</b><span>倒挂</span></div>
+                    <div class="ok"><b>3</b><span>照片</span></div>
+                  </div>
+                  <div class="sp-foot"><span>15 位责任人</span><span class="go">预览设备问题 →</span></div>
+                </article>
+
+                <article class="spcard" data-go="project">
+                  <span class="sp-tag tag on">进行中</span>
+                  <div class="sp-top"><span class="sp-code">P7391-03</span><span class="sp-name">机台 3xx 段</span></div>
+                  <div class="sp-metrics">
+                    <div><b>12</b><span>设备</span></div>
+                    <div><b>12</b><span>问题</span></div>
+                    <div class="ng"><b>2</b><span>倒挂</span></div>
+                    <div class="ok"><b>2</b><span>照片</span></div>
+                  </div>
+                  <div class="sp-foot"><span>20 位责任人</span><span class="go">预览设备问题 →</span></div>
+                </article>
+
+                <article class="spcard muted">
+                  <span class="sp-tag tag warn">待确认</span>
+                  <div class="sp-top"><span class="sp-code" style="color:var(--muted)">P7391-??</span><span class="sp-name">机台号异常</span></div>
+                  <div class="sp-metrics">
+                    <div><b>1</b><span>设备</span></div>
+                    <div><b>1</b><span>问题</span></div>
+                    <div><b>0</b><span>倒挂</span></div>
+                    <div><b>0</b><span>照片</span></div>
+                  </div>
+                  <div class="sp-foot"><span>1 台机台号异常</span><span class="go" style="color:var(--warn)">去归组 →</span></div>
+                </article>
+              </div>
+
+              <!-- 图表区：问题分布 + 阶段填写率 -->
+              <div class="viz-grid" style="flex:1;min-height:0">
+                <div class="card col" style="min-height:0">
+                  <div class="card-h"><span class="ci">◔</span><b>问题分布</b><span class="sp"></span><span class="tag">36 条</span></div>
+                  <div class="card-b" style="gap:13px;justify-content:center">
+                    <div class="donut-wrap">
+                      <div class="donut"></div>
+                      <div class="donut-c"><b>36</b><span>条问题</span></div>
+                    </div>
+                    <div class="viz-legend">
+                      <div class="vl-row"><i class="vl-dot" style="background:var(--primary)"></i><span class="vl-n">P7391-01</span><span>10 台 · 15 条</span><b>41.7%</b></div>
+                      <div class="vl-row"><i class="vl-dot" style="background:var(--primary2)"></i><span class="vl-n">P7391-02</span><span>8 台 · 8 条</span><b>22.2%</b></div>
+                      <div class="vl-row"><i class="vl-dot" style="background:var(--warn)"></i><span class="vl-n">P7391-03</span><span>12 台 · 12 条</span><b>33.3%</b></div>
+                      <div class="vl-row"><i class="vl-dot" style="background:var(--muted)"></i><span class="vl-n">待确认</span><span>1 台 · 1 条</span><b>2.8%</b></div>
+                    </div>
+                  </div>
+                  <div class="card-f"><span>照片 12 张 · 6 条问题有附件</span><span class="sp"></span><span class="mono tiny">演示值</span></div>
+                </div>
+
+                <div class="card col" style="min-height:0">
+                  <div class="card-h"><span class="ci">▥</span><b>阶段填写率</b><span class="sp"></span><span class="tiny muted">责任人填写 / 36</span></div>
+                  <div class="card-b" style="gap:14px;justify-content:space-evenly">
+                    <div class="rate lg" style="flex:1;justify-content:center">
+                      <div class="rate-row"><span class="rn">方案确定</span><div class="bar"><i style="width:91.7%"></i></div><span class="rv">33 / 36</span><span class="rs part">部分</span></div>
+                      <div class="rate-row"><span class="rn">设计下图</span><div class="bar"><i style="width:72.2%"></i></div><span class="rv">26 / 36</span><span class="rs part">部分</span></div>
+                      <div class="rate-row"><span class="rn">物料准备</span><div class="bar"><i style="width:0%"></i></div><span class="rv">0 / 36</span><span class="rs off">空白</span></div>
+                      <div class="rate-row"><span class="rn">装配调试</span><div class="bar"><i style="width:55.6%"></i></div><span class="rv">20 / 36</span><span class="rs part">部分</span></div>
+                    </div>
+                    <div class="tiny muted" style="line-height:1.6">设计下图：责任人 26、计划时间 26。完成情况 6 / 36，尚未开始闭环。</div>
+                    <div class="photo-assoc" style="margin-top:auto">
+                      <div class="pa-h"><span>现场照片（演示）</span><span class="sp" style="flex:1"></span><span>12 张 · 6 条</span></div>
+                      <div class="pa-row"><span class="mono" style="width:62px">P7391-01</span><div class="bar"><i style="width:100%"></i></div><b>7</b></div>
+                      <div class="pa-row"><span class="mono" style="width:62px">P7391-02</span><div class="bar"><i style="width:43%"></i></div><b>3</b></div>
+                      <div class="pa-row"><span class="mono" style="width:62px">P7391-03</span><div class="bar"><i style="width:29%"></i></div><b>2</b></div>
+                      <div class="pa-row"><span class="mono" style="width:62px">待确认</span><div class="bar"><i style="width:0"></i></div><b>0</b></div>
+                    </div>
+                  </div>
+                  <div class="card-f"><span>分项目号 P7391-01，归属可调</span><span class="sp"></span><button class="btn ghost sm" data-open="dlg-subproject">管理分项目</button></div>
+                </div>
+              </div>
+            </main>
+          </div>
+          <footer class="app-foot">
+            <span>总项目 P7391</span>
+            <span>分项目 3 个 · 待归组 1 台</span>
+            <span>设备 31 台</span>
+            <span class="sp"></span>
+            <span class="mono">照片：演示数据 / 附件表</span>
+          </footer>
+        </div>
+      </section>
+
+      <!-- ==================== 01B 分项目预览 ==================== -->
+      <section class="page" data-page="project" data-title="分项目 · 设备问题预览" data-group="项目"
+               data-w="1440" data-h="900" data-states="default"
+               data-galaxy="Cards,Data-tables,Badges,Attachments,Timeline"
+               data-desc="点进 P7391-01，左侧逐台设备列问题数与倒挂，右侧预览选中设备的问题点与现场照片。"
+               data-points="设备清单与问题预览同屏，不来回跳页|选中行高亮，右侧固定展示这台设备的全部问题|照片缩略图直接贴在问题点旁，点“查看”进台账">
+        <div class="app">
+          <header class="app-bar">
+            <div class="app-logo">◱</div>
+            <div class="app-title">P7391-01<span>分项目预览 · 10 台设备</span></div>
+            <div class="app-status">
+              <span class="st info"><i class="dot"></i>15 条问题</span>
+              <span class="st warn"><i class="dot"></i>5 条倒挂</span>
+              <span class="st ok"><i class="dot"></i>照片 7 张</span>
+            </div>
+            <div class="app-right">
+              <button class="btn ghost sm" data-go="projects">← 总项目</button>
+              <button class="btn ghost sm" data-go="export">导出本分项目</button>
+              <button class="btn primary sm" data-open="dlg-new">＋ 新建问题</button>
+              <div class="user-chip"><span class="av">刘</span>王工</div>
+            </div>
+          </header>
+          <div class="app-body">
+            <nav class="app-nav">
+              <a class="nav-i active" data-go="projects"><span>⌂</span>项目总览</a>
+              <a class="nav-i" data-go="main"><span>◈</span>工作台</a>
+              <a class="nav-i" data-go="issues"><span>▤</span>问题台账<span class="n">36</span></a>
+              <a class="nav-i" data-go="import"><span>⇥</span>数据交换</a>
+              <a class="nav-i" data-go="report"><span>▦</span>统计报表</a>
+              <a class="nav-i" style="margin-top:auto" data-go="settings"><span>⚙</span>系统设置</a>
+            </nav>
+            <main class="app-main" style="gap:11px">
+              <div class="crumbbar">
+                <a data-go="projects">P7391 总项目</a><span class="sep">›</span><b>P7391-01</b>
+                <span class="sep">›</span><span>设备问题预览</span>
+                <span class="sp" style="flex:1"></span>
+                <span class="tiny muted">分项目归属：机台 1xx 段 · 可调整</span>
+              </div>
+
+              <div class="proj-hero" style="padding:10px 15px;gap:12px">
+                <div class="proj-seal" style="width:40px;height:40px;font-size:15px">01</div>
+                <div style="min-width:0;position:relative;z-index:1">
+                  <div class="proj-name" style="font-size:15px">P7391-01 分项目<span class="tag on">进行中</span></div>
+                  <div class="proj-meta" style="margin-top:2px">
+                    <span>10 台设备</span><span>15 条问题</span><span>14 位责任人</span><span>装配已填 24 / 24</span>
+                  </div>
+                </div>
+                <div class="sp" style="flex:1"></div>
+                <span class="tag warn">倒挂 5 条</span>
+                <button class="btn ghost sm" data-go="export">导出本分项目</button>
+              </div>
+
+              <div class="dev-layout">
+                <!-- 左：设备清单 -->
+                <div class="card pad0 col" style="min-height:0">
+                  <div class="card-h band" style="margin:0">
+                    <span class="ci">▤</span><b>设备清单</b><span class="tag">10 台</span>
+                    <span class="sp"></span>
+                    <span class="tiny muted">点行查看该设备问题点</span>
+                  </div>
+                  <div class="tbl-scroll">
+                    <table class="tbl dev-tbl" style="table-layout:fixed">
+                      <colgroup>
+                        <col style="width:128px"><col style="width:108px"><col style="width:70px"><col>
+                      </colgroup>
+                      <thead>
+                        <tr><th>机台号</th><th>问题 / 倒挂</th><th>照片</th><th>装配责任人</th></tr>
+                      </thead>
+                      <tbody>
+                        <tr data-go="issues"><td class="mach">P7391101</td><td><b class="n">2</b></td><td><span class="tag ok">1</span></td><td>王工 / 赵工</td></tr>
+                        <tr data-go="issues"><td class="mach">P7391102</td><td><b class="n">2</b> <span class="tag ng">1</span></td><td class="muted">—</td><td>王工 / 赵工</td></tr>
+                        <tr data-go="issues"><td class="mach">P7391103</td><td><b class="n">1</b></td><td class="muted">—</td><td>孙工</td></tr>
+                        <tr data-go="issues"><td class="mach">P7391104</td><td><b class="n">2</b></td><td class="muted">—</td><td>王工 / 陈工</td></tr>
+                        <tr class="on" data-go="issues"><td class="mach">P7391106</td><td><b class="n">3</b> <span class="tag ng">1</span></td><td><span class="tag ok">6</span></td><td>王工 / 冯工</td></tr>
+                        <tr data-go="issues"><td class="mach">P7391107</td><td><b class="n">2</b> <span class="tag ng">1</span></td><td class="muted">—</td><td>孙工 / 郑工</td></tr>
+                        <tr data-go="issues"><td class="mach">P7391108</td><td><b class="n">1</b></td><td class="muted">—</td><td>王工</td></tr>
+                        <tr data-go="issues"><td class="mach">P7391109</td><td><b class="n">3</b> <span class="tag ng">1</span></td><td class="muted">—</td><td>陈工</td></tr>
+                        <tr data-go="issues"><td class="mach">P7391110</td><td><b class="n">1</b></td><td class="muted">—</td><td>孙工</td></tr>
+                        <tr data-go="issues"><td class="mach">P7391111</td><td><b class="n">1</b></td><td class="muted">—</td><td>孙工</td></tr>
+                        <tr data-go="issues"><td class="mach">P7391113</td><td><b class="n">1</b></td><td class="muted">—</td><td>孙工 / 郑工</td></tr>
+                        <tr data-go="issues"><td class="mach">P7391115</td><td><b class="n">3</b></td><td class="muted">—</td><td>冯工 / 王工</td></tr>
+                        <tr data-go="issues"><td class="mach">P7391119</td><td><b class="n">2</b> <span class="tag ng">1</span></td><td class="muted">—</td><td>王工 / 孙工</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="card-f" style="margin:0;border-radius:0">
+                    <span>10 台 · 15 条</span>
+                    <span class="sp"></span>
+                    <span class="mono tiny">照片 7 张（演示）</span>
+                  </div>
+                </div>
+
+                <!-- 右：选中设备的问题点 -->
+                <div class="card pad0 qpanel" style="min-height:0">
+                  <div class="card-h band" style="margin:0">
+                    <span class="ci">◉</span><b class="mono">P7391106</b>
+                    <span class="tag">3 条问题</span>
+                    <span class="sp"></span>
+                    <span class="tag warn">倒挂 1</span>
+                  </div>
+                  <div class="qpanel-h">
+                    <span class="tiny muted">装配责任人</span><b style="font-size:10.5px">王工 / 冯工</b>
+                    <span class="sp" style="flex:1"></span>
+                    <span class="tiny muted">照片 6 张</span>
+                  </div>
+                  <div class="qpanel-b">
+                    <a class="qitem" data-go="detail">
+                      <div class="qf"><span class="mono">P7391-008</span><span class="tag">设计未填</span><span class="sp" style="flex:1"></span><span>李工</span><span class="tag ok">照片 4</span></div>
+                      <div class="qt">操作屏支架接触不良</div>
+                      <div class="qm">解决措施：调试</div>
+                    </a>
+                    <a class="qitem on" data-go="detail">
+                      <div class="qf"><span class="mono">P7391-009</span><span class="tag ng">倒挂 4 天</span><span class="sp" style="flex:1"></span><span>王工 / 冯工</span></div>
+                      <div class="qt">接近开关信号偶发丢失</div>
+                      <div class="qm">解决措施：打磨传感器支架后连续运行观察</div>
+                      <div class="qf"><span>设计 何工 11-05</span><span>装配 11-01</span><span class="sp" style="flex:1"></span><span class="tag ok">照片 2</span></div>
+                    </a>
+                    <a class="qitem" data-go="detail">
+                      <div class="qf"><span class="mono">P7391-010</span><span class="tag warn">计划文本</span><span class="sp" style="flex:1"></span><span>王工 / 冯工</span></div>
+                      <div class="qt">安全门开关安装间距不足</div>
+                      <div class="qm">解决措施：重新固定夹具基准面并复测</div>
+                    </a>
+
+                    <div class="ph-sec" style="margin:2px 0 0;font-size:10px">现场照片<span class="sp"></span><span class="tiny muted">11-22 上传 · 演示</span></div>
+                    <div class="photo-strip" style="margin-top:0">
+                      <a class="photo-thumb a" style="width:104px;height:84px" data-open="dlg-photo"><i class="pt-ico">▣</i><span class="pt-n">1/6</span><span class="pt-cap">夹爪间隙 3.2 mm</span></a>
+                      <a class="photo-thumb b" style="width:104px;height:84px" data-open="dlg-photo"><i class="pt-ico">▣</i><span class="pt-n">2/6</span><span class="pt-cap">机器人等待位</span></a>
+                      <a class="photo-thumb add" data-open="dlg-photo" style="width:70px;height:84px;display:flex"><i style="font-style:normal;font-size:11px">⋯</i><span>全部 6 张</span></a>
+                    </div>
+                  </div>
+                  <div class="card-f" style="margin:0;border-radius:0">
+                    <span class="tiny muted">点左侧设备切换</span>
+                    <span class="sp"></span>
+                    <button class="btn ghost sm" data-go="issues">在台账中筛选 →</button>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+          <footer class="app-foot">
+            <span>P7391-01 · 机台 1xx 段</span>
+            <span>设备 13 · 问题 24 · 倒挂 5</span>
+            <span class="sp"></span>
+            <span class="mono">照片计数为演示值</span>
+          </footer>
+        </div>
+      </section>

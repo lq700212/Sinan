@@ -1,0 +1,393 @@
+      <!-- ==================== 03 问题台账 ==================== -->
+      <section class="page" data-page="issues" data-title="问题台账" data-group="工作台"
+               data-w="1440" data-h="900" data-states="default,empty,loading"
+               data-galaxy="Data-tables,Forms,Badges,Pagination,Empty-states"
+               data-desc="36 条问题的唯一事实来源：筛选、排序、逐条进入四阶段详情。"
+               data-points="筛选一行放完，只有“搜索”是主操作|倒挂与文本异常用行内徽标，不整行染色|表格纵向滚动，表头与分页条固定">
+        <div class="app">
+          <header class="app-bar">
+            <div class="app-logo">▤</div>
+            <div class="app-title">问题台账<span>P7391 · 36 条 · 分项目可筛</span></div>
+            <div class="app-right">
+              <button class="btn ghost sm" data-go="main">← 工作台</button>
+              <button class="btn ghost sm" data-go="export">导出</button>
+              <button class="btn primary sm" data-open="dlg-new">＋ 新建问题</button>
+            </div>
+          </header>
+          <div class="app-body">
+            <nav class="app-nav">
+              <a class="nav-i" data-go="projects"><span>⌂</span>项目总览</a>
+              <a class="nav-i" data-go="main"><span>◈</span>工作台</a>
+              <a class="nav-i active"><span>▤</span>问题台账<span class="n">36</span></a>
+              <a class="nav-i" data-go="import"><span>⇥</span>数据交换</a>
+              <a class="nav-i" data-go="report"><span>▦</span>统计报表</a>
+              <a class="nav-i" style="margin-top:auto" data-go="settings"><span>⚙</span>系统设置</a>
+            </nav>
+            <main class="app-main" style="gap:10px">
+              <!-- 筛选卡 -->
+              <div class="card" style="padding:10px 12px;flex:0 0 auto">
+                <div class="crumbbar" style="margin-bottom:7px">
+                  <a data-go="projects">P7391 总项目</a><span class="sep">›</span><span>全部分项目</span><span class="sep">›</span><span>全部设备</span>
+                  <span class="sp" style="flex:1"></span>
+                  <span class="tiny muted">共 36 条 · 5 条倒挂</span>
+                </div>
+                <div class="row" style="gap:8px;flex-wrap:nowrap">
+                  <div class="tin" style="flex:1 1 210px"><span class="mag">⌕</span><span class="ph">搜索问题 / 机台号 / 责任人…</span></div>
+                  <div class="tin sel" style="flex:0 0 126px">P7391 总项目 ▾</div>
+                  <div class="tin sel" style="flex:0 0 122px">全部责任人 ▾</div>
+                  <div class="tin sel" style="flex:0 0 104px">全部状态 ▾</div>
+                  <button class="btn ghost sm" title="设备、阶段、照片、完成情况">更多筛选 ▾</button>
+                  <button class="btn ghost sm">重置</button>
+                </div>
+                <div class="row" style="gap:6px;margin-top:8px">
+                  <span class="chip on">全部 36</span>
+                  <span class="chip">计划倒挂 5</span>
+                  <span class="chip">有照片 6</span>
+                  <span class="sp"></span>
+                  <span class="tiny muted">按计划日升序</span>
+                </div>
+              </div>
+
+              <div class="state-block" data-for="default" data-display="contents">
+                <!-- 表格卡 -->
+                <div class="card pad0" style="flex:1;min-height:0;display:flex;flex-direction:column">
+                  <div class="card-h band" style="margin:0">
+                    <span class="ci">▤</span><b>问题清单</b>
+                    <span class="tag">36 条</span>
+                    <span class="tag warn">13 倒挂</span>
+                    <span class="sp"></span>
+                    <span class="tiny muted">点击任意行查看四阶段详情</span>
+                  </div>
+                  <div class="tbl-scroll">
+                    <table class="tbl roomy" style="table-layout:fixed">
+                      <colgroup>
+                        <col style="width:84px"><col style="width:88px"><col><col>
+                        <col style="width:196px"><col style="width:50px"><col style="width:122px">
+                      </colgroup>
+                      <thead>
+                        <tr>
+                          <th>ID</th><th>机台号</th><th>存在问题</th><th>解决措施</th>
+                          <th>设计 → 装配</th><th>照片</th><th>状态</th>
+                        </tr>
+                      </thead>
+<tbody>
+<tr data-go="detail">
+  <td class="mono">P7391-001</td>
+  <td class="mono">P7391101</td>
+  <td>伺服电机复位不畅</td>
+  <td class="muted">调整夹具基准面并复测</td>
+  <td><b style="font-weight:600">何工</b> <span class="mono" style="font-size:9px">11-05</span><div class="cell-2">→ 王工 · 11-15</div></td>
+  <td><span class="tag ok">1</span></td>
+  <td><span class="st info">装配中</span></td>
+</tr>
+<tr data-go="detail">
+  <td class="mono">P7391-002</td>
+  <td class="mono">P7391101</td>
+  <td>安全门开关接触不良</td>
+  <td class="muted">紧固张紧轮后连续运行观察</td>
+  <td><b style="font-weight:600">蒋工</b> <span class="mono" style="font-size:9px">11-03</span><div class="cell-2">→ 王工/赵工 · 11-07</div></td>
+  <td><span class="muted">—</span></td>
+  <td><span class="st info">装配中</span></td>
+</tr>
+<tr data-go="detail">
+  <td class="mono">P7391-003</td>
+  <td class="mono">P7391102</td>
+  <td>输送带安装间距不足</td>
+  <td class="muted">重新固定防护网间隙并做气密测试</td>
+  <td><b style="font-weight:600">曹工</b> <span class="mono" style="font-size:9px">11-03</span><div class="cell-2">→ 王工/赵工 · 11-01</div></td>
+  <td><span class="muted">—</span></td>
+  <td><span class="st info">装配中</span> <span class="tag ng">倒挂</span></td>
+</tr>
+<tr data-go="detail">
+  <td class="mono">P7391-004</td>
+  <td class="mono">P7391102</td>
+  <td>安全门开关接触不良</td>
+  <td class="muted">紧固张紧轮后连续运行观察</td>
+  <td><b style="font-weight:600">曹工</b> <span class="mono" style="font-size:9px">11-03</span><div class="cell-2">→ 王工/赵工 · 11-07</div></td>
+  <td><span class="muted">—</span></td>
+  <td><span class="st info">装配中</span></td>
+</tr>
+<tr data-go="detail">
+  <td class="mono">P7391-005</td>
+  <td class="mono">P7391103</td>
+  <td>扫码枪插入困难</td>
+  <td class="muted">修配防护网间隙后连续运行观察</td>
+  <td><span class="muted">设计 /</span><div class="cell-2">→ 孙工 · 11-07</div></td>
+  <td><span class="muted">—</span></td>
+  <td><span class="st info">装配中</span> <span class="tag warn">空缺</span></td>
+</tr>
+<tr data-go="detail">
+  <td class="mono">P7391-006</td>
+  <td class="mono">P7391104</td>
+  <td>拖链复位不畅</td>
+  <td class="muted">调试</td>
+  <td><span class="muted">设计 /</span><div class="cell-2">→ 王工/陈工 · 11-15</div></td>
+  <td><span class="muted">—</span></td>
+  <td><span class="st info">装配中</span> <span class="tag warn">空缺</span></td>
+</tr>
+<tr data-go="detail">
+  <td class="mono">P7391-007</td>
+  <td class="mono">P7391104</td>
+  <td>安全门开关接触不良</td>
+  <td class="muted">紧固张紧轮后连续运行观察</td>
+  <td><b style="font-weight:600">曹工</b> <span class="mono" style="font-size:9px">11-03</span><div class="cell-2">→ 王工/赵工 · 11-07</div></td>
+  <td><span class="muted">—</span></td>
+  <td><span class="st info">装配中</span></td>
+</tr>
+<tr data-go="detail">
+  <td class="mono">P7391-008</td>
+  <td class="mono">P7391106</td>
+  <td>操作屏支架接触不良</td>
+  <td class="muted">调试</td>
+  <td><span class="muted">设计 /</span><div class="cell-2">→ 李工 · 11-07</div></td>
+  <td><span class="tag ok">4</span></td>
+  <td><span class="st info">装配中</span> <span class="tag warn">空缺</span></td>
+</tr>
+<tr data-go="detail">
+  <td class="mono">P7391-009</td>
+  <td class="mono">P7391106</td>
+  <td>接近开关信号偶发丢失</td>
+  <td class="muted">打磨传感器支架后连续运行观察</td>
+  <td><b style="font-weight:600">何工</b> <span class="mono" style="font-size:9px">11-05</span><div class="cell-2">→ 王工/冯工 · 11-01</div></td>
+  <td><span class="tag ok">2</span></td>
+  <td><span class="st info">装配中</span> <span class="tag ng">倒挂</span></td>
+</tr>
+<tr data-go="detail">
+  <td class="mono">P7391-010</td>
+  <td class="mono">P7391106</td>
+  <td>安全门开关安装间距不足</td>
+  <td class="muted">重新固定夹具基准面并复测</td>
+  <td><b style="font-weight:600">何工</b> <span class="tag warn">已下图</span><div class="cell-2">→ 王工/冯工 · 11-07</div></td>
+  <td><span class="muted">—</span></td>
+  <td><span class="st info">装配中</span> <span class="tag warn">文本</span></td>
+</tr>
+<tr data-go="detail">
+  <td class="mono">P7391-011</td>
+  <td class="mono">P7391107</td>
+  <td>防护罩安装孔位偏差</td>
+  <td class="muted">修配拖链导向并复核节拍</td>
+  <td><span class="muted">设计 /</span><div class="cell-2">→ 孙工/郑工 · 11-07</div></td>
+  <td><span class="muted">—</span></td>
+  <td><span class="st info">装配中</span> <span class="tag warn">空缺</span></td>
+</tr>
+<tr data-go="detail">
+  <td class="mono">P7391-012</td>
+  <td class="mono">P7391107</td>
+  <td>操作屏支架安装间距不足</td>
+  <td class="muted">更换线槽盖板并复核节拍</td>
+  <td><b style="font-weight:600">吴工</b> <span class="mono" style="font-size:9px">11-05</span><div class="cell-2">→ 王工/陈工 · 11-01</div></td>
+  <td><span class="muted">—</span></td>
+  <td><span class="st info">装配中</span> <span class="tag ng">倒挂</span></td>
+</tr>
+<tr data-go="detail">
+  <td class="mono">P7391-013</td>
+  <td class="mono">P7391108</td>
+  <td>拖链动作节拍偏慢</td>
+  <td class="muted">增加张紧轮并复核节拍</td>
+  <td><b style="font-weight:600">吴工</b> <span class="tag warn">已下图</span><div class="cell-2">→ 王工 · 11-07</div></td>
+  <td><span class="muted">—</span></td>
+  <td><span class="st info">装配中</span> <span class="tag warn">文本</span></td>
+</tr>
+<tr data-go="detail">
+  <td class="mono">P7391-014</td>
+  <td class="mono">P7391109</td>
+  <td>气路调压阀噪音偏大</td>
+  <td class="muted">更换防护网间隙后跑合调整线缆后连续运行观察</td>
+  <td><span class="muted">设计 /</span><div class="cell-2">→ 陈工 · 11-15</div></td>
+  <td><span class="muted">—</span></td>
+  <td><span class="st info">装配中</span> <span class="tag warn">空缺</span></td>
+</tr>
+<tr data-go="detail">
+  <td class="mono">P7391-015</td>
+  <td class="mono">P7391109</td>
+  <td>拖链接头轻微漏气</td>
+  <td class="muted">打磨定位销并复核节拍</td>
+  <td><b style="font-weight:600">张工</b> <span class="mono" style="font-size:9px">11-03</span><div class="cell-2">→ 王工/陈工 · 11-01</div></td>
+  <td><span class="muted">—</span></td>
+  <td><span class="st info">装配中</span> <span class="tag ng">倒挂</span></td>
+</tr>
+</tbody>
+                    </table>
+                  </div>
+                  <div class="card-f" style="margin:0;border-radius:0">
+                    <span class="tiny muted">共 36 条 · 每页 15 条</span>
+                    <span class="sp"></span>
+                    <div class="pager">
+                      <button class="pg" disabled>‹</button>
+                      <button class="pg on">1</button><button class="pg">2</button><button class="pg">3</button><button class="pg">4</button>
+                      <button class="pg">›</button>
+                      <span class="tiny muted">1–15 / 36</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 空态 -->
+              <div class="state-block" data-for="empty" data-display="contents">
+                <div class="card" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+                  <div class="empty-ico">▤</div>
+                  <div style="font-size:14px;font-weight:700">没有匹配的问题</div>
+                  <div class="tiny muted">试试清空关键词，或把“计划倒挂”快捷视图关掉。</div>
+                  <button class="btn ghost">清空筛选</button>
+                </div>
+              </div>
+
+              <!-- 加载态 -->
+              <div class="state-block" data-for="loading" data-display="contents">
+                <div class="card" style="flex:1;padding:0;overflow:hidden">
+                  <div class="skl-head"></div>
+                  <div class="skl-row"></div><div class="skl-row"></div><div class="skl-row"></div>
+                  <div class="skl-row"></div><div class="skl-row"></div><div class="skl-row"></div>
+                </div>
+              </div>
+            </main>
+          </div>
+          <footer class="app-foot">
+            <span>筛选结果 36 条</span>
+            <span>计划倒挂 5</span>
+            <span>责任人 21</span>
+            <span class="sp"></span>
+            <span class="mono">照片 12 张（演示）· 查询 18 ms</span>
+          </footer>
+        </div>
+      </section>
+
+      <!-- ==================== 04 问题详情 ==================== -->
+      <section class="page" data-page="detail" data-title="问题详情" data-group="工作台"
+               data-w="1440" data-h="900" data-states="default"
+               data-galaxy="Cards,Timeline,Forms,Attachments,Audit-log,Badges"
+               data-desc="一条问题的完整生命周期：四个阶段、责任人、计划、现场证据与修改留痕。"
+               data-points="顶部摘要卡固定机台/问题/措施，滚动时不丢上下文|阶段卡按业务顺序排，不按数据库字段排|右侧只放“会改变决策”的信息：倒挂、机台、审计">
+        <div class="app">
+          <header class="app-bar">
+            <div class="app-logo">▤</div>
+            <div class="app-title">P7391-009<span>问题详情 · P7391106</span></div>
+            <div class="app-status">
+              <span class="st info"><i class="dot"></i>装配中</span>
+              <span class="st ng"><i class="dot"></i>计划倒挂 4 天</span>
+            </div>
+            <div class="app-right">
+              <button class="btn ghost sm" data-go="issues">← 返回台账</button>
+              <button class="btn ghost sm" data-open="dlg-del">删除</button>
+              <button class="btn primary sm" data-open="dlg-stage">更新阶段</button>
+            </div>
+          </header>
+          <div class="app-body">
+            <nav class="app-nav">
+              <a class="nav-i" data-go="projects"><span>⌂</span>项目总览</a>
+              <a class="nav-i" data-go="main"><span>◈</span>工作台</a>
+              <a class="nav-i active" data-go="issues"><span>▤</span>问题台账<span class="n">36</span></a>
+              <a class="nav-i" data-go="import"><span>⇥</span>数据交换</a>
+              <a class="nav-i" data-go="report"><span>▦</span>统计报表</a>
+              <a class="nav-i" style="margin-top:auto" data-go="settings"><span>⚙</span>系统设置</a>
+            </nav>
+            <main class="app-main" style="gap:12px">
+              <!-- 摘要卡 -->
+              <div class="card" style="flex:0 0 auto;display:flex;align-items:flex-start;gap:14px">
+                <div class="detail-mark">09</div>
+                <div style="flex:1;min-width:0">
+                  <div class="detail-title">接近开关信号偶发丢失</div>
+                  <div class="detail-sub">机台 <b class="mono">P7391106</b> · 序号 5 · 源表第 12 行 · 创建于 11-23 09:12</div>
+                  <div class="detail-measure"><span class="dm-k">解决措施</span><span class="dm-v">打磨传感器支架后连续运行观察</span></div>
+                </div>
+                <div class="detail-side">
+                  <div class="ds-item"><span>设计下图</span><b>何工</b><em class="mono">2026-11-05</em></div>
+                  <div class="ds-item"><span>装配调试</span><b>王工 / 冯工</b><em class="mono">2026-11-01</em></div>
+                </div>
+              </div>
+
+              <div class="grid-detail" style="flex:1;min-height:0">
+                <!-- 左：四阶段 -->
+                <div class="card col" style="min-height:0;overflow:hidden">
+                  <div class="card-h"><span class="ci">◷</span><b>四阶段推进</b><span class="sp"></span><span class="tiny muted">空白 ≠ 不适用；“/”才是跳过</span></div>
+                  <div class="card-b" style="gap:0;overflow:auto">
+                    <div class="stageitem">
+                      <span class="sd"></span><span class="sn">方案确定</span>
+                      <span class="so">—<span class="muted">（未填责任人）</span></span>
+                      <span class="sdd">—</span><span class="muted">未填</span><span class="tag">空白</span>
+                    </div>
+                    <div class="stageitem done">
+                      <span class="sd">✓</span><span class="sn">设计下图</span>
+                      <span class="so">何工</span>
+                      <span class="sdd">2026-11-05</span><span class="muted">已完成</span><span class="tag ok">完成</span>
+                    </div>
+                    <div class="stageitem">
+                      <span class="sd"></span><span class="sn">物料准备</span>
+                      <span class="so">—<span class="muted">（未填责任人）</span></span>
+                      <span class="sdd">—</span><span class="muted">未填</span><span class="tag">空白</span>
+                    </div>
+                    <div class="stageitem cur">
+                      <span class="sd">●</span><span class="sn">装配调试</span>
+                      <span class="so">王工 / 冯工</span>
+                      <span class="sdd">2026-11-01</span><span class="muted">进行中</span><span class="tag ng">逾期</span>
+                    </div>
+
+                    <div class="stage-note">
+                      <div class="sn-h">阶段备注<span class="sp"></span><span class="tag">现场照片 2 张</span></div>
+                      <div class="sn-flex">
+                        <div class="sn-b">夹爪行程不足，机器人需多等 1.2 s 才能夹稳。已确认改大行程夹爪，不影响其他工位。</div>
+                        <div class="sn-photos">
+                          <a class="photo-thumb a" data-open="dlg-photo"><i class="pt-ico">▣</i><span class="pt-cap">夹爪间隙</span></a>
+                          <a class="photo-thumb b" data-open="dlg-photo"><i class="pt-ico">▣</i><span class="pt-cap">等待位</span></a>
+                        </div>
+                      </div>
+                      <div class="sn-meta"><span>记录人 王工</span><span>11-22 16:08</span><span class="tag">含现场照片 2 张</span></div>
+                    </div>
+
+                    <div class="stageflow">
+                      <div class="sf-t">推进规则（本系统固定）</div>
+                      <div class="sf-i"><b>1</b>前一阶段完成或标“/”后，后一阶段才允许填写实际完成日。</div>
+                      <div class="sf-i"><b>2</b>计划日可改，但每次修改必须填写原因并留痕。</div>
+                      <div class="sf-i"><b>3</b>装配计划日早于设计计划日时，保存即触发倒挂告警（不阻断）。</div>
+                    </div>
+                  </div>
+                  <div class="card-f">
+                    <span class="tiny muted">最近更新 11-22 16:08 · 王工</span>
+                    <span class="sp"></span>
+                    <button class="btn ghost sm" data-open="dlg-stage">填写阶段</button>
+                  </div>
+                </div>
+
+                <!-- 右：风险 / 机台 / 审计 -->
+                <div style="display:flex;flex-direction:column;gap:12px;min-height:0">
+                  <div class="card alert" style="flex:0 0 auto">
+                    <div class="card-h" style="margin-bottom:8px"><span class="ci">⚠</span><b>计划倒挂</b><span class="sp"></span><span class="tag ng">4 天</span></div>
+                    <div class="tiny" style="line-height:1.75">设计下图计划 <b class="mono">11-05</b>，装配调试计划 <b class="mono">11-01</b>。<br>按现计划，装配开始时设计图尚未下发。</div>
+                    <div class="card-f" style="margin:10px -12px -12px;padding:8px 12px"><button class="btn ghost sm" data-open="dlg-stage">调整计划日</button><span class="sp"></span><span class="tiny muted">5 条之一</span></div>
+                  </div>
+
+                  <div class="card" style="flex:0 0 auto">
+                    <div class="card-h"><span class="ci">▣</span><b>机台档案</b><span class="sp"></span><span class="tag">P7391106</span></div>
+                    <div class="kv">
+                      <span class="k">机台号</span><span class="v mono">P7391106</span>
+                      <span class="k">所属分项目</span><span class="v mono">P7391-01</span>
+                      <span class="k">台账序号</span><span class="v">5</span>
+                      <span class="k">同机台问题</span><span class="v">3 条（008 / 009 / 010）</span>
+                      <span class="k">主要责任人</span><span class="v">王工 / 冯工</span>
+                    </div>
+                  </div>
+
+                  <div class="card col" style="flex:1;min-height:0">
+                    <div class="card-h"><span class="ci">◷</span><b>修改留痕</b><span class="sp"></span><span class="mono tiny">4 条</span></div>
+                    <div class="card-b" style="overflow:auto">
+                      <div class="audit">
+                        <div class="au"><span class="ad"></span><div><b>修改装配计划日</b><div class="tiny muted">11-15 → 11-01 · 原因：与线体联调窗口对齐</div><div class="at mono">11-22 16:08 · 王工</div></div></div>
+                        <div class="au"><span class="ad"></span><div><b>上传现场照片 2 张</b><div class="tiny muted">夹爪与工件间隙、机器人等待位</div><div class="at mono">11-22 15:52 · 王工</div></div></div>
+                        <div class="au"><span class="ad"></span><div><b>填写阶段备注</b><div class="tiny muted">“夹爪行程不足…”</div><div class="at mono">11-22 15:50 · 王工</div></div></div>
+                        <div class="au"><span class="ad muted"></span><div><b>由 Excel 导入创建</b><div class="tiny muted">批次 IMP-20261123-01 · 源行 12</div><div class="at mono">11-23 09:12 · 系统</div></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+          <footer class="app-foot">
+            <span>ID P7391-009</span>
+            <span>分项目 P7391-01</span>
+            <span>源行 12</span>
+            <span class="sp"></span>
+            <span class="mono">照片 2 张（演示）· 最后保存 11-22 16:08</span>
+          </footer>
+        </div>
+      </section>

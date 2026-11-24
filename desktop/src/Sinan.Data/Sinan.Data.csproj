@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 数据层：SQLite DDL/仓储/种子 + Excel 双向通道（NPOI）。 -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Sinan.Data</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
+    <PackageReference Include="NPOI" Version="2.7.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 传递依赖漏洞修复：Microsoft.Data.Sqlite 10.0.0 带进 SQLitePCLRaw 2.1.11
+         （lib.e_sqlite3 有已知高危漏洞 GHSA-2m69-gcr7-jv3q），显式提升到 2.1.14。
+         注：NPOI 2.7.3 传递进来的 ImageSharp 2.x 与 Cryptography.* 漏洞暂不处理——
+         NPOI 2.8.x 已改用 SkiaSharp，但要求接受 OSMF EULA 商业许可，需单独评估后再升。 -->
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.14" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.14" />
+    <!-- NPOI 2.7.3 传递进来的旧版 Cryptography（8.0.1 / 8.0.2）有已知高危漏洞，
+         提升到 10.0.15（与 .NET 10 基线一致）。 -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.15" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.15" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 双端共享真源放在仓库 shared/，构建时嵌进程序集，运行时不依赖仓库路径。 -->
+    <EmbeddedResource Include="..\..\..\shared\db\schema.sql" LogicalName="Sinan.Data.Schema.sql" />
+    <EmbeddedResource Include="..\..\..\shared\db\seed\issues.seed.json" LogicalName="Sinan.Data.Seed.issues.seed.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sinan.Core\Sinan.Core.csproj" />
+  </ItemGroup>
+</Project>

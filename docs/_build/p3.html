@@ -1,0 +1,276 @@
+      <!-- ==================== 05 Excel 导入 ==================== -->
+      <section class="page" data-page="import" data-title="数据交换 · 导入" data-group="数据通道"
+               data-w="1440" data-h="900" data-states="default"
+               data-galaxy="Forms,Steps,Tables,Notifications,Badges"
+               data-desc="把客户原表安全地变成结构化台账：探测表头、映射列、校验、冲突预览、可回滚。"
+               data-points="四步固定，当前步高亮，已完成的步骤可回看|校验结果按“会阻断 / 仅提示”分开，不吓人|导入前必须看到将写入的条数与批次号">
+        <div class="app">
+          <header class="app-bar">
+            <div class="app-logo">⇥</div>
+            <div class="app-title">数据交换<span>导入 · 原表双向通道</span></div>
+            <div class="app-right">
+              <button class="btn ghost sm" data-go="main">← 工作台</button>
+              <button class="btn ghost sm" data-go="export">导出 ›</button>
+              <button class="btn ghost sm">下载模板</button>
+              <button class="btn primary sm" data-open="dlg-import-conflict">确认导入</button>
+            </div>
+          </header>
+          <div class="app-body">
+            <nav class="app-nav">
+              <a class="nav-i" data-go="projects"><span>⌂</span>项目总览</a>
+              <a class="nav-i" data-go="main"><span>◈</span>工作台</a>
+              <a class="nav-i" data-go="issues"><span>▤</span>问题台账<span class="n">36</span></a>
+              <a class="nav-i active" data-go="import"><span>⇥</span>数据交换</a>
+              <a class="nav-i" data-go="report"><span>▦</span>统计报表</a>
+              <a class="nav-i" style="margin-top:auto" data-go="settings"><span>⚙</span>系统设置</a>
+            </nav>
+            <main class="app-main" style="gap:12px">
+              <!-- 步骤条 -->
+              <div class="card" style="padding:12px 16px;flex:0 0 auto">
+                <div class="steps">
+                  <div class="step done"><span class="n">✓</span>选择文件</div><div class="step-line"></div>
+                  <div class="step done"><span class="n">✓</span>列映射</div><div class="step-line"></div>
+                  <div class="step cur"><span class="n">3</span>校验预览</div><div class="step-line"></div>
+                  <div class="step"><span class="n">4</span>确认导入</div>
+                  <span class="sp" style="flex:1"></span>
+                  <span class="tag on">批次 IMP-20261123-02</span>
+                </div>
+              </div>
+
+              <div class="grid-import" style="flex:1;min-height:0">
+                <!-- 左：源文件与摘要 -->
+                <div style="display:flex;flex-direction:column;gap:12px;min-height:0">
+                  <div class="card" style="flex:0 0 auto">
+                    <div class="card-h"><span class="ci">▤</span><b>源文件</b><span class="sp"></span><span class="tag ok">已读取</span></div>
+                    <div class="card-b">
+                      <div class="filebox">
+                        <div class="fb-ico">XLS</div>
+                        <div style="min-width:0;flex:1">
+                          <div class="fb-name">P7391_安装调试问题_演示.xlsx</div>
+                          <div class="fb-meta mono">D:\Sinan\inbox\ · 84.5 KB · 修改于 11-23 08:40</div>
+                        </div>
+                        <button class="btn ghost sm">更换</button>
+                      </div>
+                      <div class="kv" style="margin-top:2px">
+                        <span class="k">工作表</span><span class="v">P7391（唯一）</span>
+                        <span class="k">表头行</span><span class="v">第 3 行（自动探测，可改）</span>
+                        <span class="k">原始行数</span><span class="v">39 行</span>
+                        <span class="k">有效问题</span><span class="v"><b>36 条</b>（剔除 5 行空行 / 小计）</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="card col" style="flex:1;min-height:0">
+                    <div class="card-h"><span class="ci">▥</span><b>列映射</b><span class="sp"></span><span class="tag ok">12 / 12 已识别</span></div>
+                    <div class="card-b" style="overflow:auto;gap:0">
+                      <table class="tbl map-tbl">
+                        <thead><tr><th>原表列</th><th>系统字段</th><th>说明</th></tr></thead>
+                        <tbody>
+                          <tr><td>A 序号</td><td>序号</td><td class="muted">1–31，缺 7 / 19 / 28 / 33</td></tr>
+                          <tr><td>B 机台号</td><td>机台号</td><td class="muted">P7391xxx；1 处异常</td></tr>
+                          <tr><td>—（派生）</td><td>分项目号</td><td class="muted">1xx→P7391-01 · 2xx→02 · 3xx→03</td></tr>
+                          <tr><td>C 存在问题</td><td>问题标题</td><td class="muted">必填</td></tr>
+                          <tr><td>D 解决措施</td><td>解决措施</td><td class="muted">可空</td></tr>
+                          <tr><td>E / F 方案</td><td>方案确定 · 责任人 / 计划</td><td class="muted">全空</td></tr>
+                          <tr><td>G / H 设计</td><td>设计下图 · 责任人 / 计划</td><td class="muted">含 4 处“已下图”</td></tr>
+                          <tr><td>I / J 物料</td><td>物料准备 · 责任人 / 计划</td><td class="muted">全空</td></tr>
+                          <tr><td>K / L 装配</td><td>装配调试 · 责任人 / 计划</td><td class="muted">齐全</td></tr>
+                          <tr><td>M 状态</td><td>状态</td><td class="muted">全部“装配中”</td></tr>
+                          <tr><td>N 完成情况</td><td>完成情况</td><td class="muted">全部为空</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div class="card-f"><span class="tiny muted">自动映射按表头文字 + 相邻列组合判断</span><span class="sp"></span><button class="btn ghost sm">手动调整</button></div>
+                  </div>
+                </div>
+
+                <!-- 右：校验结果 -->
+                <div class="card col" style="min-height:0">
+                  <div class="card-h"><span class="ci">⚠</span><b>校验结果</b><span class="tag warn">2 类提示</span><span class="tag ok">0 条阻断</span><span class="sp"></span><span class="mono tiny">36 条</span></div>
+                  <div class="card-b" style="overflow:auto;gap:9px">
+                    <div class="valbox warn">
+                      <div class="vb-h"><span class="tag warn">提示</span><b>5 条计划倒挂</b><span class="sp"></span><span class="mono tiny">P7391-018 等</span></div>
+                      <div class="vb-b">设计下图计划日晚于装配调试计划日。导入不阻断，导入后在台账标红，需业务确认新日期。</div>
+                      <div class="vb-list">
+                        <span class="mono">003 设计 11-05 → 装配 11-03</span>
+                        <span class="mono">009 设计 11-05 → 装配 11-01</span>
+                        <span class="mono">012 设计 11-05 → 装配 11-01</span>
+                        <span class="mono">… 共 5 条</span>
+                      </div>
+                    </div>
+
+                    <div class="valbox warn">
+                      <div class="vb-h"><span class="tag warn">提示</span><b>4 处计划列是文字“已下图”</b><span class="sp"></span><span class="mono tiny">010 / 013 / 034 / 048</span></div>
+                      <div class="vb-b">无法参与日期比较。可选：原样保留并在界面标黄，或统一转换为“设计已完成”状态（不改写原表）。</div>
+                      <div class="vb-opts">
+                        <label class="chk on"><i>✓</i>原样保留 + 标黄</label>
+                        <label class="chk"><i></i>转成完成状态</label>
+                      </div>
+                    </div>
+
+                    <div class="valbox">
+                      <div class="vb-h"><span class="tag">信息</span><b>1 处机台号不符合规则</b><span class="sp"></span><span class="mono tiny">P73913118</span></div>
+                      <div class="vb-b">其余 29 台均为 P7391xxx。按原值导入，仅提示，不改写。</div>
+                    </div>
+
+                    <div class="valbox">
+                      <div class="vb-h"><span class="tag">信息</span><b>分项目自动归组</b><span class="sp"></span><span class="mono tiny">29 / 31 台</span></div>
+                      <div class="vb-b">按机台号百位段归入 P7391-01 / 02 / 03；P73913118 无法匹配，导入后进“待确认”，在分项目管理里人工归组。</div>
+                      <div class="vb-list">
+                        <span class="mono">1xx → P7391-01（10 台 / 15 条）</span>
+                        <span class="mono">2xx → P7391-02（8 台 / 8 条）</span>
+                        <span class="mono">3xx → P7391-03（12 台 / 12 条）</span>
+                      </div>
+                    </div>
+
+                    <div class="valbox ok">
+                      <div class="vb-h"><span class="tag ok">通过</span><b>必填与唯一性检查</b><span class="sp"></span><span class="mono tiny">36 / 36</span></div>
+                      <div class="vb-b">ID 无重复、机台号非空、问题标题非空；源行号已记录，可逐行回溯原表。</div>
+                    </div>
+
+                    <div class="valbox">
+                      <div class="vb-h"><span class="tag">信息</span><b>完成情况 0 / 36</b><span class="sp"></span><span class="mono tiny">全空</span></div>
+                      <div class="vb-b">导入后全部按“未完成”处理；后续在详情页或手机端推进。</div>
+                    </div>
+                  </div>
+                  <div class="card-f">
+                    <span class="tiny muted">导入可整批回滚，原 xls 永不被修改</span>
+                    <span class="sp"></span>
+                    <button class="btn ghost sm">导出校验报告</button>
+                    <button class="btn primary sm" data-open="dlg-import-conflict">下一步</button>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+          <footer class="app-foot">
+            <span>批次 IMP-20261123-02</span>
+            <span>模式：新增 + 更新（按 ID 匹配）</span>
+            <span>分项目 3 个 · 1 台待确认</span>
+            <span class="sp"></span>
+            <span class="mono">预览不写库</span>
+          </footer>
+        </div>
+      </section>
+
+      <!-- ==================== 06 导出中心 ==================== -->
+      <section class="page" data-page="export" data-title="数据交换 · 导出" data-group="数据通道"
+               data-w="1440" data-h="900" data-states="default"
+               data-galaxy="Forms,Tables,Switches,Preview"
+               data-desc="导出不是“另存为”：按客户原表版式回写，或出标准明细与统计汇总。"
+               data-points="版式三选一，右侧实时预览列序|危险选项（覆盖原文件）默认关闭并单独确认|导出完成后给出文件路径与“打开所在文件夹”">
+        <div class="app">
+          <header class="app-bar">
+            <div class="app-logo">⇤</div>
+            <div class="app-title">数据交换<span>导出 · 原表版式</span></div>
+            <div class="app-right">
+              <button class="btn ghost sm" data-go="main">← 工作台</button>
+              <button class="btn ghost sm" data-go="import">‹ 导入</button>
+              <button class="btn ghost sm" data-go="report">统计报表</button>
+              <button class="btn primary sm" data-open="dlg-export">开始导出</button>
+            </div>
+          </header>
+          <div class="app-body">
+            <nav class="app-nav">
+              <a class="nav-i" data-go="projects"><span>⌂</span>项目总览</a>
+              <a class="nav-i" data-go="main"><span>◈</span>工作台</a>
+              <a class="nav-i" data-go="issues"><span>▤</span>问题台账<span class="n">36</span></a>
+              <a class="nav-i active" data-go="export"><span>⇥</span>数据交换</a>
+              <a class="nav-i" data-go="report"><span>▦</span>统计报表</a>
+              <a class="nav-i" style="margin-top:auto" data-go="settings"><span>⚙</span>系统设置</a>
+            </nav>
+            <main class="app-main" style="gap:12px">
+              <div class="grid-export" style="flex:1;min-height:0">
+                <!-- 左：选项 -->
+                <div style="display:flex;flex-direction:column;gap:12px;min-height:0;overflow:auto">
+                  <div class="card" style="flex:0 0 auto">
+                    <div class="card-h"><span class="ci">◫</span><b>导出范围</b><span class="sp"></span><span class="tag on">当前筛选</span></div>
+                    <div class="card-b" style="gap:8px">
+                      <label class="opt on"><span class="rd"></span><div><b>当前筛选结果</b><div class="tiny muted">36 条 · 与台账当前条件一致</div></div></label>
+                      <label class="opt"><span class="rd"></span><div><b>全部问题</b><div class="tiny muted">36 条 · 忽略筛选</div></div></label>
+                      <label class="opt"><span class="rd"></span><div><b>仅计划倒挂</b><div class="tiny muted">5 条 · 用于专项协调会</div></div></label>
+                      <label class="opt"><span class="rd"></span><div><b>有现场照片的问题</b><div class="tiny muted">6 条 · 附照片清单与缩略图</div></div><span class="tag ok">演示</span></label>
+                      <label class="opt"><span class="rd"></span><div><b>选中行</b><div class="tiny muted">0 条 · 先在台账勾选</div></div></label>
+                    </div>
+                  </div>
+
+                  <div class="card" style="flex:0 0 auto">
+                    <div class="card-h"><span class="ci">▤</span><b>输出格式</b><span class="sp"></span><span class="tag">xlsx</span></div>
+                    <div class="card-b" style="gap:8px">
+                      <label class="opt on"><span class="rd"></span><div><b>客户原表版式</b><div class="tiny muted">保留合并表头、四阶段分组、列序与列宽</div></div><span class="tag ok">推荐</span></label>
+                      <label class="opt"><span class="rd"></span><div><b>标准明细表</b><div class="tiny muted">一行一条，阶段拆成独立列，便于二次分析</div></div></label>
+                      <label class="opt"><span class="rd"></span><div><b>统计汇总</b><div class="tiny muted">责任人负载、阶段填写率、倒挂清单</div></div></label>
+                      <label class="opt"><span class="rd"></span><div><b>照片包 ZIP</b><div class="tiny muted">按问题分文件夹 + manifest.csv，Excel 里只写照片数</div></div><span class="tag ok">含附件</span></label>
+                    </div>
+                  </div>
+
+                  <div class="card" style="flex:0 0 auto">
+                    <div class="card-h"><span class="ci">⚙</span><b>选项</b><span class="sp"></span><span class="mono tiny">默认值已按现场习惯</span></div>
+                    <div class="card-b" style="gap:9px">
+                      <div class="row"><span style="flex:1">倒挂 / 逾期行标红</span><span class="sw on"></span></div>
+                      <div class="row"><span style="flex:1">保留“/”与空白差异</span><span class="sw on"></span></div>
+                      <div class="row"><span style="flex:1">附“修改留痕”工作表</span><span class="sw on"></span></div>
+                      <div class="row"><span style="flex:1">附照片清单 manifest.csv</span><span class="sw on"></span></div>
+                      <div class="row"><span style="flex:1">附“字段说明”工作表</span><span class="sw"></span></div>
+                      <div class="row" style="padding-top:4px;border-top:1px solid var(--sepline)"><span style="flex:1;color:var(--ng);font-weight:600">覆盖原始 xls 文件</span><span class="sw"></span></div>
+                      <div class="tiny muted">覆盖原文件需要二次确认，且会先在同目录生成 .bak 备份。</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 右：预览 -->
+                <div class="card col" style="min-height:0">
+                  <div class="card-h"><span class="ci">◉</span><b>版式预览</b><span class="sp"></span><span class="tag">前 4 行</span><span class="tiny muted">列宽按原表比例</span></div>
+                  <div class="card-b" style="overflow:auto;gap:10px">
+                    <div class="mini-sheet">
+                      <table>
+                        <tr>
+                          <th rowspan="2" style="width:34px">序号</th>
+                          <th rowspan="2" style="width:74px">机台号</th>
+                          <th rowspan="2" style="min-width:150px">存在问题</th>
+                          <th rowspan="2" style="min-width:140px">解决措施</th>
+                          <th colspan="2" class="grp">方案确定</th>
+                          <th colspan="2" class="grp">设计下图</th>
+                          <th colspan="2" class="grp">物料准备</th>
+                          <th colspan="2" class="grp">装配调试</th>
+                          <th rowspan="2" style="width:52px">状态</th>
+                          <th rowspan="2" style="width:56px">完成情况</th>
+                        </tr>
+                        <tr>
+                          <th>责任人</th><th>计划</th><th>责任人</th><th>计划</th>
+                          <th>责任人</th><th>计划</th><th>责任人</th><th>计划</th>
+                        </tr>
+                        <tr><td class="m">1</td><td class="mono">P7391101</td><td>伺服电机复位不畅</td><td>调整夹具基准面并复测</td><td class="m"></td><td class="m"></td><td>何工</td><td class="mono">11.5</td><td class="m"></td><td class="m"></td><td>王工</td><td class="mono">11.15</td><td class="m">装配中</td><td class="m"></td></tr>
+                        <tr><td class="m">1</td><td class="mono">P7391101</td><td>安全门开关接触不良</td><td>紧固张紧轮后连续运行观察</td><td class="m"></td><td class="m"></td><td>蒋工</td><td class="mono">11.3</td><td class="m"></td><td class="m"></td><td>王工/赵工</td><td class="mono">11.7</td><td class="m">装配中</td><td class="m"></td></tr>
+                        <tr><td class="m">2</td><td class="mono">P7391102</td><td>输送带安装间距不足</td><td>重新固定防护网间隙并做气密测试</td><td class="m"></td><td class="m"></td><td>曹工</td><td class="mono" style="color:var(--ng)">11.3</td><td class="m"></td><td class="m"></td><td>王工/赵工</td><td class="mono" style="color:var(--ng)">11.1</td><td class="m">装配中</td><td class="m"></td></tr>
+                        <tr><td class="m">2</td><td class="mono">P7391102</td><td>安全门开关接触不良</td><td>紧固张紧轮后连续运行观察</td><td class="m"></td><td class="m"></td><td>曹工</td><td class="mono">11.3</td><td class="m"></td><td class="m"></td><td>王工/赵工</td><td class="mono">11.7</td><td class="m">装配中</td><td class="m"></td></tr>
+                      </table>
+                    </div>
+                    <div class="row" style="gap:8px;align-items:flex-start">
+                      <div class="tag ok">合并表头</div><div class="tag ok">四阶段分组</div><div class="tag ok">列宽保持</div><div class="tag">倒挂标红</div>
+                      <span class="sp"></span>
+                      <span class="tiny muted">预览为静态示意，实际列宽按源表映射</span>
+                    </div>
+                    <div class="card inset" style="margin-top:auto">
+                      <div class="tiny" style="line-height:1.8"><b>回写规则</b>：按 ID 匹配已有行 → 更新四阶段与状态；原表有、系统无的行 → 新增；系统有、原表无的行 → 保留并在报告里列出，不擅自删除。<br><b>照片规则</b>：图片不写进 Excel 单元格，导出 ZIP（photos/P7391-xxx/）+ manifest.csv（问题号、文件名、拍摄时间、SHA256）。</div>
+                    </div>
+                  </div>
+                  <div class="card-f">
+                    <span>将导出 <b>36</b> 条 · 3 个工作表 · 照片 12 张（演示）</span>
+                    <span class="sp"></span>
+                    <span class="mono tiny">D:\Sinan\outbox\</span>
+                    <button class="btn primary sm" data-open="dlg-export">开始导出</button>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+          <footer class="app-foot">
+            <span>导出不修改数据库</span>
+            <span>覆盖原文件需二次确认</span>
+            <span>照片另出 ZIP + manifest.csv</span>
+            <span class="sp"></span>
+            <span class="mono">NPOI · 无需安装 Office</span>
+          </footer>
+        </div>
+      </section>

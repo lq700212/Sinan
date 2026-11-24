@@ -1,0 +1,1586 @@
+[
+  {
+    "id": "P7391-001",
+    "seq": "6",
+    "machine": "P7391101",
+    "title": "急停按钮噪音偏大",
+    "solution": "修配拖链导向并复核节拍",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "design": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      }
+    },
+    "status": "待分派",
+    "completion": "",
+    "source_row": 4
+  },
+  {
+    "id": "P7391-002",
+    "seq": "15",
+    "machine": "P7391102",
+    "title": "接地线束与门板干涉",
+    "solution": "重新固定拖链导向后连续运行观察",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "design": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      }
+    },
+    "status": "待分派",
+    "completion": "",
+    "source_row": 5
+  },
+  {
+    "id": "P7391-003",
+    "seq": "38",
+    "machine": "P7391103",
+    "title": "拖链接头轻微漏气",
+    "solution": "调整气路接头并复核节拍",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "design": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      }
+    },
+    "status": "待分派",
+    "completion": "",
+    "source_row": 6
+  },
+  {
+    "id": "P7391-004",
+    "seq": "12",
+    "machine": "P7391104",
+    "title": "工件定位夹具运行时异响",
+    "solution": "增加张紧轮并复核节拍",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "吴工",
+        "due": "2026-12-15",
+        "raw_due": "12.15",
+        "note": "",
+        "state": "in_progress"
+      },
+      "design": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      }
+    },
+    "status": "方案中",
+    "completion": "",
+    "source_row": 7
+  },
+  {
+    "id": "P7391-005",
+    "seq": "5",
+    "machine": "P7391105",
+    "title": "拖链动作节拍偏慢",
+    "solution": "校正线缆后连续运行观察",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "韩工",
+        "due": "2026-12-02",
+        "raw_due": "12.2",
+        "note": "",
+        "state": "in_progress"
+      },
+      "design": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      }
+    },
+    "status": "方案中",
+    "completion": "",
+    "source_row": 8
+  },
+  {
+    "id": "P7391-006",
+    "seq": "1",
+    "machine": "P7391106",
+    "title": "定位销跑偏",
+    "solution": "紧固气路接头并做气密测试",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "朱工",
+        "due": "2026-12-02",
+        "raw_due": "12.2",
+        "note": "",
+        "state": "in_progress"
+      },
+      "design": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      }
+    },
+    "status": "方案中",
+    "completion": "",
+    "source_row": 9
+  },
+  {
+    "id": "P7391-007",
+    "seq": "32",
+    "machine": "P7391107",
+    "title": "拖链标识不清晰",
+    "solution": "重新固定夹具基准面并复测",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "丁工",
+        "due": "2026-12-05",
+        "raw_due": "12.5",
+        "note": "",
+        "state": "in_progress"
+      },
+      "design": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      }
+    },
+    "status": "方案中",
+    "completion": "",
+    "source_row": 10
+  },
+  {
+    "id": "P7391-008",
+    "seq": "34",
+    "machine": "P7391108",
+    "title": "线槽盖板读取率偏低",
+    "solution": "紧固接地线并复核节拍",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "周工",
+        "due": "2026-11-25",
+        "raw_due": "11.25",
+        "note": "",
+        "state": "in_progress"
+      },
+      "design": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      }
+    },
+    "status": "方案中",
+    "completion": "",
+    "source_row": 11
+  },
+  {
+    "id": "P7391-009",
+    "seq": "37",
+    "machine": "P7391109",
+    "title": "安全门开关安装间距不足",
+    "solution": "校正锁扣并复测",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "张工",
+        "due": "2026-11-15",
+        "raw_due": "11.15",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "周工",
+        "due": "2026-12-15",
+        "raw_due": "12.15",
+        "note": "",
+        "state": "in_progress"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      }
+    },
+    "status": "设计中",
+    "completion": "",
+    "source_row": 12
+  },
+  {
+    "id": "P7391-010",
+    "seq": "8",
+    "machine": "P7391110",
+    "title": "线槽盖板跑偏",
+    "solution": "修配门板间隙后连续运行观察",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "许工",
+        "due": "2026-11-15",
+        "raw_due": "11.15",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "吴工",
+        "due": "2026-12-08",
+        "raw_due": "12.8",
+        "note": "",
+        "state": "in_progress"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      }
+    },
+    "status": "设计中",
+    "completion": "",
+    "source_row": 13
+  },
+  {
+    "id": "P7391-011",
+    "seq": "39",
+    "machine": "P7391201",
+    "title": "电控柜风扇压力波动",
+    "solution": "打磨定位销并复核节拍",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "王工",
+        "due": "2026-11-10",
+        "raw_due": "11.10",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "赵工",
+        "due": "2026-12-05",
+        "raw_due": "12.5",
+        "note": "",
+        "state": "in_progress"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      }
+    },
+    "status": "设计中",
+    "completion": "",
+    "source_row": 14
+  },
+  {
+    "id": "P7391-012",
+    "seq": "11",
+    "machine": "P7391202",
+    "title": "防护网晃动",
+    "solution": "紧固门板间隙并复核节拍",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "冯工",
+        "due": "2026-11-03",
+        "raw_due": "11.3",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "陈工",
+        "due": "2026-11-28",
+        "raw_due": "11.28",
+        "note": "",
+        "state": "in_progress"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      }
+    },
+    "status": "设计中",
+    "completion": "",
+    "source_row": 15
+  },
+  {
+    "id": "P7391-013",
+    "seq": "3",
+    "machine": "P7391203",
+    "title": "气缸锁扣松动",
+    "solution": "重新固定防护网间隙并做气密测试",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "丁工",
+        "due": "2026-11-03",
+        "raw_due": "11.3",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "陈工",
+        "due": "2026-12-12",
+        "raw_due": "12.12",
+        "note": "",
+        "state": "in_progress"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      }
+    },
+    "status": "设计中",
+    "completion": "",
+    "source_row": 16
+  },
+  {
+    "id": "P7391-014",
+    "seq": "20",
+    "machine": "P7391204",
+    "title": "伺服电机复位不畅",
+    "solution": "调整张紧轮并复测",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "韩工",
+        "due": "2026-11-20",
+        "raw_due": "11.20",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "魏工",
+        "due": "2026-11-25",
+        "raw_due": "11.25",
+        "note": "",
+        "state": "in_progress"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      }
+    },
+    "status": "设计中",
+    "completion": "",
+    "source_row": 17
+  },
+  {
+    "id": "P7391-015",
+    "seq": "35",
+    "machine": "P7391205",
+    "title": "工件定位夹具晃动",
+    "solution": "修配接地线后连续运行观察",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "周工",
+        "due": "2026-11-05",
+        "raw_due": "11.5",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "李工",
+        "due": "2026-11-07",
+        "raw_due": "11.7",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "周工",
+        "due": "2026-11-18",
+        "raw_due": "11.18",
+        "note": "",
+        "state": "in_progress"
+      }
+    },
+    "status": "装配中",
+    "completion": "",
+    "source_row": 18
+  },
+  {
+    "id": "P7391-016",
+    "seq": "36",
+    "machine": "P7391206",
+    "title": "气路调压阀插入困难",
+    "solution": "打磨门板间隙并复核节拍",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "陈工",
+        "due": "2026-11-20",
+        "raw_due": "11.20",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "韩工",
+        "due": null,
+        "raw_due": "已下图",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "萧工",
+        "due": "2026-12-08",
+        "raw_due": "12.8",
+        "note": "",
+        "state": "in_progress"
+      }
+    },
+    "status": "装配中",
+    "completion": "",
+    "source_row": 19
+  },
+  {
+    "id": "P7391-017",
+    "seq": "26",
+    "machine": "P7391207",
+    "title": "安全门开关接触不良",
+    "solution": "调整接地线后跑合验证",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "王工",
+        "due": "2026-11-05",
+        "raw_due": "11.5",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "朱工",
+        "due": "2026-11-10",
+        "raw_due": "11.10",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "吴工",
+        "due": "2026-11-18",
+        "raw_due": "11.18",
+        "note": "",
+        "state": "in_progress"
+      }
+    },
+    "status": "装配中",
+    "completion": "",
+    "source_row": 20
+  },
+  {
+    "id": "P7391-018",
+    "seq": "27",
+    "machine": "P7391208",
+    "title": "接近开关动作节拍偏慢",
+    "solution": "紧固张紧轮后连续运行观察",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "郑工",
+        "due": "2026-11-03",
+        "raw_due": "11.3",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "邓工",
+        "due": "2026-11-15",
+        "raw_due": "11.15",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "曹工",
+        "due": "2026-11-03",
+        "raw_due": "11.3",
+        "note": "",
+        "state": "in_progress"
+      }
+    },
+    "status": "装配中",
+    "completion": "",
+    "source_row": 21
+  },
+  {
+    "id": "P7391-019",
+    "seq": "10",
+    "machine": "P7391301",
+    "title": "料仓门锁晃动",
+    "solution": "增加气路接头后跑合验证",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "何工/韩工",
+        "due": "2026-11-20",
+        "raw_due": "11.20",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "郑工",
+        "due": "2026-11-10",
+        "raw_due": "11.10",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "蒋工",
+        "due": "2026-12-02",
+        "raw_due": "12.2",
+        "note": "",
+        "state": "in_progress"
+      }
+    },
+    "status": "装配中",
+    "completion": "",
+    "source_row": 22
+  },
+  {
+    "id": "P7391-020",
+    "seq": "29",
+    "machine": "P7391302",
+    "title": "接近开关信号偶发丢失",
+    "solution": "清理线缆后跑合验证",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "丁工",
+        "due": "2026-11-10",
+        "raw_due": "11.10",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "魏工",
+        "due": "2026-11-12",
+        "raw_due": "11.12",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "郑工",
+        "due": "2026-11-10",
+        "raw_due": "11.10",
+        "note": "",
+        "state": "in_progress"
+      }
+    },
+    "status": "装配中",
+    "completion": "",
+    "source_row": 23
+  },
+  {
+    "id": "P7391-021",
+    "seq": "4",
+    "machine": "P7391303",
+    "title": "操作屏支架晃动",
+    "solution": "校正密封圈后连续运行观察",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "蒋工",
+        "due": "2026-11-03",
+        "raw_due": "11.3",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "蒋工",
+        "due": null,
+        "raw_due": "已下图",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "吴工",
+        "due": "2026-11-03",
+        "raw_due": "11.3",
+        "note": "",
+        "state": "in_progress"
+      }
+    },
+    "status": "装配中",
+    "completion": "",
+    "source_row": 24
+  },
+  {
+    "id": "P7391-022",
+    "seq": "2",
+    "machine": "P7391304",
+    "title": "电控柜风扇固定不牢",
+    "solution": "修配安装孔位并复测",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "叶工",
+        "due": "2026-11-10",
+        "raw_due": "11.10",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "郑工",
+        "due": "2026-11-15",
+        "raw_due": "11.15",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "李工",
+        "due": "2026-12-15",
+        "raw_due": "12.15",
+        "note": "",
+        "state": "in_progress"
+      }
+    },
+    "status": "装配中",
+    "completion": "",
+    "source_row": 25
+  },
+  {
+    "id": "P7391-023",
+    "seq": "16",
+    "machine": "P7391305",
+    "title": "料仓门锁标识不清晰",
+    "solution": "更换拖链导向并复测",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "陈工",
+        "due": "2026-11-10",
+        "raw_due": "11.10",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "薛工",
+        "due": "2026-11-12",
+        "raw_due": "11.12",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "程工",
+        "due": "2026-11-15",
+        "raw_due": "11.15",
+        "note": "",
+        "state": "in_progress"
+      }
+    },
+    "status": "装配中",
+    "completion": "",
+    "source_row": 26
+  },
+  {
+    "id": "P7391-024",
+    "seq": "23",
+    "machine": "P7391306",
+    "title": "线槽盖板晃动",
+    "solution": "增加防护网间隙并做气密测试",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "程工",
+        "due": "2026-11-10",
+        "raw_due": "11.10",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "程工",
+        "due": "2026-11-07",
+        "raw_due": "11.7",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "李工",
+        "due": "2026-11-07",
+        "raw_due": "11.7",
+        "note": "",
+        "state": "in_progress"
+      }
+    },
+    "status": "装配中",
+    "completion": "",
+    "source_row": 27
+  },
+  {
+    "id": "P7391-025",
+    "seq": "25",
+    "machine": "P7391307",
+    "title": "扫码枪信号偶发丢失",
+    "solution": "打磨传感器支架后连续运行观察",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "陈工",
+        "due": "2026-11-03",
+        "raw_due": "11.3",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "薛工",
+        "due": "2026-11-05",
+        "raw_due": "11.5",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "许工",
+        "due": "2026-12-12",
+        "raw_due": "12.12",
+        "note": "",
+        "state": "in_progress"
+      }
+    },
+    "status": "装配中",
+    "completion": "",
+    "source_row": 28
+  },
+  {
+    "id": "P7391-026",
+    "seq": "9",
+    "machine": "P7391308",
+    "title": "输送带安装间距不足",
+    "solution": "更换防护网间隙后跑合验证",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "许工",
+        "due": "2026-11-03",
+        "raw_due": "11.3",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "萧工",
+        "due": null,
+        "raw_due": "已下图",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "秦工",
+        "due": "2026-11-03",
+        "raw_due": "11.3",
+        "note": "",
+        "state": "done"
+      }
+    },
+    "status": "待验证",
+    "completion": "",
+    "source_row": 29
+  },
+  {
+    "id": "P7391-027",
+    "seq": "40",
+    "machine": "P7391309",
+    "title": "防护罩安装孔位偏差",
+    "solution": "紧固防护网间隙后跑合验证",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "周工",
+        "due": "2026-11-12",
+        "raw_due": "11.12",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "蒋工",
+        "due": "2026-11-03",
+        "raw_due": "11.3",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "张工",
+        "due": "2026-11-15",
+        "raw_due": "11.15",
+        "note": "",
+        "state": "done"
+      }
+    },
+    "status": "待验证",
+    "completion": "已更换并连续运行 2 小时无异常",
+    "source_row": 30
+  },
+  {
+    "id": "P7391-028",
+    "seq": "13",
+    "machine": "P7391310",
+    "title": "输送带信号偶发丢失",
+    "solution": "清理风扇减震垫后跑合验证",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "曹工/蒋工",
+        "due": "2026-11-15",
+        "raw_due": "11.15",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "张工",
+        "due": "2026-11-05",
+        "raw_due": "11.5",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "朱工",
+        "due": "2026-11-15",
+        "raw_due": "11.15",
+        "note": "",
+        "state": "done"
+      }
+    },
+    "status": "待验证",
+    "completion": "",
+    "source_row": 31
+  },
+  {
+    "id": "P7391-029",
+    "seq": "21",
+    "machine": "P7391311",
+    "title": "光电传感器锁扣松动",
+    "solution": "调整夹具基准面并复测",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "魏工",
+        "due": "2026-11-18",
+        "raw_due": "11.18",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "冯工",
+        "due": "2026-11-07",
+        "raw_due": "11.7",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "吴工",
+        "due": "2026-11-15",
+        "raw_due": "11.15",
+        "note": "",
+        "state": "done"
+      }
+    },
+    "status": "待验证",
+    "completion": "已处理，观察中",
+    "source_row": 32
+  },
+  {
+    "id": "P7391-030",
+    "seq": "18",
+    "machine": "P7391312",
+    "title": "气路调压阀噪音偏大",
+    "solution": "打磨定位销并做气密测试",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "秦工",
+        "due": "2026-11-05",
+        "raw_due": "11.5",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "冯工",
+        "due": "2026-11-20",
+        "raw_due": "11.20",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "许工",
+        "due": "2026-11-12",
+        "raw_due": "11.12",
+        "note": "",
+        "state": "done"
+      }
+    },
+    "status": "待验证",
+    "completion": "",
+    "source_row": 33
+  },
+  {
+    "id": "P7391-031",
+    "seq": "31",
+    "machine": "P73913118",
+    "title": "操作屏支架接触不良",
+    "solution": "重新固定锁扣并复核节拍",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "杨工",
+        "due": "2026-11-15",
+        "raw_due": "11.15",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "丁工",
+        "due": null,
+        "raw_due": "已下图",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "赵工",
+        "due": "2026-11-05",
+        "raw_due": "11.5",
+        "note": "",
+        "state": "done"
+      }
+    },
+    "status": "已关闭",
+    "completion": "已按措施处理，现场复测正常",
+    "source_row": 34
+  },
+  {
+    "id": "P7391-032",
+    "seq": "14",
+    "machine": "P7391101",
+    "title": "操作屏支架安装间距不足",
+    "solution": "更换线槽盖板并复核节拍",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "邓工",
+        "due": "2026-11-12",
+        "raw_due": "11.12",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "王工",
+        "due": "2026-11-05",
+        "raw_due": "11.5",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "程工",
+        "due": "2026-11-12",
+        "raw_due": "11.12",
+        "note": "",
+        "state": "done"
+      }
+    },
+    "status": "已关闭",
+    "completion": "已更换并连续运行 2 小时无异常",
+    "source_row": 35
+  },
+  {
+    "id": "P7391-033",
+    "seq": "22",
+    "machine": "P7391102",
+    "title": "气管信号偶发丢失",
+    "solution": "修配防护网间隙后连续运行观察",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "程工",
+        "due": "2026-11-15",
+        "raw_due": "11.15",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "魏工",
+        "due": "2026-11-18",
+        "raw_due": "11.18",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "曹工",
+        "due": "2026-11-07",
+        "raw_due": "11.7",
+        "note": "",
+        "state": "done"
+      }
+    },
+    "status": "已关闭",
+    "completion": "已调整到位，待下次点检确认",
+    "source_row": 36
+  },
+  {
+    "id": "P7391-034",
+    "seq": "24",
+    "machine": "P7391103",
+    "title": "光电传感器安装间距不足",
+    "solution": "重新固定风扇减震垫并复核节拍",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "孙工",
+        "due": "2026-11-10",
+        "raw_due": "11.10",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "设计下图",
+        "owner": "程工",
+        "due": "2026-11-15",
+        "raw_due": "11.15",
+        "note": "",
+        "state": "done"
+      },
+      "material": {
+        "label": "物料准备",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "王工",
+        "due": "2026-11-07",
+        "raw_due": "11.7",
+        "note": "",
+        "state": "done"
+      }
+    },
+    "status": "已关闭",
+    "completion": "已处理，观察中",
+    "source_row": 37
+  },
+  {
+    "id": "P7391-035",
+    "seq": "17",
+    "machine": "P7391104",
+    "title": "气缸接触不良",
+    "solution": "标定传感器支架并复核节拍",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "萧工",
+        "due": "2026-11-15",
+        "raw_due": "11.15",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      }
+    },
+    "status": "已取消",
+    "completion": "",
+    "source_row": 38
+  },
+  {
+    "id": "P7391-036",
+    "seq": "30",
+    "machine": "P7391105",
+    "title": "接地线束复位不畅",
+    "solution": "调整线缆后连续运行观察",
+    "stages": {
+      "plan": {
+        "label": "方案确定",
+        "owner": "朱工",
+        "due": "2026-11-20",
+        "raw_due": "11.20",
+        "note": "",
+        "state": "done"
+      },
+      "design": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "material": {
+        "label": "方案确定",
+        "owner": "",
+        "due": null,
+        "raw_due": "",
+        "note": "",
+        "state": "not_started"
+      },
+      "assembly": {
+        "label": "装配调试",
+        "owner": "",
+        "due": null,
+        "raw_due": "/",
+        "note": "",
+        "state": "na"
+      }
+    },
+    "status": "已取消",
+    "completion": "",
+    "source_row": 39
+  }
+]

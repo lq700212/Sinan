@@ -1,0 +1,42 @@
+﻿<Application x:Class="Sinan.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ShutdownMode="OnExplicitShutdown">
+    <!--
+      合并字典顺序是契约：ThemeManager 只替换索引 0（主题键板），
+      控件样式与图标在索引 1/2，切主题不会重新解析样式（避免闪烁与重建）。
+      不要设 TextBlock 隐式样式：它会覆盖 ContentPresenter 里文字对按钮 Foreground 的继承，
+      导致暗色主题下按钮文字变深色（WPF 经典坑）。
+    -->
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Sinan.Light.xaml"/>
+                <ResourceDictionary Source="Themes/Sinan.Controls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style TargetType="ToolTip">
+                <Setter Property="Background" Value="{DynamicResource Brush.Panel}"/>
+                <Setter Property="Foreground" Value="{DynamicResource Brush.Fg}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="10,6"/>
+                <Setter Property="FontFamily" Value="{DynamicResource Font.Ui}"/>
+                <Setter Property="FontSize" Value="{DynamicResource Text.Size.Small}"/>
+                <Setter Property="HasDropShadow" Value="False"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ToolTip">
+                            <Border CornerRadius="10" Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

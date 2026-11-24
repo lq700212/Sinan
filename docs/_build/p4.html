@@ -1,0 +1,227 @@
+      <!-- ==================== 07 统计报表 ==================== -->
+      <section class="page" data-page="report" data-title="统计报表" data-group="数据通道"
+               data-w="1440" data-h="900" data-states="default"
+               data-galaxy="Charts,Cards,Tables,Badges"
+               data-desc="只统计系统里已有的字段：谁的任务最多、计划压在哪几天、四阶段填得怎么样。"
+               data-points="图表用横向条，不用饼图——25 个责任人饼图读不出名次|每个数字都标口径，避免“36 条”被误读成 36 台|底部给结论句，汇报时直接念">
+        <div class="app">
+          <header class="app-bar">
+            <div class="app-logo">▦</div>
+            <div class="app-title">统计报表<span>Analytics · 截至 11-23</span></div>
+            <div class="app-right">
+              <button class="btn ghost sm" data-go="main">← 工作台</button>
+              <button class="btn ghost sm" data-go="export">导出报表</button>
+              <button class="btn primary sm" data-go="issues">查看明细</button>
+            </div>
+          </header>
+          <div class="app-body">
+            <nav class="app-nav">
+              <a class="nav-i" data-go="projects"><span>⌂</span>项目总览</a>
+              <a class="nav-i" data-go="main"><span>◈</span>工作台</a>
+              <a class="nav-i" data-go="issues"><span>▤</span>问题台账<span class="n">36</span></a>
+              <a class="nav-i" data-go="import"><span>⇥</span>数据交换</a>
+              <a class="nav-i active"><span>▦</span>统计报表</a>
+              <a class="nav-i" style="margin-top:auto" data-go="settings"><span>⚙</span>系统设置</a>
+            </nav>
+            <main class="app-main" style="gap:12px">
+              <div class="kpis" style="flex:0 0 auto;grid-template-columns:repeat(4,1fr)">
+                <div class="kpi"><div class="k-l">问题总数</div><div class="k-v">36<span class="u">条</span></div><div class="k-s">源表 39 行 · 3 个分项目</div></div>
+                <div class="kpi"><div class="k-l">涉及机台</div><div class="k-v">31<span class="u">台</span></div><div class="k-s">缺 7 / 19 / 28 / 33 号 · 1 台待归组</div></div>
+                <div class="kpi warn"><div class="k-l">计划倒挂</div><div class="k-v">5<span class="u">条</span></div><div class="k-s">占 13.9%</div></div>
+                <div class="kpi ok"><div class="k-l">现场照片</div><div class="k-v">12<span class="u">张</span></div><div class="k-s">6 条问题 · 演示值</div></div>
+              </div>
+
+              <div class="grid-2" style="flex:1;min-height:0">
+                <!-- 左：责任人负载 -->
+                <div class="card col" style="min-height:0">
+                  <div class="card-h"><span class="ci">◍</span><b>责任人任务量</b><span class="sp"></span><span class="tag">按阶段计数</span></div>
+                  <div class="card-b" style="overflow:auto;gap:7px">
+                    <div class="barrow"><span class="nm">王工</span><div class="bar"><i style="width:100%"></i></div><span class="vv">6</span></div>
+                    <div class="barrow"><span class="nm">陈工</span><div class="bar"><i style="width:83.3%"></i></div><span class="vv">5</span></div>
+                    <div class="barrow"><span class="nm">孙工</span><div class="bar"><i style="width:83.3%"></i></div><span class="vv">5</span></div>
+                    <div class="barrow"><span class="nm">何工</span><div class="bar"><i style="width:66.7%"></i></div><span class="vv">4</span></div>
+                    <div class="barrow"><span class="nm">冯工</span><div class="bar"><i style="width:66.7%"></i></div><span class="vv">4</span></div>
+                    <div class="barrow"><span class="nm">赵工</span><div class="bar"><i style="width:50%"></i></div><span class="vv">3</span></div>
+                    <div class="barrow"><span class="nm">曹工</span><div class="bar"><i style="width:50%"></i></div><span class="vv">3</span></div>
+                    <div class="barrow"><span class="nm">吴工</span><div class="bar"><i style="width:50%"></i></div><span class="vv">3</span></div>
+                    <div class="barrow"><span class="nm">许工</span><div class="bar"><i style="width:33.3%"></i></div><span class="vv">2</span></div>
+                    <div class="barrow"><span class="nm">郑工</span><div class="bar"><i style="width:33.3%"></i></div><span class="vv">2</span></div>
+                    <div class="barrow"><span class="nm">程工</span><div class="bar"><i style="width:33.3%"></i></div><span class="vv">2</span></div>
+                    <div class="tiny muted" style="margin-top:auto;line-height:1.6">合计 101 个阶段任务 · 王工 6 项（7.3%），其余 14 人合计 43 项（52.4%）</div>
+                  </div>
+                  <div class="card-f"><span>25 位责任人</span><span class="sp"></span><span class="tag on">负载均衡</span></div>
+                </div>
+
+                <!-- 右：计划分布 -->
+                <div class="card col" style="min-height:0">
+                  <div class="card-h"><span class="ci">◷</span><b>计划时间分布</b><span class="sp"></span><span class="tag">前 5 个日期</span></div>
+                  <div class="card-b" style="gap:10px;justify-content:center">
+                    <div class="dateline">
+                      <div class="dl-row"><span class="dl-d mono">11-07</span><div class="bar"><i style="width:100%"></i></div><span class="dl-v">23</span></div>
+                      <div class="dl-row"><span class="dl-d mono">11-15</span><div class="bar"><i style="width:82.6%"></i></div><span class="dl-v">19</span></div>
+                      <div class="dl-row"><span class="dl-d mono">11-03</span><div class="bar"><i style="width:69.6%"></i></div><span class="dl-v">16</span></div>
+                      <div class="dl-row"><span class="dl-d mono">11-01</span><div class="bar"><i style="width:65.2%"></i></div><span class="dl-v">15</span></div>
+                      <div class="dl-row"><span class="dl-d mono">11-05</span><div class="bar"><i style="width:60.9%"></i></div><span class="dl-v">14</span></div>
+                    </div>
+                    <div class="callout" style="display:flex;flex-direction:column;align-items:stretch;gap:7px;margin-top:auto">
+                      <div class="tiny" style="font-weight:700;display:flex;align-items:center;gap:6px"><span class="tag warn">5</span>倒挂的装配计划全部在 11-01</div>
+                      <div class="pa-row"><span class="mono" style="width:58px">设计 11-03</span><div class="bar"><i style="width:100%"></i></div><b>8</b></div>
+                      <div class="pa-row"><span class="mono" style="width:58px">设计 11-05</span><div class="bar"><i style="width:62.5%"></i></div><b>5</b></div>
+                    </div>
+                  </div>
+                  <div class="card-f"><span>日期来自原表计划列</span><span class="sp"></span><span class="mono tiny">4 处文本未计入</span></div>
+                </div>
+              </div>
+
+              <!-- 底部：阶段矩阵 + 照片关联 + 结论 -->
+              <div class="grid-3b" style="flex:0 0 auto">
+                <div class="card" style="padding:12px 14px">
+                  <div class="card-h" style="margin-bottom:9px"><span class="ci">▥</span><b>阶段填写率</b><span class="sp"></span><span class="mono tiny">n=36</span></div>
+                  <div class="rate" style="gap:9px">
+                    <div class="rate-row"><span class="rn">方案确定</span><div class="bar"><i style="width:91.7%"></i></div><span class="rv">33 / 36</span><span class="rs part">部分</span></div>
+                    <div class="rate-row"><span class="rn">设计下图</span><div class="bar"><i style="width:72.2%"></i></div><span class="rv">26 / 36</span><span class="rs part">部分</span></div>
+                    <div class="rate-row"><span class="rn">物料准备</span><div class="bar"><i style="width:0%"></i></div><span class="rv">0 / 36</span><span class="rs off">空白</span></div>
+                    <div class="rate-row"><span class="rn">装配调试</span><div class="bar"><i style="width:55.6%"></i></div><span class="rv">20 / 36</span><span class="rs part">部分</span></div>
+                  </div>
+                  <div class="tiny muted" style="margin-top:9px">设计下图：责任人 34、计划时间 30</div>
+                </div>
+
+                <div class="card" style="padding:12px 14px">
+                  <div class="card-h" style="margin-bottom:9px"><span class="ci">▣</span><b>照片分布</b><span class="sp"></span><span class="tag ok">12 张</span></div>
+                  <div style="display:flex;flex-direction:column;gap:7px">
+                    <div class="st-row"><span class="sn">P7391-01</span><div class="stack"><i class="s1" style="width:58.3%"></i></div><span class="sv">7 张 · 3 条</span></div>
+                    <div class="st-row"><span class="sn">P7391-02</span><div class="stack"><i class="s1" style="width:25%"></i></div><span class="sv">3 张 · 1 条</span></div>
+                    <div class="st-row"><span class="sn">P7391-03</span><div class="stack"><i class="s1" style="width:16.7%"></i></div><span class="sv">2 张 · 2 条</span></div>
+                    <div class="st-row"><span class="sn">合计</span><div class="stack"><i class="s1" style="width:100%"></i></div><span class="sv">12 张 · 6 条</span></div>
+                  </div>
+                  <div class="tiny muted" style="margin-top:9px">关联率 6 / 36 = 10.5%；历史 Excel 无附件</div>
+                </div>
+
+                <div class="card" style="padding:12px 14px;display:flex;flex-direction:column;gap:6px">
+                  <div class="card-h" style="margin-bottom:2px"><span class="ci">✎</span><b>本期结论</b><span class="sp"></span><span class="tag on">可直接汇报</span></div>
+                  <div class="concl">
+                    <div class="cn"><i>1</i><span>36 条全在<b>装配中</b>，完成情况 0 / 36，尚无法计算完成率。</span></div>
+                    <div class="cn warn"><i>2</i><span><b>5 条倒挂</b>的装配计划全部压在 11-01，设计尚未出图。</span></div>
+                    <div class="cn"><i>3</i><span>程工 <b>6 项</b>为最高负载（7.3%）；照片关联仅 10.5%。</span></div>
+                  </div>
+                  <div class="card-f" style="margin:auto -14px -12px;padding:8px 14px"><span class="tiny muted">口径：源表 2026-11-23</span><span class="sp"></span><button class="btn ghost sm" data-go="export">导出结论</button></div>
+                </div>
+              </div>
+            </main>
+          </div>
+          <footer class="app-foot">
+            <span>统计口径：有效问题 36 条</span>
+            <span>阶段任务 101 个</span>
+            <span>分项目 3 个</span>
+            <span>照片 12 张（演示）</span>
+            <span class="sp"></span>
+            <span class="mono">截至 2026-11-23</span>
+          </footer>
+        </div>
+      </section>
+
+      <!-- ==================== 08 系统设置 ==================== -->
+      <section class="page" data-page="settings" data-title="系统设置" data-group="系统"
+               data-w="1440" data-h="900" data-states="default"
+               data-galaxy="Forms,Switches,Tabs,Notifications"
+               data-desc="数据源、导入规则、提醒与移动端配对；低频但必须找得到。"
+               data-points="左侧设置目录固定 6 项，不做二级折叠|危险操作（清空/重建）放到最底且标红|移动端配对用一次性二维码，不手输 IP">
+        <div class="app">
+          <header class="app-bar">
+            <div class="app-logo">⚙</div>
+            <div class="app-title">系统设置<span>Settings · 本机</span></div>
+            <div class="app-right">
+              <button class="btn ghost sm" data-go="main">← 工作台</button>
+              <button class="btn primary sm">保存设置</button>
+            </div>
+          </header>
+          <div class="app-body">
+            <nav class="app-nav">
+              <a class="nav-i" data-go="projects"><span>⌂</span>项目总览</a>
+              <a class="nav-i" data-go="main"><span>◈</span>工作台</a>
+              <a class="nav-i" data-go="issues"><span>▤</span>问题台账<span class="n">36</span></a>
+              <a class="nav-i" data-go="import"><span>⇥</span>数据交换</a>
+              <a class="nav-i" data-go="report"><span>▦</span>统计报表</a>
+              <a class="nav-i active"><span>⚙</span>系统设置</a>
+            </nav>
+            <main class="app-main" style="gap:12px">
+              <div class="grid-settings" style="flex:1;min-height:0">
+                <!-- 左：设置目录 -->
+                <div class="card" style="padding:8px;align-self:flex-start;width:176px;flex:0 0 auto">
+                  <div class="setnav">
+                    <a class="on">数据与备份</a>
+                    <a>导入规则</a>
+                    <a>提醒与逾期</a>
+                    <a>人员与角色</a>
+                    <a data-open="dlg-bind">移动端配对</a>
+                    <a>关于与许可</a>
+                  </div>
+                </div>
+
+                <!-- 右：设置内容 -->
+                <div style="display:flex;flex-direction:column;gap:12px;min-height:0;overflow:auto">
+                  <div class="card fold" style="flex:0 0 auto">
+                    <div class="f-h"><span class="ci">▤</span><b>数据源</b><span class="sp"></span><span class="tag ok">正常</span></div>
+                    <div style="padding:12px 14px">
+                      <div class="formrow"><label>数据库</label><div class="tin mono" style="font-size:10.5px">D:\Sinan\data\sinan.db</div><button class="btn ghost sm">打开目录</button></div>
+                      <div class="formrow"><label>Excel 收件箱</label><div class="tin mono" style="font-size:10.5px">D:\Sinan\inbox\</div><button class="btn ghost sm">浏览…</button></div>
+                      <div class="formrow" style="margin-bottom:0"><label>导出目录</label><div class="tin mono" style="font-size:10.5px">D:\Sinan\outbox\</div><button class="btn ghost sm">浏览…</button></div>
+                    </div>
+                  </div>
+
+                  <div class="card fold" style="flex:0 0 auto">
+                    <div class="f-h"><span class="ci">⇥</span><b>导入规则</b><span class="sp"></span><span class="tiny muted">与原表一一对应</span></div>
+                    <div style="padding:12px 14px">
+                      <div class="formrow"><label>匹配主键</label><div class="tin sel">ID（P7391-001）▾</div><span class="tiny muted">ID 缺失时按“机台 + 问题”匹配</span></div>
+                      <div class="formrow"><label>表头探测</label><div class="tin sel">自动（前 5 行）▾</div></div>
+                      <div class="formrow"><label>“/”语义</label><div class="tin sel">不适用，跳过该阶段▾</div></div>
+                      <div class="formrow" style="margin-bottom:10px"><label>空白语义</label><div class="tin sel">未填写，保留空白▾</div></div>
+                      <div class="row"><span style="flex:1">导入前强制预览（推荐）</span><span class="sw on"></span></div>
+                      <div class="row"><span style="flex:1">保留整批回滚点（最近 20 批）</span><span class="sw on"></span></div>
+                    </div>
+                  </div>
+
+                  <div class="card fold" style="flex:0 0 auto">
+                    <div class="f-h"><span class="ci">◷</span><b>提醒与逾期</b><span class="sp"></span><span class="tag">本机弹窗</span></div>
+                    <div style="padding:12px 14px">
+                      <div class="formrow"><label>到期提醒</label><div class="tin sel">提前 1 天 09:00▾</div></div>
+                      <div class="formrow"><label>倒挂提醒</label><div class="tin sel">保存时立即提示▾</div></div>
+                      <div class="formrow" style="margin-bottom:10px"><label>逾期升级</label><div class="tin sel">超过 3 天标红并置顶▾</div></div>
+                      <div class="row"><span style="flex:1">每日 17:30 生成待办摘要</span><span class="sw on"></span></div>
+                    </div>
+                  </div>
+
+                  <div class="card fold" style="flex:0 0 auto">
+                    <div class="f-h"><span class="ci">▣</span><b>移动端配对</b><span class="sp"></span><span class="tag ok">1 台在线</span></div>
+                    <div style="padding:12px 14px;display:flex;gap:16px;align-items:flex-start">
+                      <div style="flex:1;min-width:0">
+                        <div class="tiny" style="line-height:1.8">手机端与桌面端共用同一份台账。配对后手机可离线记录，回到局域网自动补传；照片默认压缩到 1600px 长边。</div>
+                        <div class="kv" style="margin-top:10px">
+                          <span class="k">本机地址</span><span class="v mono">192.168.1.26:5180</span>
+                          <span class="k">最近同步</span><span class="v">11-23 09:41 · 王工 · 3 条</span>
+                          <span class="k">离线缓存</span><span class="v">上限 500 条 / 2 GB</span>
+                        </div>
+                        <button class="btn primary sm" style="margin-top:10px" data-open="dlg-bind">显示配对二维码</button>
+                      </div>
+                      <div class="qrbox" style="width:112px;height:112px" title="演示二维码">
+                        <svg viewBox="0 0 21 21" shape-rendering="crispEdges"><rect width="21" height="21" fill="#fff"/><g fill="#111"><rect x="0" y="0" width="7" height="7"/><rect x="1" y="1" width="5" height="5" fill="#fff"/><rect x="2" y="2" width="3" height="3"/><rect x="14" y="0" width="7" height="7"/><rect x="15" y="1" width="5" height="5" fill="#fff"/><rect x="16" y="2" width="3" height="3"/><rect x="0" y="14" width="7" height="7"/><rect x="1" y="15" width="5" height="5" fill="#fff"/><rect x="2" y="16" width="3" height="3"/><rect x="9" y="1" width="1" height="1"/><rect x="11" y="2" width="1" height="1"/><rect x="9" y="4" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="8" y="8" width="1" height="1"/><rect x="10" y="9" width="1" height="1"/><rect x="12" y="8" width="1" height="1"/><rect x="13" y="10" width="1" height="1"/><rect x="15" y="9" width="1" height="1"/><rect x="18" y="10" width="1" height="1"/><rect x="8" y="12" width="1" height="1"/><rect x="9" y="14" width="1" height="1"/><rect x="11" y="13" width="1" height="1"/><rect x="13" y="14" width="1" height="1"/><rect x="12" y="16" width="1" height="1"/><rect x="15" y="13" width="1" height="1"/><rect x="17" y="14" width="1" height="1"/><rect x="19" y="16" width="1" height="1"/><rect x="9" y="18" width="1" height="1"/><rect x="12" y="19" width="1" height="1"/><rect x="15" y="18" width="1" height="1"/><rect x="18" y="19" width="1" height="1"/><rect x="10" y="10" width="1" height="1"/></g></svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="card alert" style="flex:0 0 auto">
+                    <div class="card-h" style="margin-bottom:6px"><span class="ci">⚠</span><b>危险操作</b><span class="sp"></span><span class="tag ng">不可撤销</span></div>
+                    <div class="row"><span class="tiny" style="flex:1">清空本机台账并重新导入：会删除 36 条问题与全部修改留痕，但保留操作日志。</span><button class="btn ghost sm" style="border-color:var(--ng);color:var(--ng)">清空台账</button></div>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+          <footer class="app-foot">
+            <span>设置即时生效</span>
+            <span>数据库 1.8 MB</span>
+            <span class="sp"></span>
+            <span class="mono">司南 v1.0.0 · WPF + SQLite</span>
+          </footer>
+        </div>
+      </section>

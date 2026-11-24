@@ -1,0 +1,11 @@
+<Project>
+  <!--
+    只作用于 desktop/ThirdParty 下的子模块工程（当前为 Kaleidoscope）。
+    司南桌面端是 net10.0-windows，Kaleidoscope.UI 默认双目标 net472;net8.0-windows；
+    这里让 UI 库在司南构建时只产出 net10.0-windows，避免额外还原 net472/net8 targeting pack。
+    子模块被其他宿主仓库复用时不受影响（各宿主有自己的 Directory.Build.props）。
+  -->
+  <PropertyGroup>
+    <KaleidoscopeUITargetFrameworks>net10.0-windows</KaleidoscopeUITargetFrameworks>
+  </PropertyGroup>
+</Project>

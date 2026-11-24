@@ -1,0 +1,200 @@
+      <!-- ==================== 01 登录 ==================== -->
+      <section class="page" data-page="login" data-title="登录" data-group="入口"
+               data-w="1440" data-h="900" data-states="default"
+               data-galaxy="Forms,Buttons,Notifications,Tooltips"
+               data-desc="工号登录本机数据库，离线可用；服务器地址仅用于移动端同步。"
+               data-points="左侧讲清“离线也能用”，右侧只留三个输入|登录失败原因就地展开，不弹二级窗|左下角常驻数据库路径与版本，便于现场排障">
+        <div class="app">
+          <div class="login-wrap">
+            <div class="login-brand">
+              <div class="brand-row">
+                <div class="brand-seal">司</div>
+                <div>
+                  <div class="brand-name">司南</div>
+                  <div class="brand-sub">P7391 安装调试问题闭环系统</div>
+                </div>
+              </div>
+              <div class="brand-slogan">让每个问题，都有方向</div>
+              <div class="brand-desc">面向 P7391 产线安装调试期的现场问题台账。四阶段责任到人，计划倒挂当场标红，Excel 原表随时进出。</div>
+              <div class="brand-facts">
+                <div class="bfact"><b>36</b><span>条在册问题</span></div>
+                <div class="bfact"><b>30</b><span>台机台</span></div>
+                <div class="bfact"><b>3</b><span>个分项目</span></div>
+                <div class="bfact"><b>4</b><span>个阶段节点</span></div>
+              </div>
+              <div class="brand-foot">
+                <span class="st ok"><i class="dot"></i>本地数据库正常</span>
+                <span class="mono tiny">v1.0.0 · SQLite</span>
+              </div>
+            </div>
+            <div class="login-panel">
+              <div class="login-card">
+                <div class="login-h">
+                  <div class="login-t">登录工作台</div>
+                  <div class="login-s">使用调试组工号，数据保存在本机</div>
+                </div>
+                <div class="formrow"><label>工号</label><div class="tin">engineer</div></div>
+                <div class="formrow"><label>密码</label><div class="tin">••••••••</div></div>
+                <div class="formrow"><label>数据文件</label><div class="tin mono" style="font-size:10.5px">D:\Sinan\data\sinan.db</div></div>
+                <div class="formrow" style="margin-bottom:12px"><label></label>
+                  <label class="chk"><i>✓</i>记住工号</label>
+                  <span class="sp"></span>
+                  <span class="tiny muted">上次登录 11-22 17:40</span>
+                </div>
+                <button class="btn primary" style="width:100%;height:38px" data-go="projects">进入项目总览</button>
+                <div class="login-err"><span class="ic">!</span>演示稿：直接点击即可进入，无需真实口令</div>
+                <div class="login-links">
+                  <span>数据目录</span><span class="mono">D:\Sinan\data\</span>
+                  <span class="sp"></span>
+                  <span data-open="dlg-bind" style="cursor:pointer;color:var(--primary);font-weight:600">手机端配对</span>
+                </div>
+              </div>
+              <div class="login-note">首次使用请先在“数据交换”导入 Excel，建立台账。</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 02 主看板 ==================== -->
+      <section class="page" data-page="main" data-title="工作台总览" data-group="工作台"
+               data-w="1440" data-h="900" data-states="default,empty"
+               data-galaxy="Cards,Data-tables,Badges,Progress,Timeline,Notifications"
+               data-desc="一屏回答三个问题：现在有多少问题、卡在哪个阶段、谁的活最重。"
+               data-points="顶部焦点卡只放“今天必须看的一件事”|KPI 用真实体检数字，不做无来源图表|右侧风险清单逐条可点，直接进对应问题">
+        <div class="app">
+          <header class="app-bar">
+            <div class="app-logo">司</div>
+            <div class="app-title">工作台总览<span>P7391 · 3 个分项目</span></div>
+            <div class="app-status">
+              <span class="st ok"><i class="dot"></i>本地库正常</span>
+              <span class="st info"><i class="dot"></i>Excel 通道就绪</span>
+              <span class="st warn"><i class="dot"></i>5 条计划倒挂</span>
+            </div>
+            <div class="app-right">
+              <span class="plno" data-go="projects" style="cursor:pointer" title="返回总项目总览">P7391 ›</span>
+              <button class="btn primary sm" data-open="dlg-new">＋ 新建问题</button>
+              <button class="icon-btn" title="系统设置" data-go="settings">⚙</button>
+              <div class="user-chip"><span class="av">刘</span>王工</div>
+            </div>
+          </header>
+          <div class="app-body">
+            <nav class="app-nav">
+              <a class="nav-i" data-go="projects"><span>⌂</span>项目总览</a>
+              <a class="nav-i active"><span>◈</span>工作台</a>
+              <a class="nav-i" data-go="issues"><span>▤</span>问题台账<span class="n">36</span></a>
+              <a class="nav-i" data-go="import"><span>⇥</span>数据交换</a>
+              <a class="nav-i" data-go="report"><span>▦</span>统计报表</a>
+              <a class="nav-i" style="margin-top:auto" data-go="settings"><span>⚙</span>系统设置</a>
+            </nav>
+            <main class="app-main">
+              <div class="state-block" data-for="default" data-display="contents">
+              <!-- 焦点卡：一屏只允许一张 -->
+              <div class="card top" style="display:flex;align-items:center;gap:16px;padding:13px 16px">
+                <div class="focus-ico">◷</div>
+                <div style="min-width:0">
+                  <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px">
+                    计划倒挂 5 条
+                    <span class="st ng"><i class="dot"></i>待校正</span>
+                  </div>
+                  <div class="tiny muted" style="margin-top:3px">设计计划晚于装配计划，按现有计划无法按期交付。最早 P7391-018：设计 11-05 → 装配 11-03。</div>
+                </div>
+                <span class="sp"></span>
+                <div class="focus-kpi"><b>5</b><span>/ 36 条</span></div>
+                <button class="btn primary sm" data-go="issues">逐条校正</button>
+              </div>
+
+              <div class="kpis">
+                <div class="kpi"><div class="k-l">在册问题</div><div class="k-v">36<span class="u">条</span></div><div class="k-s">源表 39 行 → 36</div></div>
+                <div class="kpi"><div class="k-l">涉及机台</div><div class="k-v">31<span class="u">台</span></div><div class="k-s">序号 1–40 · 缺 7 / 19 / 28 / 33</div></div>
+                <div class="kpi warn"><div class="k-l">计划倒挂</div><div class="k-v">5<span class="u">条</span></div><div class="k-s">设计晚于装配</div></div>
+                <div class="kpi"><div class="k-l">分项目</div><div class="k-v">3<span class="u">个</span></div><div class="k-s">1 台待归组</div></div>
+              </div>
+
+              <div class="grid-2" style="flex:1;min-height:0">
+                <!-- 左：阶段填写率 + 负载 -->
+                <div class="card col" style="min-height:0">
+                  <div class="card-h"><span class="ci">▥</span><b>四阶段填写率</b><span class="sp"></span><span class="mono tiny">n = 36</span></div>
+                  <div class="card-b" style="gap:11px;justify-content:center">
+                    <div class="stage-grid" style="flex:1;align-content:center">
+                      <div class="stage-tile">
+                        <div class="stl">方案确定<span class="tag on">部分</span></div>
+                        <div class="stv">33<span>/36</span></div>
+                        <div class="bar"><i style="width:91.7%"></i></div>
+                      </div>
+                      <div class="stage-tile">
+                        <div class="stl">设计下图<span class="tag on">部分</span></div>
+                        <div class="stv">26<span>/36</span></div>
+                        <div class="bar"><i style="width:72.2%"></i></div>
+                        <div class="sts">计划时间 26 / 36</div>
+                      </div>
+                      <div class="stage-tile">
+                        <div class="stl">物料准备<span class="tag">空</span></div>
+                        <div class="stv">0<span>/36</span></div>
+                        <div class="bar"><i style="width:0%"></i></div>
+                      </div>
+                      <div class="stage-tile">
+                        <div class="stl">装配调试<span class="tag on">部分</span></div>
+                        <div class="stv">20<span>/36</span></div>
+                        <div class="bar"><i style="width:55.6%"></i></div>
+                        <div class="sts">责任人 20 / 计划 22</div>
+                      </div>
+                    </div>
+                    <div class="tiny muted" style="line-height:1.55">完成情况 6 / 36，已闭环 16.7%。</div>
+                  </div>
+                  <div class="card-f"><span>数据体检 · 11-23</span><span class="sp"></span><span class="mono tiny">阶段任务 101</span></div>
+                </div>
+
+                <!-- 右：责任人负载 -->
+                <div class="card col" style="min-height:0">
+                  <div class="card-h"><span class="ci">◍</span><b>责任人任务量</b><span class="sp"></span><span class="tag on">按阶段计数</span></div>
+                  <div class="card-b" style="gap:8px">
+                    <div class="barrow"><span class="nm">王工</span><div class="bar"><i style="width:100%"></i></div><span class="vv">6</span></div>
+                    <div class="barrow"><span class="nm">陈工</span><div class="bar"><i style="width:83.3%"></i></div><span class="vv">5</span></div>
+                    <div class="barrow"><span class="nm">孙工</span><div class="bar"><i style="width:83.3%"></i></div><span class="vv">5</span></div>
+                    <div class="barrow"><span class="nm">何工</span><div class="bar"><i style="width:66.7%"></i></div><span class="vv">4</span></div>
+                    <div class="barrow"><span class="nm">冯工</span><div class="bar"><i style="width:66.7%"></i></div><span class="vv">4</span></div>
+                    <div class="barrow"><span class="nm">赵工</span><div class="bar"><i style="width:50%"></i></div><span class="vv">3</span></div>
+                    <div class="barrow"><span class="nm">曹工</span><div class="bar"><i style="width:50%"></i></div><span class="vv">3</span></div>
+                    <div class="barrow"><span class="nm">吴工</span><div class="bar"><i style="width:50%"></i></div><span class="vv">3</span></div>
+                    <div class="barrow"><span class="nm">许工</span><div class="bar"><i style="width:33.3%"></i></div><span class="vv">2</span></div>
+                    <div class="barrow"><span class="nm">郑工</span><div class="bar"><i style="width:33.3%"></i></div><span class="vv">2</span></div>
+                    <div class="barrow"><span class="nm">程工</span><div class="bar"><i style="width:33.3%"></i></div><span class="vv">2</span></div>
+                    <div class="tiny muted" style="margin-top:auto;line-height:1.55">王工 6 项（7.3%），其余 14 人合计 43 项（52.4%），负载较均衡。</div>
+                  </div>
+                  <div class="card-f"><span>共 25 位责任人</span><span class="sp"></span><button class="btn ghost sm" data-go="report">看全量分布 →</button></div>
+                </div>
+              </div>
+
+              <!-- 底部：风险清单 -->
+              <div class="card pad0" style="flex:0 0 auto">
+                <div class="card-h band"><span class="ci">⚠</span><b>数据待处理</b><span class="sp"></span><span class="tiny muted">来自本次导入体检，处理一条少一条</span></div>
+                <div class="rows">
+                  <div class="r"><span class="tag ng">倒挂</span><span style="font-weight:600">5 条计划时间倒挂</span><span class="sp"></span><span class="mono tiny">018 / 024 / 030 …</span><button class="btn ghost sm" data-go="issues">去校正</button></div>
+                  <div class="r"><span class="tag warn">文本</span><span style="font-weight:600">4 处计划列写成“已下图”</span><span class="sp"></span><span class="mono tiny">010 / 013 / 034 / 048</span><button class="btn ghost sm" data-go="import">去转换</button></div>
+                  <div class="r"><span class="tag warn">缺口</span><span style="font-weight:600">方案 / 物料两阶段整列为空</span><span class="sp"></span><span class="mono tiny">需业务确认</span><button class="btn ghost sm" data-go="settings">定规则</button></div>
+                  <div class="r"><span class="tag warn">归组</span><span style="font-weight:600">1 台机台未归入分项目</span><span class="sp"></span><span class="mono tiny">P73913118</span><button class="btn ghost sm" data-go="projects">去归组</button></div>
+                </div>
+              </div>
+
+              </div>
+
+              <!-- 空态：只有当台账为空时显示（演示用状态切换） -->
+              <div class="state-block" data-for="empty" data-display="contents">
+                <div class="card" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center">
+                  <div class="empty-ico">⇥</div>
+                  <div style="font-size:14px;font-weight:700">台账还是空的</div>
+                  <div class="tiny muted" style="max-width:360px;line-height:1.7">第一次使用请导入客户原表。系统会自动探测表头、预览 36 条问题与 5 条倒挂，确认后才写库。</div>
+                  <button class="btn primary" data-go="import">导入 Excel 原表</button>
+                </div>
+              </div>
+            </main>
+          </div>
+          <footer class="app-foot">
+            <span class="st ok"><i class="dot"></i>数据库已连接</span>
+            <span>源文件：P7391 安装调试问题 20261123</span>
+            <span>最后导入：11-23 09:12</span>
+            <span class="sp"></span>
+            <span class="mono">v1.0.0 · 离线模式</span>
+          </footer>
+        </div>
+      </section>

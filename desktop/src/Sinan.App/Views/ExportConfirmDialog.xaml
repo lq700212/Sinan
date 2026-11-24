@@ -1,0 +1,118 @@
+<ui:ChromeDialogWindow x:Class="Sinan.App.Views.ExportConfirmDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:Kaleidoscope.UI.Views;assembly=Kaleidoscope.UI"
+        Title="开始导出"
+        Subtitle="{Binding HeaderSubtitle}"
+        TitleIconChar="⇤"
+        Width="580" Height="560"
+        Resizeable="False"
+        CaptionHeight="40"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="{DynamicResource Font.Ui}"
+        FontSize="{DynamicResource Text.Size.Body}"
+        Foreground="{DynamicResource Brush.Fg}">
+
+    <!--
+      ============================================================================
+      开始导出（设计稿 dlg-export，560×440）
+      不是"确认一下"，而是导出前的事实清单：
+        - 文件名可改（默认 项目_版式_时间戳，撞名后端会追加 _2/_3）；
+        - 保存目录是真实归档路径，不是设计稿的演示路径；
+        - 工作表清单与"将包含"逐条按本次真实数据生成（没有照片就不写照片那条）。
+      纪律：不会修改数据库；口径（倒挂/文本计划）与台账同源，不另算一套。
+      ============================================================================
+    -->
+
+    <Grid Margin="24,14,24,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ============ 文件名 / 目录 / 工作表 ============ -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="文件名" Style="{StaticResource T.Label}" Margin="2,0,0,5"/>
+            <TextBox Style="{StaticResource Input.Text}" Height="32"
+                     FontFamily="{DynamicResource Font.Mono}" FontSize="11"
+                     AutomationProperties.AutomationId="ExportFileNameBox"
+                     Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Text="{Binding FileNameHint}" Style="{StaticResource T.Tiny}" FontSize="9.5"
+                       Margin="2,4,0,0"/>
+
+            <TextBlock Text="保存到" Style="{StaticResource T.Label}" Margin="2,12,0,5"/>
+            <Border Background="{DynamicResource Brush.CardWell}"
+                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                    CornerRadius="9" Padding="10,7">
+                <TextBlock Text="{Binding Directory}" FontFamily="{DynamicResource Font.Mono}"
+                           FontSize="10" TextTrimming="CharacterEllipsis"
+                           ToolTip="{Binding Directory}"/>
+            </Border>
+
+            <TextBlock Text="工作表" Style="{StaticResource T.Label}" Margin="2,12,0,5"/>
+            <Border Background="{DynamicResource Brush.CardWell}"
+                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                    CornerRadius="9" Padding="10,7">
+                <TextBlock Text="{Binding SheetListText}" FontSize="10.5"
+                           TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
+            </Border>
+        </StackPanel>
+
+        <!-- ============ 将包含（设计稿 .exp-list） ============ -->
+        <!--
+          放进 ScrollViewer 而不是靠调高窗口：条目数随数据变化（有照片才多一条、
+          有倒挂才多一条），固定高度必然在某些数据下把最后一条切掉一半。
+        -->
+        <ScrollViewer Grid.Row="1" Margin="0,14,0,0"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel>
+                <TextBlock Text="将包含" Style="{StaticResource T.Label}" Margin="2,0,0,7"/>
+                <Border Style="{StaticResource Card.Inset}" Padding="13,10">
+                    <ItemsControl ItemsSource="{Binding Items}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ContentControl Grid.Column="0" Style="{StaticResource Chip}"
+                                                    Tag="{Binding TagKind}" MinHeight="18"
+                                                    Padding="6,0" VerticalAlignment="Top">
+                                        <TextBlock Text="{Binding Mark}" FontSize="8.5"/>
+                                    </ContentControl>
+                                    <TextBlock Grid.Column="1" Text="{Binding Text}" FontSize="10.5"
+                                               TextWrapping="Wrap" Margin="8,1,0,0"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+
+                <CheckBox Style="{StaticResource Check.Box}" Margin="2,11,0,0"
+                          AutomationProperties.AutomationId="ExportOpenFolderCheck"
+                          IsChecked="{Binding OpenFolderAfterExport, Mode=TwoWay}"
+                          Content="导出完成后打开文件夹"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ============ 底部 ============ -->
+        <Grid Grid.Row="2" Margin="0,14,0,0">
+            <TextBlock Text="{Binding FooterHint}" Style="{StaticResource T.Tiny}" FontSize="9.5"
+                       VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="取消" Style="{StaticResource Btn.Ghost}" Height="34" Width="82"
+                        AutomationProperties.AutomationId="ExportCancelButton"
+                        Command="{Binding CancelCommand}"/>
+                <Button Content="导出" Style="{StaticResource Btn.Primary}" Height="34" Width="104"
+                        Margin="10,0,0,0"
+                        AutomationProperties.AutomationId="ExportConfirmButton"
+                        IsEnabled="{Binding CanConfirm}"
+                        Command="{Binding ConfirmCommand}"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</ui:ChromeDialogWindow>

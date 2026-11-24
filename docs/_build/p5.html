@@ -1,0 +1,390 @@
+      <!-- ==================== A1 手机端登录 ==================== -->
+      <section class="page" data-page="m-login" data-title="手机端 · 登录" data-group="Android 现场端"
+               data-w="390" data-h="844" data-states="default"
+               data-galaxy="Mobile,Forms,Buttons"
+               data-desc="现场人员用同一工号登录手机端；首次登录扫码配对，之后可完全离线。"
+               data-points="品牌区占 40%，表单占 60%，拇指可达|服务器地址折叠在“高级”里，默认自动发现|说明离线边界，避免现场误以为必须联网">
+        <div class="ph">
+          <div class="ph-status"><span>9:41</span><span class="sp"></span><span>5G</span><span>▮▮▮</span><span>86%</span></div>
+          <div class="ph-body" style="justify-content:center;gap:16px">
+            <div style="margin-bottom:6px">
+              <div class="ph-logo">司</div>
+              <div class="ph-login-title" style="margin-top:16px">司南</div>
+              <div class="ph-login-sub">P7391 · 现场问题闭环</div>
+            </div>
+            <div class="ph-card" style="display:flex;flex-direction:column;gap:9px">
+              <div class="ph-sec">工号登录</div>
+              <div class="ph-input"><span>◉</span>engineer</div>
+              <div class="ph-input"><span>⌘</span>••••••••</div>
+              <div class="ph-row" style="justify-content:space-between">
+                <span class="ph-sub">已配对 · 192.168.1.26</span>
+                <span class="ph-badge ok">局域网</span>
+              </div>
+              <a class="ph-btn" data-go="m-home">进入现场端</a>
+              <div class="ph-sub" style="text-align:center">无网络也能记录，回到车间自动补传</div>
+            </div>
+            <div class="ph-card flat">
+              <div class="ph-sec" style="margin:0 0 4px">离线可用范围</div>
+              <div class="ph-sub" style="line-height:1.8">✓ 查看已同步的 36 条问题<br>✓ 新建问题、拍照、推进阶段<br>○ 跨人查询与统计需回到桌面端</div>
+            </div>
+            <div class="ph-sub" style="text-align:center;margin-top:4px">v1.0.0 · 仅限 P7391 调试组</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== A2 我的待办 ==================== -->
+      <section class="page" data-page="m-home" data-title="手机端 · 我的待办" data-group="Android 现场端"
+               data-w="390" data-h="844" data-states="default"
+               data-galaxy="Mobile,Cards,Badges,Progress"
+               data-desc="打开手机先看“今天该我做什么”，而不是先看 36 条全量台账。"
+               data-points="首屏只放我的任务，不展示全公司统计|扫码与拍照是最高频动作，做成悬浮主按钮|离线状态常驻顶部，不让用户猜有没有联网">
+        <div class="ph">
+          <div class="ph-status"><span>9:41</span><span class="sp"></span><span>离线</span><span>▮▮</span><span>86%</span></div>
+          <header class="ph-head">
+            <div>
+              <div class="ph-h-title">早上好，王工</div>
+              <div class="ph-h-sub">P7391 · 3 个分项目 · 11 月 23 日</div>
+            </div>
+            <span class="sp"></span>
+            <span class="ph-badge warn">离线缓存</span>
+          </header>
+          <div class="ph-body" style="overflow:auto">
+            <div class="ph-projbar">
+              <a class="ph-badge info" data-go="m-projects">P7391 总览</a>
+              <a class="ph-badge plain" data-go="m-project">P7391-01</a>
+              <a class="ph-badge plain" data-go="m-project">P7391-02</a>
+              <a class="ph-badge plain" data-go="m-project">P7391-03</a>
+            </div>
+            <div class="ph-kpis">
+              <div class="ph-kpi"><div class="l">我的阶段任务</div><div class="v">39<span class="u">项</span></div></div>
+              <div class="ph-kpi warn"><div class="l">计划倒挂</div><div class="v">5<span class="u">条</span></div></div>
+              <div class="ph-kpi"><div class="l">本机待传</div><div class="v">3<span class="u">条</span></div></div>
+              <div class="ph-kpi ok"><div class="l">今日已记录</div><div class="v">2<span class="u">条</span></div></div>
+            </div>
+
+            <div class="ph-row" style="gap:8px">
+              <a class="ph-btn sm" style="flex:1" data-go="m-scan">⌗ 扫码选机台</a>
+              <a class="ph-btn sm ghost" style="flex:1" data-go="m-new">📷 拍照新建</a>
+            </div>
+
+            <div class="ph-sec"><span>今天先处理</span><span class="sp"></span><span class="ph-badge ng">3 条</span></div>
+            <div class="ph-card alert" style="display:flex;flex-direction:column;gap:5px">
+              <div class="ph-row"><span class="ph-badge ng">倒挂</span><span class="ph-sub mono">P7391106</span><span class="sp"></span><span class="ph-sub">装配 11-01</span></div>
+              <div style="font-size:13px;font-weight:700">接近开关信号偶发丢失</div>
+              <div class="ph-sub">打磨传感器支架后连续运行观察 · 设计 何工 11-05</div>
+              <div class="ph-row"><span class="ph-sub">距计划日已过 22 天</span><span class="sp"></span><a class="ph-sub" style="color:var(--primary);font-weight:700" data-go="m-detail">去处理 ›</a></div>
+            </div>
+            <div class="ph-card" style="display:flex;flex-direction:column;gap:5px">
+              <div class="ph-row"><span class="ph-badge warn">文本</span><span class="ph-sub mono">P7391106</span><span class="sp"></span><span class="ph-sub">装配 11-07</span></div>
+              <div style="font-size:13px;font-weight:700">安全门开关安装间距不足</div>
+              <div class="ph-sub">重新固定夹具基准面并复测 · 设计列填写“已下图”</div>
+            </div>
+            <div class="ph-card" style="display:flex;flex-direction:column;gap:5px">
+              <div class="ph-row"><span class="ph-badge info">待推进</span><span class="ph-sub mono">P7391108</span><span class="sp"></span><span class="ph-sub">装配 11-07</span></div>
+              <div style="font-size:13px;font-weight:700">拖链动作节拍偏慢</div>
+              <div class="ph-sub">增加张紧轮并复核节拍 · 设计 吴工 已下图</div>
+            </div>
+
+            <div class="ph-sec" style="margin-top:2px"><span>最近同步</span><span class="sp"></span><a class="ph-sub" data-go="m-sync">查看 ›</a></div>
+            <div class="ph-card flat" style="display:flex;align-items:center;gap:9px">
+              <span class="ph-badge ok">✓</span>
+              <div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:700">11-23 09:41 已同步</div><div class="ph-sub">上行 3 条 · 下行 36 条 · 无冲突</div></div>
+            </div>
+          </div>
+          <nav class="ph-tabbar">
+            <a class="ph-tab active"><span class="ic">◈</span>待办</a>
+            <a class="ph-tab" data-go="m-projects"><span class="ic">⌂</span>项目</a>
+            <a class="ph-tab" data-go="m-new"><span class="fab">＋</span></a>
+            <a class="ph-tab" data-go="m-list"><span class="ic">▤</span>台账</a>
+            <a class="ph-tab" data-go="m-sync"><span class="ic">⇅</span>同步</a>
+          </nav>
+        </div>
+      </section>
+
+      <!-- ==================== A3 问题列表 ==================== -->
+      <section class="page" data-page="m-list" data-title="手机端 · 问题列表" data-group="Android 现场端"
+               data-w="390" data-h="844" data-states="default"
+               data-galaxy="Mobile,Lists,Filters,Empty-states"
+               data-desc="按机台、责任人和倒挂快速筛，列表项只保留现场决策需要的五个字段。"
+               data-points="筛选竖排两行，不做横向长滚动|列表项高度固定，标题最多两行|离线数据用角标标注“本机”">
+        <div class="ph">
+          <div class="ph-status"><span>9:41</span><span class="sp"></span><span>离线</span><span>▮▮</span><span>86%</span></div>
+          <header class="ph-head">
+            <a class="ph-back" data-go="m-home">‹</a>
+            <div><div class="ph-h-title">问题台账</div><div class="ph-h-sub">36 条 · 本机缓存</div></div>
+            <span class="sp"></span>
+            <span class="ph-badge plain">筛选 2</span>
+          </header>
+          <div class="ph-body" style="overflow:hidden">
+            <div class="ph-row" style="gap:6px;flex-wrap:wrap">
+              <span class="ph-badge info">全部 36</span>
+              <span class="ph-badge ng">倒挂 13</span>
+              <span class="ph-badge plain">文本 4</span>
+              <span class="ph-badge plain">有照片 6</span>
+              <span class="ph-badge plain">P7391106 ×3</span>
+            </div>
+            <div class="ph-projbar">
+              <span class="ph-badge info">P7391-01 · 24</span>
+              <span class="ph-badge plain">P7391-02 · 9</span>
+              <span class="ph-badge plain">P7391-03 · 22</span>
+              <span class="ph-badge plain">待确认 · 2</span>
+            </div>
+            <div class="ph-input" style="min-height:36px"><span>⌕</span>搜索问题 / 机台号</div>
+            <div style="flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px;padding-bottom:4px">
+              <a class="ph-card" style="display:block;text-decoration:none;color:var(--fg)" data-go="m-detail">
+                <div class="ph-row"><span class="ph-badge ng">倒挂</span><span class="ph-sub mono">P7391106</span><span class="sp"></span><span class="ph-badge plain">装配中</span></div>
+                <div style="font-size:13px;font-weight:700;margin:4px 0 2px">接近开关信号偶发丢失</div>
+                <div class="ph-sub">打磨传感器支架后连续运行观察</div>
+                <div class="ph-row" style="margin-top:5px"><span class="ph-sub">设计 何工 11-05</span><span class="sp"></span><span class="ph-sub">装配 王工/冯工 11-01</span></div>
+              </a>
+              <a class="ph-card" style="display:block;text-decoration:none;color:var(--fg)" data-go="m-detail">
+                <div class="ph-row"><span class="ph-badge warn">文本</span><span class="ph-sub mono">P7391106</span><span class="sp"></span><span class="ph-badge plain">装配中</span></div>
+                <div style="font-size:13px;font-weight:700;margin:4px 0 2px">安全门开关安装间距不足</div>
+                <div class="ph-sub">重新固定夹具基准面并复测</div>
+                <div class="ph-row" style="margin-top:5px"><span class="ph-sub">设计 何工 已下图</span><span class="sp"></span><span class="ph-sub">装配 王工/冯工 11-07</span></div>
+              </a>
+              <a class="ph-card" style="display:block;text-decoration:none;color:var(--fg)" data-go="m-detail">
+                <div class="ph-row"><span class="ph-badge plain">—</span><span class="ph-sub mono">P7391108</span><span class="sp"></span><span class="ph-badge plain">装配中</span></div>
+                <div style="font-size:13px;font-weight:700;margin:4px 0 2px">拖链动作节拍偏慢</div>
+                <div class="ph-sub">增加张紧轮并复核节拍</div>
+                <div class="ph-row" style="margin-top:5px"><span class="ph-sub">设计 吴工 已下图</span><span class="sp"></span><span class="ph-sub">装配 王工 11-07</span></div>
+              </a>
+              <a class="ph-card" style="display:block;text-decoration:none;color:var(--fg)" data-go="m-detail">
+                <div class="ph-row"><span class="ph-badge plain">—</span><span class="ph-sub mono">P7391102</span><span class="sp"></span><span class="ph-badge plain">装配中</span></div>
+                <div style="font-size:13px;font-weight:700;margin:4px 0 2px">输送带安装间距不足</div>
+                <div class="ph-sub">重新固定防护网间隙并做气密测试</div>
+                <div class="ph-row" style="margin-top:5px"><span class="ph-sub">设计 曹工 11-03</span><span class="sp"></span><span class="ph-sub">装配 王工/赵工 11-01</span></div>
+              </a>
+              <a class="ph-card" style="display:block;text-decoration:none;color:var(--fg)" data-go="m-detail">
+                <div class="ph-row"><span class="ph-badge plain">—</span><span class="ph-sub mono">P7391101</span><span class="sp"></span><span class="ph-badge plain">装配中</span></div>
+                <div style="font-size:13px;font-weight:700;margin:4px 0 2px">伺服电机复位不畅</div>
+                <div class="ph-sub">调整夹具基准面并复测</div>
+                <div class="ph-row" style="margin-top:5px"><span class="ph-sub">设计 何工 11-05</span><span class="sp"></span><span class="ph-sub">装配 王工 11-15</span></div>
+              </a>
+            </div>
+          </div>
+          <nav class="ph-tabbar">
+            <a class="ph-tab" data-go="m-home"><span class="ic">◈</span>待办</a>
+            <a class="ph-tab" data-go="m-projects"><span class="ic">⌂</span>项目</a>
+            <a class="ph-tab" data-go="m-new"><span class="fab">＋</span></a>
+            <a class="ph-tab active"><span class="ic">▤</span>台账</a>
+            <a class="ph-tab" data-go="m-sync"><span class="ic">⇅</span>同步</a>
+          </nav>
+        </div>
+      </section>
+
+      <!-- ==================== A4 问题详情 ==================== -->
+      <section class="page" data-page="m-detail" data-title="手机端 · 问题详情" data-group="Android 现场端"
+               data-w="390" data-h="844" data-states="default"
+               data-galaxy="Mobile,Cards,Timeline,Forms"
+               data-desc="站在机台边单手看：这条问题卡在哪个阶段、下一步该谁、拍完照直接推进。"
+               data-points="阶段列表压成四行，不画大时间轴|底部固定“推进阶段”，滚动时永远够得着|倒挂原因用一句话说清，不展开长文">
+        <div class="ph">
+          <div class="ph-status"><span>9:41</span><span class="sp"></span><span>离线</span><span>▮▮</span><span>86%</span></div>
+          <header class="ph-head">
+            <a class="ph-back" data-go="m-list">‹</a>
+            <div><div class="ph-h-title">P7391-009</div><div class="ph-h-sub">P7391-01 · P7391106 · 装配中</div></div>
+            <span class="sp"></span>
+            <span class="ph-badge ng">倒挂 4 天</span>
+          </header>
+          <div class="ph-body" style="overflow:auto;gap:9px">
+            <div class="ph-card">
+              <div class="ph-title">接近开关信号偶发丢失</div>
+              <div class="ph-sub" style="margin-top:3px">解决措施：打磨传感器支架后连续运行观察</div>
+              <div class="ph-tagrow" style="margin-top:7px">
+                <span class="ph-badge plain">序号 5</span>
+                <span class="ph-badge plain">源行 12</span>
+                <span class="ph-badge info">本机缓存</span>
+              </div>
+            </div>
+
+            <div class="ph-sec">四阶段</div>
+            <div class="ph-card" style="padding:4px 12px">
+              <div class="ph-stage na"><span class="dot">/</span><span class="nm">方案确定</span><span class="ow">未填责任人</span><span class="dd">—</span></div>
+              <div class="ph-stage cur"><span class="dot">●</span><span class="nm">设计下图</span><span class="ow">何工</span><span class="dd">11-05</span></div>
+              <div class="ph-stage"><span class="dot"></span><span class="nm">物料准备</span><span class="ow">未填责任人</span><span class="dd">—</span></div>
+              <div class="ph-stage"><span class="dot"></span><span class="nm">装配调试</span><span class="ow">王工 / 冯工</span><span class="dd">11-01</span></div>
+            </div>
+
+            <div class="ph-card alert">
+              <div class="ph-row"><span class="ph-badge ng">倒挂</span><span style="font-size:12px;font-weight:700">设计晚于装配 4 天</span></div>
+              <div class="ph-sub" style="margin-top:4px">设计计划 11-05，装配计划 11-01。按现计划装配开始时图纸还没下发。</div>
+            </div>
+
+            <div class="ph-sec"><span>现场记录</span><span class="sp"></span><span class="ph-sub">2 / 9 张</span></div>
+            <div class="ph-photo-grid">
+              <a class="photo-thumb a" data-open="dlg-m-view"><i class="pt-ico">▣</i><span class="pt-cap">夹爪间隙 3.2 mm</span></a>
+              <a class="photo-thumb b" data-open="dlg-m-view"><i class="pt-ico">▣</i><span class="pt-cap">机器人等待位</span></a>
+              <a class="photo-thumb add" data-go="m-photo"><i style="font-style:normal;font-size:14px">＋</i><span>拍照</span></a>
+            </div>
+            <div class="ph-row" style="font-size:9px;color:var(--muted)">
+              <span>11-22 15:52 · 王工</span><span>1600 × 1200</span><span class="sp"></span><span>原图留本机</span>
+            </div>
+
+            <div class="ph-sec"><span>最近留痕</span><span class="sp"></span><a class="ph-sub" data-go="m-sync">同步详情 ›</a></div>
+            <div class="ph-card flat" style="padding:9px 11px">
+              <div class="ph-timeline">
+                <div class="ph-tl"><span class="d"></span><div class="c"><b>修改装配计划日</b><div class="ph-sub">11-15 → 11-01 · 与线体联调窗口对齐</div><div class="t">11-22 16:08 · 王工</div></div><span class="line"></span></div>
+                <div class="ph-tl"><span class="d muted"></span><div class="c"><b>由 Excel 导入创建</b><div class="ph-sub">批次 IMP-20261123-01 · 源行 12</div><div class="t">11-23 09:12 · 系统</div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="ph-actionbar">
+            <a class="ph-btn ghost" data-go="m-scan">⌗ 扫码</a>
+            <a class="ph-btn" data-open="dlg-m-note">推进阶段</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== A5 拍照新建 ==================== -->
+      <section class="page" data-page="m-new" data-title="手机端 · 新建问题" data-group="Android 现场端"
+               data-w="390" data-h="844" data-states="default"
+               data-galaxy="Mobile,Forms,Camera,Validation"
+               data-desc="现场发现新问题，三步内记完：扫机台、写一句、拍一张。"
+               data-points="机台号放第一行，扫码优先于手输|问题描述只要求一句人话，不强制模板|保存后立即显示“已存本机，待同步”">
+        <div class="ph">
+          <div class="ph-status"><span>9:41</span><span class="sp"></span><span>离线</span><span>▮▮</span><span>86%</span></div>
+          <header class="ph-head">
+            <a class="ph-back" data-go="m-home">✕</a>
+            <div><div class="ph-h-title">新建问题</div><div class="ph-h-sub">保存到本机，联网后自动上传</div></div>
+            <span class="sp"></span>
+            <span class="ph-badge warn">离线</span>
+          </header>
+          <div class="ph-body" style="overflow:auto;gap:10px">
+            <div class="ph-sec" style="margin:0">机台</div>
+            <a class="ph-input" style="justify-content:space-between;color:var(--fg);text-decoration:none" data-go="m-scan">
+              <span class="ph-row"><span style="color:var(--primary)">⌗</span><b class="mono">P7391106</b><span class="ph-sub">已扫码</span></span>
+              <span style="color:var(--muted)">重新扫 ›</span>
+            </a>
+
+            <div class="ph-sec" style="margin:2px 0 0">存在问题 <span style="color:var(--ng)">*</span></div>
+            <div class="ph-input ph-textarea" style="color:var(--fg)">机器人夹工件时需多等 1.2 秒，节拍达不到 6.8 s</div>
+
+            <div class="ph-sec" style="margin:2px 0 0">解决措施</div>
+            <div class="ph-input ph-textarea" style="min-height:64px;color:var(--fg)">更换大行程夹爪，今天下午到货</div>
+
+            <div class="ph-row" style="gap:8px">
+              <div style="flex:1"><div class="ph-sec" style="margin:0 0 4px">责任阶段</div><div class="ph-input" style="min-height:38px">装配调试 ▾</div></div>
+              <div style="flex:1"><div class="ph-sec" style="margin:0 0 4px">责任人</div><div class="ph-input" style="min-height:38px">王工 ▾</div></div>
+            </div>
+            <div class="ph-row" style="gap:8px">
+              <div style="flex:1"><div class="ph-sec" style="margin:0 0 4px">计划完成</div><div class="ph-input" style="min-height:38px">2026-11-25</div></div>
+              <div style="flex:1"><div class="ph-sec" style="margin:0 0 4px">状态</div><div class="ph-input" style="min-height:38px">装配中 ▾</div></div>
+            </div>
+
+            <div class="ph-sec" style="margin:2px 0 0">现场照片<span class="sp"></span><span class="ph-sub">最多 9 张</span></div>
+            <div class="ph-photo-row">
+              <div class="ph-photo"><span class="pic">▣</span><span>IMG_2841.jpg</span><span class="mono" style="font-size:8px">1.2 MB · 已压缩</span></div>
+              <a class="ph-photo" style="text-decoration:none;color:var(--muted)" data-open="dlg-m-photo"><span class="pic">＋</span><span>拍照 / 从相册选</span></a>
+            </div>
+
+            <div class="ph-card flat" style="display:flex;gap:8px;align-items:center">
+              <span class="ph-badge info">i</span>
+              <div class="ph-sub" style="flex:1">保存后这台手机上有 4 条待传。回到局域网打开 App 会自动补传，不需要手动点。</div>
+            </div>
+          </div>
+          <div class="ph-actionbar">
+            <a class="ph-btn ghost" style="flex:0 0 92px" data-go="m-home">取消</a>
+            <a class="ph-btn" data-go="m-home">保存并继续</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== A6 扫码选机台 ==================== -->
+      <section class="page" data-page="m-scan" data-title="手机端 · 扫码选机台" data-group="Android 现场端"
+               data-w="390" data-h="844" data-states="default"
+               data-galaxy="Mobile,Camera,Scanner,Recent"
+               data-desc="扫机台铭牌上的二维码或条码，直接带出机台号与历史问题。"
+               data-points="取景框占屏幕一半，暗底提高识别率|手输入口常驻，光线差时不耽误|最近扫过的 3 台机台一键回选">
+        <div class="ph">
+          <div class="ph-status"><span>9:41</span><span class="sp"></span><span>离线</span><span>▮▮</span><span>86%</span></div>
+          <header class="ph-head">
+            <a class="ph-back" data-go="m-new">‹</a>
+            <div><div class="ph-h-title">扫码选机台</div><div class="ph-h-sub">对准铭牌二维码 / 条码</div></div>
+            <span class="sp"></span>
+            <span class="ph-badge info">手电筒</span>
+          </header>
+          <div class="ph-body" style="overflow:hidden;gap:10px">
+            <div class="ph-scan">
+              <div class="frame">
+                <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+                <span class="line"></span>
+              </div>
+              <div class="hint">将机台二维码放入框内，自动识别</div>
+            </div>
+            <div class="ph-row" style="gap:8px">
+              <div class="ph-input" style="flex:1"><span>⌨</span>手动输入机台号</div>
+              <a class="ph-btn sm" style="flex:0 0 76px" data-go="m-new">确定</a>
+            </div>
+            <div class="ph-sec" style="margin:2px 0 0">最近扫描<span class="sp"></span><span class="ph-sub">3 台</span></div>
+            <div class="ph-list">
+              <a class="ph-li" data-go="m-new"><span class="ic">▣</span><div style="flex:1"><b class="mono" style="font-size:12px">P7391106</b><div class="ph-sub">3 条问题 · 最近 11-22</div></div><span class="ph-badge warn">倒挂 2</span></a>
+              <a class="ph-li" data-go="m-new"><span class="ic">▣</span><div style="flex:1"><b class="mono" style="font-size:12px">P7391102</b><div class="ph-sub">2 条问题 · 最近 11-21</div></div><span class="ph-badge ng">倒挂 2</span></a>
+              <a class="ph-li" data-go="m-new"><span class="ic">▣</span><div style="flex:1"><b class="mono" style="font-size:12px">P7391108</b><div class="ph-sub">1 条问题 · 最近 11-20</div></div><span class="ph-badge plain">正常</span></a>
+            </div>
+          </div>
+          <div class="ph-actionbar">
+            <a class="ph-btn ghost" data-go="m-home">返回待办</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== A7 离线同步 ==================== -->
+      <section class="page" data-page="m-sync" data-title="手机端 · 离线同步" data-group="Android 现场端"
+               data-w="390" data-h="844" data-states="default"
+               data-galaxy="Mobile,Sync,Progress,Conflict-resolution"
+               data-desc="把“哪条还没传、传失败为什么、冲突怎么选”讲清楚，而不是只转圈。"
+               data-points="队列逐条列出，带时间与机台|冲突提供“保留手机 / 保留桌面”二选一，不自动覆盖|同步日志可复制给技术支持">
+        <div class="ph">
+          <div class="ph-status"><span>9:41</span><span class="sp"></span><span>Wi-Fi</span><span>▮▮▮</span><span>86%</span></div>
+          <header class="ph-head">
+            <a class="ph-back" data-go="m-home">‹</a>
+            <div><div class="ph-h-title">同步中心</div><div class="ph-h-sub">本机 3 条待传 · 0 条冲突</div></div>
+            <span class="sp"></span>
+            <span class="ph-badge ok">已连局域网</span>
+          </header>
+          <div class="ph-body" style="overflow:auto;gap:10px">
+            <div class="ph-card" style="display:flex;flex-direction:column;gap:7px">
+              <div class="ph-row"><span style="font-size:12px;font-weight:700">上行队列</span><span class="sp"></span><span class="ph-badge warn">3 条</span></div>
+              <div class="ph-progress"><i style="width:33%"></i></div>
+              <div class="ph-sub">正在上传 1 / 3 · IMG_2841.jpg 已压缩至 1.2 MB</div>
+              <div class="ph-list">
+                <div class="ph-li"><span class="ic">↑</span><div style="flex:1"><b style="font-size:11px">P7391106 · 接近开关信号偶发丢失</b><div class="ph-sub">阶段推进 · 11-23 09:38</div></div><span class="ph-badge info">上传中</span></div>
+                <div class="ph-li"><span class="ic">↑</span><div style="flex:1"><b style="font-size:11px">P7391106 · 现场照片 1 张</b><div class="ph-sub">IMG_2841.jpg · 11-23 09:39</div></div><span class="ph-badge plain">等待</span></div>
+                <div class="ph-li"><span class="ic">↑</span><div style="flex:1"><b style="font-size:11px">新问题 · P7391106 夹爪等待</b><div class="ph-sub">新建 · 11-23 09:40</div></div><span class="ph-badge plain">等待</span></div>
+              </div>
+            </div>
+
+            <div class="ph-sec" style="margin:0">下行</div>
+            <div class="ph-card flat" style="display:flex;align-items:center;gap:9px">
+              <span class="ph-badge ok">✓</span>
+              <div style="flex:1"><div style="font-size:11px;font-weight:700">已拉取 36 条问题</div><div class="ph-sub">11-23 09:41 · 覆盖本机缓存</div></div>
+              <span class="ph-sub">详情 ›</span>
+            </div>
+
+            <div class="ph-sec" style="margin:0">同步规则</div>
+            <div class="ph-card" style="padding:9px 11px">
+              <div class="ph-sub" style="line-height:1.9">
+                · 同一问题两端都改 → 标记冲突，必须人工选一边；<br>
+                · 只有一端修改 → 自动合并，不打扰；<br>
+                · 照片先传缩略图，原图在 Wi-Fi 下补传。
+              </div>
+            </div>
+
+            <div class="ph-card alert">
+              <div class="ph-row"><span class="ph-badge ng">提醒</span><span style="font-size:11px;font-weight:700">不要在同步中关闭 App</span></div>
+              <div class="ph-sub" style="margin-top:3px">队列会保留，但正在上传的照片可能产生半包，需要重新上传。</div>
+            </div>
+
+            <div class="ph-card" style="display:flex;align-items:center;gap:9px">
+              <span class="ic" style="width:28px;height:28px;border-radius:8px;background:var(--primarydim);color:var(--primary);display:grid;place-items:center">ⓘ</span>
+              <div style="flex:1"><div style="font-size:11px;font-weight:700">上次完整同步</div><div class="ph-sub">11-23 09:41 · 用时 12 s</div></div>
+              <span class="ph-badge ok">正常</span>
+            </div>
+          </div>
+          <div class="ph-actionbar">
+            <a class="ph-btn ghost" style="flex:0 0 92px" data-go="m-home">返回</a>
+            <a class="ph-btn">立即同步 3 条</a>
+          </div>
+        </div>
+      </section>

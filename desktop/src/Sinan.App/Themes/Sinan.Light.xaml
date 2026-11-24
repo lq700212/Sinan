@@ -1,0 +1,185 @@
+﻿<!--
+  ============================================================================
+  司南 · 晨光现场 · 精致玻璃态 —— 明主题键板
+  ············································································
+  唯一色值来源：docs/_build/extra.css 的 :root 段（设计稿单方案 C）。
+  所有页面只准引用本文件的键，禁止在 XAML 里写死 #RRGGBB。
+
+  玻璃态口径（AGENTS.md 第 4 节）：
+    WPF 无 backdrop-filter，用 ①页面底层柔光斑 ②半透明渐变卡片 + 1px 亮边
+    ③暖色柔影 三层近似；卡片内容保持不透明，绝不 BlurEffect 糊文字。
+  ============================================================================
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <!-- ==================== 基础色 ==================== -->
+    <Color x:Key="Color.Bg">#FBF6EE</Color>
+    <Color x:Key="Color.Panel">#FFFFFF</Color>
+    <Color x:Key="Color.Fg">#2A2118</Color>
+    <Color x:Key="Color.Muted">#7D6E5E</Color>
+    <Color x:Key="Color.Border">#EDDFCC</Color>
+    <Color x:Key="Color.Primary">#D97706</Color>
+    <Color x:Key="Color.Primary2">#F59E0B</Color>
+    <Color x:Key="Color.Accent">#0F766E</Color>
+    <Color x:Key="Color.Ok">#15803D</Color>
+    <Color x:Key="Color.Warn">#B45309</Color>
+    <Color x:Key="Color.Ng">#B91C1C</Color>
+
+    <!-- ==================== 表面 ==================== -->
+    <SolidColorBrush x:Key="Brush.Bg" Color="#FBF6EE"/>
+    <SolidColorBrush x:Key="Brush.Panel" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.PanelSoft" Color="#94FFFAAF"/>
+    <SolidColorBrush x:Key="Brush.Bar" Color="#A3FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.Side" Color="#8CFFFDF8"/>
+    <SolidColorBrush x:Key="Brush.Footer" Color="#8CFFFAF2"/>
+    <SolidColorBrush x:Key="Brush.Border" Color="#EDDFCC"/>
+    <SolidColorBrush x:Key="Brush.SepLine" Color="#B3EDDFCC"/>
+    <SolidColorBrush x:Key="Brush.Input" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.RowAlt" Color="#4DFCF8F1"/>
+    <SolidColorBrush x:Key="Brush.RowHover" Color="#70F8EDDD"/>
+    <SolidColorBrush x:Key="Brush.RowSelect" Color="#33D97706"/>
+    <SolidColorBrush x:Key="Brush.TheadBg" Color="#6BF7EFE2"/>
+    <SolidColorBrush x:Key="Brush.TheadFg" Color="#7B6A56"/>
+    <SolidColorBrush x:Key="Brush.CardWell" Color="#80FCF7EF"/>
+
+    <!-- 登录页左侧品牌区：比页面底色更暖的渐变，不能写死在页面里 -->
+    <LinearGradientBrush x:Key="Brush.BrandPanel" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FBE9D2" Offset="0"/>
+        <GradientStop Color="#FFFCF6" Offset="0.55"/>
+        <GradientStop Color="#FFFCF6" Offset="1"/>
+    </LinearGradientBrush>
+
+    <!-- ==================== 前景 ==================== -->
+    <SolidColorBrush x:Key="Brush.Fg" Color="#2A2118"/>
+    <SolidColorBrush x:Key="Brush.Muted" Color="#7D6E5E"/>
+    <SolidColorBrush x:Key="Brush.Faint" Color="#A89A88"/>
+    <SolidColorBrush x:Key="Brush.OnPrimary" Color="#FFFFFF"/>
+
+    <!-- ==================== 主色 / 强调 ==================== -->
+    <SolidColorBrush x:Key="Brush.Primary" Color="#D97706"/>
+    <SolidColorBrush x:Key="Brush.Primary2" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="Brush.PrimaryDim" Color="#1FD97706"/>
+    <SolidColorBrush x:Key="Brush.PrimaryLine" Color="#59D97706"/>
+    <LinearGradientBrush x:Key="Brush.PrimaryGrad" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#D97706" Offset="0"/>
+        <GradientStop Color="#F59E0B" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="Brush.TitleGrad" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#B45309" Offset="0"/>
+        <GradientStop Color="#F59E0B" Offset="1"/>
+    </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="Brush.Accent" Color="#0F766E"/>
+    <SolidColorBrush x:Key="Brush.AccentSoft" Color="#1F0F766E"/>
+    <SolidColorBrush x:Key="Brush.AccentLine" Color="#590F766E"/>
+
+    <!-- ==================== 语义色（状态胶囊/圆点/提示条） ==================== -->
+    <SolidColorBrush x:Key="Brush.Ok" Color="#15803D"/>
+    <SolidColorBrush x:Key="Brush.OkSoft" Color="#1F15803D"/>
+    <SolidColorBrush x:Key="Brush.OkLine" Color="#5915803D"/>
+
+    <SolidColorBrush x:Key="Brush.Warn" Color="#B45309"/>
+    <SolidColorBrush x:Key="Brush.WarnSoft" Color="#1FB45309"/>
+    <SolidColorBrush x:Key="Brush.WarnLine" Color="#59B45309"/>
+
+    <SolidColorBrush x:Key="Brush.Ng" Color="#B91C1C"/>
+    <SolidColorBrush x:Key="Brush.NgSoft" Color="#1FB91C1C"/>
+    <SolidColorBrush x:Key="Brush.NgLine" Color="#59B91C1C"/>
+
+    <SolidColorBrush x:Key="Brush.Info" Color="#0F766E"/>
+    <SolidColorBrush x:Key="Brush.InfoSoft" Color="#1F0F766E"/>
+
+    <!-- ==================== 玻璃态（卡片/弹窗） ==================== -->
+    <LinearGradientBrush x:Key="Brush.GlassBg" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#61FFFFFF" Offset="0"/>
+        <GradientStop Color="#47FFFCF6" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="Brush.GlassBgStrong" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#8FFFFFFF" Offset="0"/>
+        <GradientStop Color="#73FFFCF6" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="Brush.GlassBg2" Color="#8FFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.GlassLine" Color="#EBFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.GlassHi" Color="#FAFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.GlassSheen" Color="#59FFFFFF"/>
+    <SolidColorBrush x:Key="Brush.GlassRing" Color="#1FB4783C"/>
+
+    <!-- 页面底层柔光斑：三团径向渐变（琥珀 / 深青 / 暖橙），WPF 版 backdrop 近似 -->
+    <RadialGradientBrush x:Key="Brush.MeshA" GradientOrigin="0.5,0.5" Center="0.5,0.5"
+                         RadiusX="0.5" RadiusY="0.5">
+        <GradientStop Color="#42F59E0B" Offset="0"/>
+        <GradientStop Color="#00F59E0B" Offset="1"/>
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="Brush.MeshB" GradientOrigin="0.5,0.5" Center="0.5,0.5"
+                         RadiusX="0.5" RadiusY="0.5">
+        <GradientStop Color="#290F766E" Offset="0"/>
+        <GradientStop Color="#000F766E" Offset="1"/>
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="Brush.MeshC" GradientOrigin="0.5,0.5" Center="0.5,0.5"
+                         RadiusX="0.5" RadiusY="0.5">
+        <GradientStop Color="#2EFB923C" Offset="0"/>
+        <GradientStop Color="#00FB923C" Offset="1"/>
+    </RadialGradientBrush>
+
+    <!-- ==================== Kaleidoscope 弹窗基类别名键 ====================
+         ChromeDialogWindow/TitleBar 只认库内语义键；司南不合并其缺省键板，
+         这里把库键映射到司南 Token。写字面值，禁止资源元素转发（库内 net472
+         BAML 键值错位血泪，见 Kaleidoscope AGENTS.md）。只补实际引用的键。 -->
+    <SolidColorBrush x:Key="Brush.TopbarFg" Color="#2A2118"/>
+    <SolidColorBrush x:Key="Brush.TopbarBorder" Color="#EDDFCC"/>
+    <SolidColorBrush x:Key="Brush.Fresh.Border" Color="#EDDFCC"/>
+    <SolidColorBrush x:Key="Brush.Fresh.FgStrong" Color="#2A2118"/>
+    <SolidColorBrush x:Key="Brush.Fresh.CloseHoverBg" Color="#B91C1C"/>
+    <SolidColorBrush x:Key="Brush.Shell.SysBtnHover" Color="#14000000"/>
+    <LinearGradientBrush x:Key="Brush.HeaderGrad" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#FFF9F0" Offset="0"/>
+        <GradientStop Color="#FBEFD9" Offset="1"/>
+    </LinearGradientBrush>
+    <!-- 标题条副题（Kaleidoscope.UI V2.4.2 起的可选键）：浅色标题条上必须用深字，
+         库内缺省是 72% 白色，只在深色渐变标题条上看得见。 -->
+    <SolidColorBrush x:Key="Brush.Shell.TitleSubFg" Color="#9A7B5A"/>
+    <LinearGradientBrush x:Key="Brush.Fresh.WinBg" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FFFFFFFF" Offset="0"/>
+        <GradientStop Color="#FFFFFCF6" Offset="1"/>
+    </LinearGradientBrush>
+    <CornerRadius x:Key="Fn.ShellRadius">18</CornerRadius>
+    <CornerRadius x:Key="Fn.ShellRadiusTop">18,18,0,0</CornerRadius>
+    <FontWeight x:Key="Fn.ShellTitleFontWeight">SemiBold</FontWeight>
+    <DropShadowEffect x:Key="Fx.WinShadow" Color="#B45309" BlurRadius="30"
+                      ShadowDepth="8" Direction="270" Opacity="0.22"/>
+
+    <!-- ==================== 排版 ==================== -->
+    <FontFamily x:Key="Font.Ui">Microsoft YaHei UI</FontFamily>
+    <FontFamily x:Key="Font.Mono">Consolas</FontFamily>
+    <!-- 字号严格对齐设计稿 extra.css：根字号 14 / 卡片头 12.5 / tiny 10.5 / tag 9.5。
+         页面标题 H1 只给登录标题与详情大标题（设计稿 17–19），
+         卡片头一律 H2=12.5，正文 Body=13.5（浏览器 14px 在 WPF 下略放大，收 0.5）。 -->
+    <sys:Double x:Key="Text.Size.H1">19</sys:Double>
+    <sys:Double x:Key="Text.Size.H2">12.5</sys:Double>
+    <sys:Double x:Key="Text.Size.Body">13.5</sys:Double>
+    <sys:Double x:Key="Text.Size.Small">11.5</sys:Double>
+    <sys:Double x:Key="Text.Size.Tiny">10.5</sys:Double>
+
+    <!-- ==================== 几何 ====================
+         只保留"卡片 20 / 内卡 16"两档实体键：设计稿 radius、card-r-sm。
+         胶囊（按钮/输入框/Chip/导航项/细进度条，设计稿 btnradius:99）不再设固定键——
+         WPF 的 Border.CornerRadius=99 会按横/纵分别钳成椭圆角（"尖锐/橄榄球"根因），
+         统一用库内 KxCapsuleBorder（内部绑 ActualHeight/2 求半高正圆）。 -->
+    <CornerRadius x:Key="Radius.Card">20</CornerRadius>
+    <CornerRadius x:Key="Radius.CardInset">16</CornerRadius>
+    <Thickness x:Key="Pad.Card">20</Thickness>
+    <Thickness x:Key="Pad.Page">20,20,20,20</Thickness>
+
+    <!-- ==================== 暖色柔影 ==================== -->
+    <DropShadowEffect x:Key="Fx.CardShadow" Color="#B45309" BlurRadius="34"
+                      ShadowDepth="6" Direction="270" Opacity="0.16"/>
+    <DropShadowEffect x:Key="Fx.CardShadowSoft" Color="#B45309" BlurRadius="18"
+                      ShadowDepth="3" Direction="270" Opacity="0.10"/>
+    <DropShadowEffect x:Key="Fx.PrimaryGlow" Color="#D97706" BlurRadius="16"
+                      ShadowDepth="3" Direction="270" Opacity="0.30"/>
+    <DropShadowEffect x:Key="Fx.WindowShadow" Color="#78B414" BlurRadius="46"
+                      ShadowDepth="12" Direction="270" Opacity="0.28"/>
+
+</ResourceDictionary>

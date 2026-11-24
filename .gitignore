@@ -1,0 +1,24 @@
+# 构建产物
+**/bin/
+**/obj/
+*.user
+*.suo
+.vs/
+
+# 运行时数据（数据库/附件/日志/归档一律在 %LOCALAPPDATA%\Sinan，不入库）
+*.db
+*.db-wal
+*.db-shm
+logs/
+attachments/
+archive/
+
+# 本机真实资料（仅用于本地自测，禁止入库）
+source/
+data/
+.sensitive.local
+
+# 系统与工具临时文件
+Thumbs.db
+desktop.ini
+.DS_Store

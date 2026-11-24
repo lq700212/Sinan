@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- WPF 桌面端：MVVM 分层，View 不直连数据库。 -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>Sinan.App</RootNamespace>
+    <AssemblyName>Sinan</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <SatelliteResourceLanguages>zh-Hans;en</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sinan.Core\Sinan.Core.csproj" />
+    <ProjectReference Include="..\Sinan.Data\Sinan.Data.csproj" />
+    <!-- 公司级 WPF 复用库（git submodule）；只引 UI 工程，主库 Kaleidoscope 是 net472 通讯库，司南不引。 -->
+    <ProjectReference Include="..\..\ThirdParty\Kaleidoscope\Kaleidoscope.UI\Kaleidoscope.UI.csproj" />
+  </ItemGroup>
+</Project>

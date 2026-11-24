@@ -1,0 +1,250 @@
+﻿<ui:ChromeBorderlessWindow x:Class="Sinan.App.Views.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:Kaleidoscope.UI.Views;assembly=Kaleidoscope.UI"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="司南 · 登录"
+        Width="1440" Height="900"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanMinimize"
+        CornerRadius="18" CaptionHeight="40"
+        FontFamily="{DynamicResource Font.Ui}"
+        FontSize="{DynamicResource Text.Size.Body}"
+        Foreground="{DynamicResource Brush.Fg}">
+
+    <!-- 设计稿 p1：左 52% 品牌区（暖色渐变 + 右下同心圆）/ 右 48% 登录区（392 卡片）。
+         表单是「标签 86px 右对齐 + 胶囊输入」，不是上下堆叠的标签。 -->
+    <Border CornerRadius="18" Background="{DynamicResource Brush.Bg}" SnapsToDevicePixels="True">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="52*"/>
+                <ColumnDefinition Width="48*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ==================== 左：品牌区 ==================== -->
+            <Border Grid.Column="0" Background="{DynamicResource Brush.BrandPanel}"
+                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,1,0"
+                    CornerRadius="18,0,0,18">
+                <Grid ClipToBounds="True">
+                    <!-- 设计稿 ::after 实线圆 420 / ::before 虚线圆 260，均贴右下角 -->
+                    <Ellipse Width="420" Height="420" Stroke="{DynamicResource Brush.Border}"
+                             StrokeThickness="1" Opacity="0.7"
+                             HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                             Margin="0,0,-120,-120" IsHitTestVisible="False"/>
+                    <Ellipse Width="260" Height="260" Stroke="{DynamicResource Brush.Border}"
+                             StrokeThickness="1" StrokeDashArray="4 4" Opacity="0.8"
+                             HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                             Margin="0,0,-60,-60" IsHitTestVisible="False"/>
+
+                    <StackPanel Margin="76,0" VerticalAlignment="Center">
+                        <!-- 品牌行：印章 56 + 名称 30 -->
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="56" Height="56" CornerRadius="16"
+                                    Background="{DynamicResource Brush.PrimaryGrad}"
+                                    Effect="{DynamicResource Fx.PrimaryGlow}">
+                                <TextBlock Text="司" Foreground="White" FontSize="26"
+                                           FontWeight="Bold" HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="司南" FontSize="30" FontWeight="Bold"
+                                           Foreground="{DynamicResource Brush.Fg}"/>
+                                <TextBlock Text="P7391 安装调试问题闭环系统"
+                                           FontSize="11" Foreground="{DynamicResource Brush.Muted}"
+                                           Margin="1,5,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- slogan 20 / 描述 12 × 行高 2 -->
+                        <TextBlock Text="让每个问题，都有方向" FontSize="20" FontWeight="Bold"
+                                   Foreground="{DynamicResource Brush.Fg}" Margin="0,26,0,0"/>
+                        <TextBlock Text="面向 P7391 产线安装调试期的现场问题台账。四阶段责任到人，计划倒挂当场标红，Excel 原表随时进出。"
+                                   FontSize="12" Foreground="{DynamicResource Brush.Muted}"
+                                   LineHeight="24" TextWrapping="Wrap" MaxWidth="460"
+                                   HorizontalAlignment="Left" Margin="0,12,0,0"/>
+
+                        <!-- 四个事实数字：字号 26 / 间距 28 -->
+                        <StackPanel Orientation="Horizontal" Margin="0,26,0,0">
+                            <StackPanel Margin="0,0,28,0">
+                                <TextBlock Text="{Binding IssueCount}" FontFamily="{DynamicResource Font.Mono}"
+                                           FontSize="26" FontWeight="Bold" Foreground="{DynamicResource Brush.Primary}"/>
+                                <TextBlock Text="条在册问题" FontSize="10.5"
+                                           Foreground="{DynamicResource Brush.Muted}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,28,0">
+                                <TextBlock Text="{Binding MachineCount}" FontFamily="{DynamicResource Font.Mono}"
+                                           FontSize="26" FontWeight="Bold" Foreground="{DynamicResource Brush.Primary}"/>
+                                <TextBlock Text="台机台" FontSize="10.5"
+                                           Foreground="{DynamicResource Brush.Muted}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,28,0">
+                                <TextBlock Text="{Binding SubprojectCount}" FontFamily="{DynamicResource Font.Mono}"
+                                           FontSize="26" FontWeight="Bold" Foreground="{DynamicResource Brush.Primary}"/>
+                                <TextBlock Text="个分项目" FontSize="10.5"
+                                           Foreground="{DynamicResource Brush.Muted}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="{Binding StageNodeCount}" FontFamily="{DynamicResource Font.Mono}"
+                                           FontSize="26" FontWeight="Bold" Foreground="{DynamicResource Brush.Primary}"/>
+                                <TextBlock Text="个阶段节点" FontSize="10.5"
+                                           Foreground="{DynamicResource Brush.Muted}" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- 左下常驻：真实数据库状态与版本 -->
+                        <StackPanel Orientation="Horizontal" Margin="0,28,0,0">
+                            <ContentControl Style="{StaticResource Chip}" Tag="ok">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Style="{StaticResource Dot}" Tag="ok" Width="6" Height="6"
+                                             Margin="0,0,5,0"/>
+                                    <TextBlock Text="本地数据库正常" FontSize="10"/>
+                                </StackPanel>
+                            </ContentControl>
+                            <TextBlock Text="{Binding VersionDisplay}" Style="{StaticResource T.Mono}"
+                                       FontSize="10" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding DataPathDisplay}" Style="{StaticResource T.Mono}"
+                                   FontSize="10" Margin="0,8,0,0" MaxWidth="520"
+                                   HorizontalAlignment="Left" TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding DataPathDisplay}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- ==================== 右：登录区 ==================== -->
+            <Grid Grid.Column="1">
+                <Ellipse Width="420" Height="420" Fill="{DynamicResource Brush.MeshC}"
+                         HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                         Margin="0,0,-180,-200" IsHitTestVisible="False"/>
+
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="392">
+                    <Border Padding="26,26,26,18"
+                            Background="{DynamicResource Brush.Panel}"
+                            BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                            CornerRadius="{DynamicResource Radius.Card}"
+                            Effect="{DynamicResource Fx.CardShadow}">
+                        <StackPanel>
+                            <TextBlock Text="登录工作台" FontSize="19" FontWeight="Bold"
+                                       Foreground="{DynamicResource Brush.Fg}"/>
+                            <TextBlock Text="使用调试组工号，数据保存在本机" FontSize="11"
+                                       Foreground="{DynamicResource Brush.Muted}" Margin="0,4,0,18"/>
+
+                            <!-- 工号 -->
+                            <Grid Margin="0,0,0,9">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="86"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="工号" FontSize="11.5"
+                                           Foreground="{DynamicResource Brush.Muted}"
+                                           TextAlignment="Right" VerticalAlignment="Center"
+                                           Margin="0,0,8,0"/>
+                                <TextBox Grid.Column="1" x:Name="EmployeeNoBox"
+                                         Style="{StaticResource Input.Text}" Height="30" FontSize="11.5"
+                                         Text="{Binding EmployeeNo, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+
+                            <!-- 密码 -->
+                            <Grid Margin="0,0,0,9">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="86"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="密码" FontSize="11.5"
+                                           Foreground="{DynamicResource Brush.Muted}"
+                                           TextAlignment="Right" VerticalAlignment="Center"
+                                           Margin="0,0,8,0"/>
+                                <PasswordBox Grid.Column="1" x:Name="PasswordInput"
+                                             Style="{StaticResource Input.Password}" Height="30" FontSize="11.5"
+                                             PasswordChanged="OnPasswordChanged"/>
+                            </Grid>
+
+                            <!-- 数据文件（真实路径，只读） -->
+                            <Grid Margin="0,0,0,9">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="86"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="数据文件" FontSize="11.5"
+                                           Foreground="{DynamicResource Brush.Muted}"
+                                           TextAlignment="Right" VerticalAlignment="Center"
+                                           Margin="0,0,8,0"/>
+                                <TextBox Grid.Column="1" Style="{StaticResource Input.Text}"
+                                         Height="30" FontSize="10" IsReadOnly="True"
+                                         FontFamily="{DynamicResource Font.Mono}"
+                                         Foreground="{DynamicResource Brush.Muted}"
+                                         Text="{Binding DataPathDisplay, Mode=OneWay}"
+                                         ToolTip="{Binding DataPathDisplay}"/>
+                            </Grid>
+
+                            <!-- 记住工号 + 上次提示 -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="86"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <CheckBox Grid.Column="1" Style="{StaticResource Check.Box}"
+                                          Content="记住工号" FontSize="11"
+                                          IsChecked="{Binding RememberEmployeeNo}"/>
+                                <TextBlock Grid.Column="2" Text="首次登录后请修改默认密码" FontSize="10"
+                                           Foreground="{DynamicResource Brush.Muted}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <Button Content="进入项目总览" Style="{StaticResource Btn.Primary}"
+                                    Command="{Binding LoginCommand}" IsDefault="True"
+                                    Height="38" FontSize="13" HorizontalContentAlignment="Center"/>
+
+                            <!-- 失败原因就地展开，不弹二级窗 -->
+                            <Border Margin="0,12,0,0" Padding="9,7" CornerRadius="8"
+                                    Background="{DynamicResource Brush.PrimaryDim}"
+                                    Visibility="{Binding HasError, Converter={StaticResource TrueToVisibility}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="16" Height="16" CornerRadius="8"
+                                            Background="{DynamicResource Brush.Primary}" Margin="0,1,7,0">
+                                        <TextBlock Text="!" FontSize="9" FontWeight="Bold" Foreground="White"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap"
+                                               FontSize="10.5" MaxWidth="300"
+                                               Foreground="{DynamicResource Brush.Primary}"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource Hairline}" Margin="0,14,0,11"/>
+
+                            <Grid>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="数据目录" FontSize="10"
+                                               Foreground="{DynamicResource Brush.Muted}"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding DataRootDisplay}" FontFamily="{DynamicResource Font.Mono}"
+                                               FontSize="10" Foreground="{DynamicResource Brush.Muted}"
+                                               Margin="7,0,0,0" MaxWidth="150"
+                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                                <Button Content="手机端配对" Style="{StaticResource Btn.Ghost}"
+                                        HorizontalAlignment="Right" Height="22" Padding="0" FontSize="10"
+                                        Command="{Binding ShowPairingCommand}"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Style="{StaticResource T.Tiny}" FontSize="10.5"
+                               HorizontalAlignment="Center" Margin="0,14,0,0"
+                               LineHeight="19" TextAlignment="Center"
+                               Text="首次使用请先在「数据交换」导入 Excel，建立台账。&#10;演示数据：P7391 虚构样例，照片为演示占位。"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- 关闭按钮：WindowChrome 标题区内的按钮必须显式放行点击 -->
+            <Button x:Name="CloseButton" Style="{StaticResource Btn.Icon}" Content="✕"
+                    HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Margin="0,8,10,0" FontSize="13"
+                    ToolTip="关闭"
+                    shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                    Click="OnCloseClick"/>
+        </Grid>
+    </Border>
+</ui:ChromeBorderlessWindow>
