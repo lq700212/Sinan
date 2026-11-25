@@ -40,6 +40,8 @@ public sealed class ExchangeViewModel : ObservableObject
     private int _step = 1;
     private LayoutOption _layout;
     private ScopeOption _scope;
+    private bool _isExportMode;
+    private List<ExportPreviewRow> _exportPreviewRows = new();
 
     public ExchangeViewModel(App app, INavigationService nav)
     {
@@ -74,6 +76,21 @@ public sealed class ExchangeViewModel : ObservableObject
         };
         _scope = Scopes[0];
 
+        // 每个范围的实时条数：设计稿每行都带"36 条 / 5 条"，这里按库内实况填，
+        // 不照抄演示值；切范围时预览行与估算文案一起换（见 Scope setter）。
+        var allIssues = app.Issues.All();
+        foreach (var scope in Scopes)
+        {
+            scope.CountText = scope.Value switch
+            {
+                "inverted" => $"{allIssues.Count(i => i.IsInverted)} 条",
+                "overdue" => $"{allIssues.Count(i => i.OverdueDays > 0)} 条",
+                "photos" => $"{allIssues.Count(i => i.PhotoCount > 0)} 条",
+                _ => $"{allIssues.Count} 条"
+            };
+        }
+        _exportPreviewRows = BuildExportPreview(allIssues, _scope.Value);
+
         Rows = new ObservableCollection<ImportRowPreview>();
 
         PreviewCommand = new AsyncRelayCommand(PreviewAsync);
@@ -85,6 +102,7 @@ public sealed class ExchangeViewModel : ObservableObject
         StepBackCommand = new RelayCommand(() => Step = Math.Max(1, Step - 1), () => CanGoBack);
         StepNextCommand = new RelayCommand(() => Step = Math.Min(4, Step + 1), () => CanGoNext);
         GoStepCommand = new RelayCommand(p => GoStep(p));
+        SetModeCommand = new RelayCommand(p => IsExportMode = p as string == "export");
 
         LastImportDisplay = app.Projects.GetOverview().LastImportDisplay;
         ExportDirDisplay = Path.Combine(app.Database.Paths.ArchiveDir, "exports");
@@ -110,7 +128,8 @@ public sealed class ExchangeViewModel : ObservableObject
         {
             if (!SetProperty(ref _step, value)) return;
             OnPropertiesChanged(nameof(StepTitle), nameof(CanGoBack), nameof(CanGoNext),
-                nameof(StepHint), nameof(IsStep1), nameof(IsStep2), nameof(IsStep3), nameof(IsStep4));
+                nameof(StepHint), nameof(IsStep1), nameof(IsStep2), nameof(IsStep3), nameof(IsStep4),
+                nameof(IsStep1Done), nameof(IsStep2Done), nameof(IsStep3Done));
             StepBackCommand.RaiseCanExecuteChanged();
             StepNextCommand.RaiseCanExecuteChanged();
         }
@@ -120,6 +139,11 @@ public sealed class ExchangeViewModel : ObservableObject
     public bool IsStep2 => Step == 2;
     public bool IsStep3 => Step == 3;
     public bool IsStep4 => Step == 4;
+
+    /// <summary>已完成的步骤（步骤条画绿色 ✓）；第 4 步完成即整批导入结束。</summary>
+    public bool IsStep1Done => Step > 1;
+    public bool IsStep2Done => Step > 2;
+    public bool IsStep3Done => Step > 3;
 
     public string StepTitle => Step switch
     {
@@ -164,8 +188,66 @@ public sealed class ExchangeViewModel : ObservableObject
         set
         {
             if (value == null || !SetProperty(ref _scope, value)) return;
-            OnPropertiesChanged(nameof(ExportEstimateText));
+            _exportPreviewRows = BuildExportPreview(_app.Issues.All(), value.Value);
+            OnPropertiesChanged(nameof(ExportEstimateText), nameof(ExportPreviewRows),
+                nameof(ExportPreviewCaption));
         }
+    }
+
+    /// <summary>
+    /// 数据交换页的两种模式：设计稿把"导入"和"导出"做成两个独立整页（data-page=import/export），
+    /// 侧栏同一个"数据交换"入口。这里用一个布尔切换，顶部分段按钮来回切，不新增导航项。
+    /// </summary>
+    public bool IsExportMode
+    {
+        get => _isExportMode;
+        set
+        {
+            if (!SetProperty(ref _isExportMode, value)) return;
+            OnPropertiesChanged(nameof(IsImportMode));
+        }
+    }
+
+    public bool IsImportMode => !IsExportMode;
+
+    /// <summary>导出预览：按范围取前 4 条，字段与原表版式列序一致（设计稿"前 4 行"）。</summary>
+    public IReadOnlyList<ExportPreviewRow> ExportPreviewRows => _exportPreviewRows;
+
+    public string ExportPreviewCaption => ExportEstimateText;
+
+    private static List<ExportPreviewRow> BuildExportPreview(List<Issue> issues, string scope)
+    {
+        var filtered = scope switch
+        {
+            "inverted" => issues.Where(i => i.IsInverted),
+            "overdue" => issues.Where(i => i.OverdueDays > 0),
+            "photos" => issues.Where(i => i.PhotoCount > 0),
+            _ => issues
+        };
+
+        return filtered
+            .OrderBy(i => i.SourceRow ?? int.MaxValue)
+            .ThenBy(i => i.SeqNo, SeqNoComparer.Instance)
+            .Take(4)
+            .Select(i => new ExportPreviewRow
+            {
+                SeqNo = i.SeqNo,
+                MachineCode = i.MachineCode,
+                Title = i.Title,
+                Solution = i.Solution,
+                PlanOwner = i.PlanStage?.OwnerText ?? "",
+                PlanDue = i.PlanStage?.DueRaw ?? "",
+                DesignOwner = i.DesignStage?.OwnerText ?? "",
+                DesignDue = i.DesignStage?.DueRaw ?? "",
+                MaterialOwner = i.MaterialStage?.OwnerText ?? "",
+                MaterialDue = i.MaterialStage?.DueRaw ?? "",
+                AssemblyOwner = i.AssemblyStage?.OwnerText ?? "",
+                AssemblyDue = i.AssemblyStage?.DueRaw ?? "",
+                Status = i.Status,
+                Completion = i.CompletionText,
+                IsInverted = i.IsInverted
+            })
+            .ToList();
     }
 
     /// <summary>导出前的估算文案：让用户在点按钮前就知道会导多少条。</summary>
@@ -181,7 +263,17 @@ public sealed class ExchangeViewModel : ObservableObject
                 "photos" => all.Count(i => i.PhotoCount > 0),
                 _ => all.Count
             };
-            return $"将导出 {count} 条 · 版式「{Layout?.Label ?? "原表版式"}」";
+            var photos = all
+                .Where(i => (Scope?.Value ?? "all") switch
+                {
+                    "inverted" => i.IsInverted,
+                    "overdue" => i.OverdueDays > 0,
+                    "photos" => i.PhotoCount > 0,
+                    _ => true
+                })
+                .Sum(i => i.PhotoCount);
+            var sheets = 3 + (IncludeChangeLog ? 1 : 0);
+            return $"将导出 {count} 条 · {sheets} 个工作表 · 照片 {photos} 张";
         }
     }
 
@@ -218,13 +310,21 @@ public sealed class ExchangeViewModel : ObservableObject
     public bool IncludeAttachments
     {
         get => _includeAttachments;
-        set => SetProperty(ref _includeAttachments, value);
+        set
+        {
+            if (!SetProperty(ref _includeAttachments, value)) return;
+            OnPropertiesChanged(nameof(ExportEstimateText));
+        }
     }
 
     public bool IncludeChangeLog
     {
         get => _includeChangeLog;
-        set => SetProperty(ref _includeChangeLog, value);
+        set
+        {
+            if (!SetProperty(ref _includeChangeLog, value)) return;
+            OnPropertiesChanged(nameof(ExportEstimateText));
+        }
     }
 
     public string FilePath
@@ -239,13 +339,37 @@ public sealed class ExchangeViewModel : ObservableObject
         private set
         {
             if (!SetProperty(ref _preview, value)) return;
-            OnPropertiesChanged(nameof(HasPreview), nameof(PreviewSummary), nameof(CanApply));
+            OnPropertiesChanged(nameof(HasPreview), nameof(PreviewSummary), nameof(CanApply),
+                nameof(BatchBadgeText));
         }
     }
 
     public bool HasPreview => Preview != null;
     public bool CanApply => Preview != null && (Preview.InsertCount + Preview.UpdateCount > 0);
     public string PreviewSummary => Preview == null ? "" : Preview.Summary;
+
+    /// <summary>步骤条右侧的批次徽标：预览阶段还没写库，不能编造批次号。</summary>
+    public string BatchBadgeText => Preview == null ? "等待选择文件" : "预览 · 未写库";
+
+    /// <summary>
+    /// 列映射说明（设计稿 import 页「列映射」表）。这是系统固定口径，不随文件变化：
+    /// 原表列 → 系统字段 → 处理规则。说明里不写"缺 7/19/28"这类演示数字，
+    /// 具体缺口以实际解析结果为准。
+    /// </summary>
+    public IReadOnlyList<ColumnMappingRow> ColumnMappings { get; } = new[]
+    {
+        new ColumnMappingRow("A 序号", "序号", "原样保留，允许缺口，不重排"),
+        new ColumnMappingRow("B 机台号", "机台号", "P7391xxx；异常值进“待确认”"),
+        new ColumnMappingRow("—（派生）", "分项目号", "1xx→01 · 2xx→02 · 3xx→03"),
+        new ColumnMappingRow("C 存在问题", "问题标题", "必填"),
+        new ColumnMappingRow("D 解决措施", "解决措施", "可空"),
+        new ColumnMappingRow("E / F 方案", "方案确定 · 责任人 / 计划", "空白与“/”分开存"),
+        new ColumnMappingRow("G / H 设计", "设计下图 · 责任人 / 计划", "文字计划原样保留"),
+        new ColumnMappingRow("I / J 物料", "物料准备 · 责任人 / 计划", "空白与“/”分开存"),
+        new ColumnMappingRow("K / L 装配", "装配调试 · 责任人 / 计划", "责任人含“/”多人"),
+        new ColumnMappingRow("M 状态", "状态", "无法识别时按待分派"),
+        new ColumnMappingRow("N 完成情况", "完成情况", "原样保留")
+    };
 
     public ImportResult? ImportResult
     {
@@ -315,6 +439,7 @@ public sealed class ExchangeViewModel : ObservableObject
     public RelayCommand StepBackCommand { get; }
     public RelayCommand StepNextCommand { get; }
     public RelayCommand GoStepCommand { get; }
+    public RelayCommand SetModeCommand { get; }
 
     /// <summary>
     /// 跳到指定步：只允许跳到"已完成"的步（≤ 当前进度）。
@@ -669,6 +794,44 @@ public sealed class LayoutOption
     public override string ToString() => Label;
 }
 
+/// <summary>列映射表的一行（原表列 / 系统字段 / 处理规则）。</summary>
+public sealed class ColumnMappingRow
+{
+    public ColumnMappingRow(string source, string target, string note)
+    {
+        Source = source;
+        Target = target;
+        Note = note;
+    }
+
+    public string Source { get; }
+    public string Target { get; }
+    public string Note { get; }
+}
+
+/// <summary>
+/// 导出预览的一行：列序与原表版式一致（序号/机台号/问题/措施/设计/装配/状态），
+/// 只用于"版式预览"，不参与导出计算。日期保留原文，不在预览里格式化。
+/// </summary>
+public sealed class ExportPreviewRow
+{
+    public string SeqNo { get; init; } = "";
+    public string MachineCode { get; init; } = "";
+    public string Title { get; init; } = "";
+    public string Solution { get; init; } = "";
+    public string PlanOwner { get; init; } = "";
+    public string PlanDue { get; init; } = "";
+    public string DesignOwner { get; init; } = "";
+    public string DesignDue { get; init; } = "";
+    public string MaterialOwner { get; init; } = "";
+    public string MaterialDue { get; init; } = "";
+    public string AssemblyOwner { get; init; } = "";
+    public string AssemblyDue { get; init; } = "";
+    public string Status { get; init; } = "";
+    public string Completion { get; init; } = "";
+    public bool IsInverted { get; init; }
+}
+
 /// <summary>导出范围（设计稿 export 页「导出范围」）。</summary>
 public sealed class ScopeOption
 {
@@ -682,6 +845,9 @@ public sealed class ScopeOption
     public string Value { get; }
     public string Label { get; }
     public string Hint { get; }
+
+    /// <summary>实时条数（如"36 条"），构造时按库内实况算一次，不写死设计稿演示值。</summary>
+    public string CountText { get; set; } = "";
 
     public string AccessibleName => $"范围 {Label}";
 

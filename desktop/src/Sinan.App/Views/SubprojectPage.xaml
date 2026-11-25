@@ -1,47 +1,53 @@
 <UserControl x:Class="Sinan.App.Views.SubprojectPage"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:ui="clr-namespace:Kaleidoscope.UI.Views;assembly=Kaleidoscope.UI"
         FontFamily="{DynamicResource Font.Ui}"
         FontSize="{DynamicResource Text.Size.Body}">
 
     <!--
       ============================================================================
-      分项目 · 设备问题预览（设计稿 p1 project）
-      左侧设备清单表 + 右侧选中设备的问题点面板，同屏不跳页。
-      照片全部是演示占位（历史 Excel 无附件），界面必须带"演示值"字样。
-      圆角一律走主题 Radius.* 与库内 KxCapsuleBorder，不写死数值。
+      分项目 · 设备问题预览（设计稿 p1 · data-page="project"）
+      结构对照设计稿：
+        面包屑 → 分项目头卡（印章 + 名称 + 4 项 meta + 倒挂/导出）
+        → 左右两栏：左"设备清单"（band 卡头 + 表格 + 卡底），
+                    右"选中设备问题点"（band 卡头 + 摘要条 + 问题卡 + 照片条 + 卡底）
+      设计取舍：
+        - 设备表用 ListBox 自绘行而不是 GridView：设计稿列宽是"128/108/70/剩余"，
+          GridView 最后一列不能写 *，1440 下会留一条空列；自绘 Grid 能铺满且
+          选中行可以带左侧 2px 主色条（设计稿 .dev-tbl tr.on 的 inset 阴影）。
+        - 问题卡只挂"最需要处理的一个"标签（倒挂 > 计划文本 > 设计未填），
+          照片数单独一枚绿标，与设计稿三张演示卡的信息密度一致。
+        - 照片是演示占位（历史 Excel 无附件），标题与卡底都必须带"演示"字样。
       ============================================================================
     -->
 
     <Grid Margin="0,0,12,0">
         <Grid.RowDefinitions>
-            <!-- 面包屑 -->
             <RowDefinition Height="Auto"/>
-            <!-- 分项目头卡 -->
             <RowDefinition Height="Auto"/>
-            <!-- 左右两栏（撑满剩余高度） -->
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- ==================== 面包屑 ==================== -->
+        <!-- ==================== 面包屑（.crumbbar） ==================== -->
         <Grid Grid.Row="0" Margin="2,0,2,10">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock Text="P7391 总项目" Style="{StaticResource T.Tiny}" FontSize="10.5"
-                           Foreground="{DynamicResource Brush.Primary}" Cursor="Hand"/>
-                <TextBlock Text="›" Style="{StaticResource T.Tiny}" FontSize="10.5" Margin="6,0"/>
+                           Foreground="{DynamicResource Brush.Muted}" Cursor="Hand"/>
+                <TextBlock Text="›" Style="{StaticResource T.Tiny}" FontSize="10.5" Margin="6,0"
+                           Foreground="{DynamicResource Brush.Faint}"/>
                 <TextBlock Text="{Binding Code}" Style="{StaticResource T.Tiny}" FontSize="10.5"
-                           FontWeight="SemiBold" FontFamily="{DynamicResource Font.Mono}"
+                           FontWeight="Bold" FontFamily="{DynamicResource Font.Mono}"
                            Foreground="{DynamicResource Brush.Fg}"/>
-                <TextBlock Text="›" Style="{StaticResource T.Tiny}" FontSize="10.5" Margin="6,0"/>
+                <TextBlock Text="›" Style="{StaticResource T.Tiny}" FontSize="10.5" Margin="6,0"
+                           Foreground="{DynamicResource Brush.Faint}"/>
                 <TextBlock Text="设备问题预览" Style="{StaticResource T.Tiny}" FontSize="10.5"/>
             </StackPanel>
-            <TextBlock Text="{Binding MachineRange}" Style="{StaticResource T.Tiny}" FontSize="10.5"
+            <TextBlock Text="{Binding MachineRange}" Style="{StaticResource T.Tiny}" FontSize="10"
                        HorizontalAlignment="Right" VerticalAlignment="Center"/>
         </Grid>
 
-        <!-- ==================== 分项目头卡 ==================== -->
-        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="16,13" Margin="0,0,0,12">
+        <!-- ==================== 分项目头卡（.proj-hero） ==================== -->
+        <Border Grid.Row="1" Style="{StaticResource Card}" Padding="10,10" Margin="0,0,0,11">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -49,19 +55,19 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- 分项目印章：设计稿 proj-seal 只放分项目序号（01），圆角 12 / 等宽粗体 -->
-                <Border Grid.Column="0" Width="46" Height="46" CornerRadius="12"
+                <!-- 印章：设计稿本页把 52 覆盖成 40×40 / 15px，只放分项目序号 -->
+                <Border Grid.Column="0" Width="40" Height="40" CornerRadius="10"
                         Background="{DynamicResource Brush.PrimaryGrad}" VerticalAlignment="Center">
                     <TextBlock Text="{Binding SealText}" FontFamily="{DynamicResource Font.Mono}"
-                               FontSize="17" FontWeight="Bold" Foreground="{DynamicResource Brush.OnPrimary}"
+                               FontSize="15" FontWeight="Bold" Foreground="{DynamicResource Brush.OnPrimary}"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
 
-                <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding Name}" FontSize="15.5" FontWeight="Bold"
+                        <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="Bold"
                                    Foreground="{DynamicResource Brush.Fg}" VerticalAlignment="Center"/>
-                        <ContentControl Margin="9,0,0,0">
+                        <ContentControl Margin="8,0,0,0">
                             <ContentControl.Style>
                                 <Style TargetType="ContentControl" BasedOn="{StaticResource Chip}">
                                     <Setter Property="Tag" Value="{Binding StatusChipTag}"/>
@@ -71,29 +77,21 @@
                         </ContentControl>
                     </StackPanel>
                     <TextBlock Text="{Binding SummaryText}" Style="{StaticResource T.Tiny}"
-                               FontSize="10.5" Margin="0,4,0,0"/>
+                               FontSize="10.5" Margin="0,3,0,0"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <ContentControl Style="{StaticResource Chip}" Tag="ng" Margin="0,0,8,0"
+                    <ContentControl Style="{StaticResource Chip}" Tag="warn" Margin="0,0,8,0"
                                     Visibility="{Binding HasInverted, Converter={StaticResource TrueToVisibility}}">
                         <TextBlock Text="{Binding InvertedText}" FontSize="10"/>
                     </ContentControl>
-                    <ContentControl Margin="0,0,8,0">
-                        <ContentControl.Style>
-                            <Style TargetType="ContentControl" BasedOn="{StaticResource Chip}">
-                                <Setter Property="Tag" Value="plain"/>
-                            </Style>
-                        </ContentControl.Style>
-                        <TextBlock Text="{Binding PhotoNote}" FontSize="10"/>
-                    </ContentControl>
-                    <Button Content="在台账中筛选 →" Style="{StaticResource Btn.Secondary}" Height="30"
-                            FontSize="11.5" Command="{Binding OpenIssuesCommand}"/>
+                    <Button Content="导出本分项目" Style="{StaticResource Btn.Ghost}" Height="28"
+                            FontSize="11" Command="{Binding ExportCommand}"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- ==================== 左右两栏 ==================== -->
+        <!-- ==================== 左右两栏（.dev-layout） ==================== -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -109,135 +107,208 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0" Margin="18,14,18,10">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="设备清单" Style="{StaticResource T.H2}" FontSize="15"/>
-                            <ContentControl Style="{StaticResource Chip}" Tag="on" Margin="10,0,0,0">
-                                <TextBlock Text="{Binding MachineCount, StringFormat={}{0} 台}" FontSize="10"/>
-                            </ContentControl>
-                        </StackPanel>
-                        <TextBlock Text="点行查看该设备问题点" Style="{StaticResource T.Tiny}"
-                                   HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    <!-- 卡头 band：浅色带底 + 底边线，顶角与卡片同心 -->
+                    <Border Grid.Row="0" Background="{DynamicResource Brush.CardWell}"
+                            BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,0,0,1"
+                            CornerRadius="18,18,0,0" Padding="14,8">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="20" CornerRadius="6"
+                                        Background="{DynamicResource Brush.PrimaryDim}">
+                                    <TextBlock Text="▤" FontSize="10"
+                                               Foreground="{DynamicResource Brush.Primary}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="设备清单" FontSize="12.5" FontWeight="Bold"
+                                           Foreground="{DynamicResource Brush.Fg}"
+                                           VerticalAlignment="Center" Margin="7,0,0,0"/>
+                                <ContentControl Style="{StaticResource Chip}" Tag="plain" Margin="8,0,0,0">
+                                    <TextBlock Text="{Binding MachineCount, StringFormat={}{0} 台}" FontSize="9.5"/>
+                                </ContentControl>
+                            </StackPanel>
+                            <TextBlock Text="点行查看该设备问题点" Style="{StaticResource T.Tiny}" FontSize="9.5"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- 自绘表头：列宽与行模板严格一致（128 / 108 / 70 / 剩余） -->
+                    <Grid Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Background="{DynamicResource Brush.TheadBg}"
+                                BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,0,0,1">
+                            <Grid Height="30">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="128"/>
+                                    <ColumnDefinition Width="108"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="机台号" Margin="14,0,0,0"
+                                           Style="{StaticResource T.Tiny}" FontSize="10"
+                                           FontWeight="SemiBold" Foreground="{DynamicResource Brush.TheadFg}"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="问题 / 倒挂" Margin="10,0,0,0"
+                                           Style="{StaticResource T.Tiny}" FontSize="10"
+                                           FontWeight="SemiBold" Foreground="{DynamicResource Brush.TheadFg}"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="照片" Margin="10,0,0,0"
+                                           Style="{StaticResource T.Tiny}" FontSize="10"
+                                           FontWeight="SemiBold" Foreground="{DynamicResource Brush.TheadFg}"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="3" Text="装配责任人" Margin="10,0,0,0"
+                                           Style="{StaticResource T.Tiny}" FontSize="10"
+                                           FontWeight="SemiBold" Foreground="{DynamicResource Brush.TheadFg}"
+                                           VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <ListBox Grid.Row="1" x:Name="MachineTable" Margin="0"
+                                 AutomationProperties.AutomationId="MachineTable"
+                                 ItemsSource="{Binding Machines}"
+                                 SelectedItem="{Binding SelectedMachine, Mode=TwoWay}"
+                                 Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 FocusVisualStyle="{x:Null}">
+                            <ListBox.Template>
+                                <ControlTemplate TargetType="ListBox">
+                                    <ScrollViewer Background="Transparent" Padding="0"
+                                                  HorizontalScrollBarVisibility="Disabled"
+                                                  VerticalScrollBarVisibility="Auto">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </ListBox.Template>
+                            <ListBox.ItemContainerStyle>
+                                <!-- 行：默认透明；悬停浅底；选中主色柔底 + 左侧 2px 主色条。
+                                     无障碍名绑机台号，自动化与读屏能定位到具体设备。 -->
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                    <Setter Property="AutomationProperties.Name" Value="{Binding Code}"/>
+                                    <Setter Property="AutomationProperties.AutomationId"
+                                            Value="{Binding Code, StringFormat=machine-{0}}"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="Bd" Background="Transparent"
+                                                        BorderBrush="{DynamicResource Brush.SepLine}"
+                                                        BorderThickness="0,0,0,1" Padding="0">
+                                                    <ContentPresenter/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background"
+                                                                Value="{DynamicResource Brush.RowHover}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background"
+                                                                Value="{DynamicResource Brush.PrimaryDim}"/>
+                                                        <Setter TargetName="Bd" Property="BorderBrush"
+                                                                Value="{DynamicResource Brush.Primary}"/>
+                                                        <Setter TargetName="Bd" Property="BorderThickness"
+                                                                Value="2,0,0,1"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Height="33">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="128"/>
+                                            <ColumnDefinition Width="108"/>
+                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0" Text="{Binding Code}" Margin="14,0,0,0"
+                                                   FontFamily="{DynamicResource Font.Mono}" FontSize="11.5"
+                                                   FontWeight="Bold"
+                                                   Foreground="{DynamicResource Brush.Fg}"
+                                                   VerticalAlignment="Center"/>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                                    Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding IssueCount}" FontSize="12"
+                                                       FontFamily="{DynamicResource Font.Mono}"
+                                                       FontWeight="Bold"
+                                                       Foreground="{DynamicResource Brush.Fg}"/>
+                                            <ContentControl Style="{StaticResource Chip}" Tag="ng"
+                                                            Margin="6,0,0,0" MinHeight="16" Padding="6,0"
+                                                            Visibility="{Binding HasInverted, Converter={StaticResource TrueToVisibility}}">
+                                                <TextBlock Text="{Binding InvertedCount}" FontSize="9"/>
+                                            </ContentControl>
+                                        </StackPanel>
+
+                                        <Grid Grid.Column="2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="—" Foreground="{DynamicResource Brush.Faint}"
+                                                       FontSize="10">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasPhoto}" Value="False">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <ContentControl MinHeight="16" Padding="6,0"
+                                                            HorizontalAlignment="Left">
+                                                <ContentControl.Style>
+                                                    <Style TargetType="ContentControl" BasedOn="{StaticResource Chip}">
+                                                        <Setter Property="Tag" Value="ok"/>
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasPhoto}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ContentControl.Style>
+                                                <TextBlock Text="{Binding PhotoCount}" FontSize="9"/>
+                                            </ContentControl>
+                                        </Grid>
+
+                                        <TextBlock Grid.Column="3" Text="{Binding AssemblyOwnersDisplay}"
+                                                   Margin="10,0,14,0" FontSize="10.5"
+                                                   Foreground="{DynamicResource Brush.Muted}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center"
+                                                   ToolTip="{Binding AssemblyOwners}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </Grid>
 
-                    <ListView Grid.Row="1" Style="{StaticResource Grid.Table}" Margin="8,0,8,0"
-                              ItemsSource="{Binding Machines}"
-                              SelectedItem="{Binding SelectedMachine, Mode=TwoWay}">
-                        <ListView.ItemContainerStyle>
-                            <!-- 行无障碍名绑机台号：默认行名是类型名（十行全同名），
-                                 读屏与自动化都定位不到具体设备。 -->
-                            <Style TargetType="ListViewItem" BasedOn="{StaticResource Grid.Row}">
-                                <Setter Property="AutomationProperties.Name" Value="{Binding Code}"/>
-                                <Setter Property="AutomationProperties.AutomationId"
-                                        Value="{Binding Code, StringFormat=machine-{0}}"/>
-                            </Style>
-                        </ListView.ItemContainerStyle>
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn Header="机台号" Width="132"
-                                                HeaderContainerStyle="{StaticResource Grid.Header}">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Code}" Margin="10,0,0,0"
-                                                       FontFamily="{DynamicResource Font.Mono}" FontSize="12"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource Brush.Fg}"
-                                                       VerticalAlignment="Center"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-
-                                <GridViewColumn Header="问题 / 倒挂" Width="112"
-                                                HeaderContainerStyle="{StaticResource Grid.Header}">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" Margin="10,0,0,0"
-                                                        VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding IssueCount}" FontSize="12.5"
-                                                           FontFamily="{DynamicResource Font.Mono}"
-                                                           FontWeight="Bold"
-                                                           Foreground="{DynamicResource Brush.Fg}"/>
-                                                <ContentControl Margin="6,0,0,0"
-                                                                Visibility="{Binding HasInverted, Converter={StaticResource TrueToVisibility}}">
-                                                    <ContentControl.Style>
-                                                        <Style TargetType="ContentControl" BasedOn="{StaticResource Chip}">
-                                                            <Setter Property="Tag" Value="ng"/>
-                                                        </Style>
-                                                    </ContentControl.Style>
-                                                    <TextBlock Text="{Binding InvertedCount}" FontSize="9.5"/>
-                                                </ContentControl>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-
-                                <GridViewColumn Header="照片" Width="76"
-                                                HeaderContainerStyle="{StaticResource Grid.Header}">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Grid Margin="10,0,0,0" VerticalAlignment="Center">
-                                                <!-- 0 张显示破折号，>0 显示绿色计数徽标；两者互斥，同位置叠放 -->
-                                                <TextBlock Text="—" Foreground="{DynamicResource Brush.Faint}">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock" BasedOn="{StaticResource T.Tiny}">
-                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding HasPhoto}" Value="False">
-                                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                                <ContentControl>
-                                                    <ContentControl.Style>
-                                                        <Style TargetType="ContentControl" BasedOn="{StaticResource Chip}">
-                                                            <Setter Property="Tag" Value="ok"/>
-                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding HasPhoto}" Value="True">
-                                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </ContentControl.Style>
-                                                    <TextBlock Text="{Binding PhotoCount}" FontSize="9.5"/>
-                                                </ContentControl>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-
-                                <GridViewColumn Header="装配责任人" Width="180"
-                                                HeaderContainerStyle="{StaticResource Grid.Header}">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding AssemblyOwnersDisplay}"
-                                                       Margin="10,0,0,0" FontSize="11.5"
-                                                       Foreground="{DynamicResource Brush.Muted}"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       VerticalAlignment="Center"
-                                                       ToolTip="{Binding AssemblyOwners}"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
-
-                    <Border Grid.Row="2" Style="{StaticResource Hairline}" Margin="18,10,18,0"/>
-                    <Grid Grid.Row="2" Margin="18,10,18,12">
-                        <TextBlock Style="{StaticResource T.Tiny}" FontSize="10.5" VerticalAlignment="Center">
-                            <Run Text="{Binding MachineCount, Mode=OneWay}"/><Run Text=" 台 · "/>
-                            <Run Text="{Binding IssueCount, Mode=OneWay}"/><Run Text=" 条问题"/>
-                        </TextBlock>
-                        <TextBlock Text="{Binding PhotoNote}" Style="{StaticResource T.Tiny}" FontSize="10.5"
-                                   HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                    </Grid>
+                    <!-- 卡底（.card-f）：与卡片底角同心 -->
+                    <Border Grid.Row="2" Background="{DynamicResource Brush.CardWell}"
+                            BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,1,0,0"
+                            CornerRadius="0,0,13,13" Padding="14,7">
+                        <Grid>
+                            <TextBlock Style="{StaticResource T.Tiny}" FontSize="10" VerticalAlignment="Center">
+                                <Run Text="{Binding MachineCount, Mode=OneWay}"/><Run Text=" 台 · "/>
+                                <Run Text="{Binding IssueCount, Mode=OneWay}"/><Run Text=" 条问题"/>
+                            </TextBlock>
+                            <TextBlock Text="{Binding PhotoNote}" Style="{StaticResource T.Tiny}" FontSize="10"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
                 </Grid>
             </Border>
 
-            <!-- ===== 右：选中设备的问题点 ===== -->
+            <!-- ===== 右：选中设备的问题点（.qpanel） ===== -->
             <Border Grid.Column="1" Style="{StaticResource Card}" Padding="0">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -247,28 +318,38 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- 标题条：机台号 + 条数 + 倒挂 -->
-                    <Grid Grid.Row="0" Margin="16,13,16,0">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="◉" FontSize="13" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource Brush.Primary}" Margin="0,0,7,0"/>
-                            <TextBlock Text="{Binding SelectedTitle}" FontFamily="{DynamicResource Font.Mono}"
-                                       FontSize="14" FontWeight="Bold"
-                                       Foreground="{DynamicResource Brush.Fg}" VerticalAlignment="Center"/>
-                            <ContentControl Style="{StaticResource Chip}" Tag="on" Margin="8,0,0,0">
-                                <TextBlock Text="{Binding SelectedIssueCountText}" FontSize="9.5"/>
+                    <!-- 卡头 band：机台号 + 条数 + 倒挂 -->
+                    <Border Grid.Row="0" Background="{DynamicResource Brush.CardWell}"
+                            BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,0,0,1"
+                            CornerRadius="18,18,0,0" Padding="14,8">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="20" CornerRadius="6"
+                                        Background="{DynamicResource Brush.PrimaryDim}">
+                                    <TextBlock Text="◉" FontSize="10"
+                                               Foreground="{DynamicResource Brush.Primary}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="{Binding SelectedTitle}" FontFamily="{DynamicResource Font.Mono}"
+                                           FontSize="12.5" FontWeight="Bold"
+                                           Foreground="{DynamicResource Brush.Fg}"
+                                           VerticalAlignment="Center" Margin="7,0,0,0"/>
+                                <ContentControl Style="{StaticResource Chip}" Tag="plain" Margin="8,0,0,0">
+                                    <TextBlock Text="{Binding SelectedIssueCountText}" FontSize="9.5"/>
+                                </ContentControl>
+                            </StackPanel>
+                            <ContentControl Style="{StaticResource Chip}" Tag="warn"
+                                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                                            Visibility="{Binding SelectedHasInverted, Converter={StaticResource TrueToVisibility}}">
+                                <TextBlock Text="{Binding SelectedInvertedText}" FontSize="9.5"/>
                             </ContentControl>
-                        </StackPanel>
-                        <ContentControl Style="{StaticResource Chip}" Tag="ng"
-                                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                                        Visibility="{Binding SelectedHasInverted, Converter={StaticResource TrueToVisibility}}">
-                            <TextBlock Text="{Binding SelectedInvertedText}" FontSize="9.5"/>
-                        </ContentControl>
-                    </Grid>
+                        </Grid>
+                    </Border>
 
-                    <!-- 责任人 / 照片摘要条 -->
+                    <!-- 摘要条（.qpanel-h）：装配责任人 + 照片数 -->
                     <Border Grid.Row="1" Background="{DynamicResource Brush.CardWell}"
-                            Padding="16,7" Margin="0,10,0,0">
+                            BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,0,0,1"
+                            Padding="14,7">
                         <Grid>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="装配责任人" Style="{StaticResource T.Tiny}" FontSize="9.5"
@@ -283,67 +364,83 @@
                         </Grid>
                     </Border>
 
-                    <!-- 问题点列表（可滚动） -->
-                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="0"
-                                  HorizontalScrollBarVisibility="Disabled">
-                        <StackPanel Margin="10,9,10,9">
+                    <!-- 问题卡 + 照片条（.qpanel-b） -->
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled" Padding="0">
+                        <StackPanel Margin="9,9,9,9">
+
                             <ItemsControl ItemsSource="{Binding SelectedIssues}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Margin="0,0,0,7" Padding="10,8" CornerRadius="8"
-                                                Background="{DynamicResource Brush.Panel}"
-                                                BorderBrush="{DynamicResource Brush.Border}"
-                                                BorderThickness="1" Cursor="Hand">
+                                        <!-- 问题卡：hover 换主色边框；点击整卡进详情（.qitem） -->
+                                        <Border Margin="0,0,0,7" Padding="9,8" CornerRadius="8"
+                                                Cursor="Hand" ToolTip="打开问题详情">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick"
+                                                              Command="{Binding DataContext.OpenIssueCommand,
+                                                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                              CommandParameter="{Binding Id}"/>
+                                            </Border.InputBindings>
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background"
+                                                            Value="{DynamicResource Brush.Panel}"/>
+                                                    <Setter Property="BorderBrush"
+                                                            Value="{DynamicResource Brush.Border}"/>
+                                                    <Setter Property="BorderThickness" Value="1"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="BorderBrush"
+                                                                    Value="{DynamicResource Brush.PrimaryLine}"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
                                             <StackPanel>
-                                                <!-- 第一行：序号 + 状态/倒挂徽标 + 责任人 -->
+                                                <!-- 第一行：问题号 + 主标签 + 责任人 + 照片 -->
                                                 <Grid>
                                                     <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding SeqNo, StringFormat=第 {0} 项}"
+                                                        <TextBlock Text="{Binding CodeText}"
                                                                    FontFamily="{DynamicResource Font.Mono}"
                                                                    FontSize="9.5"
                                                                    Foreground="{DynamicResource Brush.Muted}"
                                                                    VerticalAlignment="Center"/>
-                                                        <ContentControl Style="{StaticResource Chip}" Tag="ng"
-                                                                        Margin="6,0,0,0"
-                                                                        Visibility="{Binding IsInverted, Converter={StaticResource TrueToVisibility}}">
-                                                            <TextBlock Text="{Binding InvertedText}" FontSize="9"/>
+                                                        <ContentControl Style="{StaticResource Chip}"
+                                                                        Tag="{Binding BadgeTag}"
+                                                                        Margin="6,0,0,0" MinHeight="16" Padding="6,0"
+                                                                        Visibility="{Binding HasBadge, Converter={StaticResource TrueToVisibility}}">
+                                                            <TextBlock Text="{Binding BadgeText}" FontSize="9"/>
                                                         </ContentControl>
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                        <TextBlock Text="{Binding OwnerText}" FontSize="9.5"
+                                                                   Foreground="{DynamicResource Brush.Muted}"
+                                                                   VerticalAlignment="Center"
+                                                                   TextTrimming="CharacterEllipsis" MaxWidth="120"/>
                                                         <ContentControl Style="{StaticResource Chip}" Tag="ok"
-                                                                        Margin="5,0,0,0"
+                                                                        Margin="6,0,0,0" MinHeight="16" Padding="6,0"
                                                                         Visibility="{Binding HasPhoto, Converter={StaticResource TrueToVisibility}}">
                                                             <TextBlock Text="{Binding PhotoText}" FontSize="9"/>
                                                         </ContentControl>
                                                     </StackPanel>
-                                                    <TextBlock Text="{Binding AssemblyOwner}" FontSize="9"
-                                                               HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                               Foreground="{DynamicResource Brush.Muted}"
-                                                               TextTrimming="CharacterEllipsis" MaxWidth="110"/>
                                                 </Grid>
 
-                                                <!-- 问题标题 -->
-                                                <TextBlock Text="{Binding Title}" FontSize="11.5" FontWeight="Bold"
+                                                <TextBlock Text="{Binding Title}" FontSize="11" FontWeight="Bold"
                                                            Foreground="{DynamicResource Brush.Fg}"
-                                                           TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                                           TextWrapping="Wrap" LineHeight="16"
+                                                           Margin="0,3,0,0"/>
 
-                                                <!-- 解决措施 -->
-                                                <TextBlock Text="{Binding Solution, StringFormat=解决措施：{0}}"
-                                                           FontSize="9.5" Margin="0,3,0,0"
+                                                <TextBlock Text="{Binding SolutionLine}" FontSize="9.5"
                                                            Foreground="{DynamicResource Brush.Muted}"
-                                                           TextWrapping="Wrap" MaxHeight="30"
-                                                           TextTrimming="CharacterEllipsis"/>
+                                                           TextWrapping="Wrap" LineHeight="14"
+                                                           Margin="0,2,0,0"/>
 
-                                                <!-- 设计/装配计划 -->
-                                                <Grid Margin="0,5,0,0">
-                                                    <TextBlock Text="{Binding DesignPlanLine}" FontSize="9"
-                                                               Foreground="{DynamicResource Brush.Muted}"
-                                                               TextTrimming="CharacterEllipsis"/>
-                                                    <Button Content="打开 →" Style="{StaticResource Btn.Ghost}"
-                                                            Height="22" FontSize="9.5" Padding="8,0"
-                                                            HorizontalAlignment="Right"
-                                                            Command="{Binding DataContext.OpenIssueCommand,
-                                                                      RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                            CommandParameter="{Binding Id}"/>
-                                                </Grid>
+                                                <!-- 计划行：只有填过计划才出现，避免每条都多一行破折号 -->
+                                                <TextBlock Text="{Binding PlanLine}" FontSize="9"
+                                                           Foreground="{DynamicResource Brush.Muted}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Margin="0,4,0,0"
+                                                           Visibility="{Binding HasPlanLine, Converter={StaticResource TrueToVisibility}}"/>
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>
@@ -359,14 +456,20 @@
                             </Border>
 
                             <!-- 照片条（演示占位） -->
-                            <StackPanel Margin="0,6,0,0"
+                            <StackPanel Margin="0,2,0,0"
                                         Visibility="{Binding SelectedHasPhotos, Converter={StaticResource TrueToVisibility}}">
-                                <Grid Margin="2,0,2,6">
-                                    <TextBlock Text="现场照片" FontSize="10" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource Brush.Muted}"/>
+                                <Grid Margin="1,0,1,5">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="现场照片" FontSize="10" FontWeight="Bold"
+                                                   Foreground="{DynamicResource Brush.Muted}"/>
+                                        <TextBlock Text="{Binding SelectedPhotoCountText}" FontSize="9"
+                                                   Foreground="{DynamicResource Brush.Muted}"
+                                                   VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                    </StackPanel>
                                     <TextBlock Text="演示占位 · 历史 Excel 无附件"
-                                               FontSize="9" HorizontalAlignment="Right"
-                                               Foreground="{DynamicResource Brush.Faint}"/>
+                                               FontSize="8.5" HorizontalAlignment="Right"
+                                               Foreground="{DynamicResource Brush.Faint}"
+                                               VerticalAlignment="Center"/>
                                 </Grid>
                                 <ItemsControl ItemsSource="{Binding SelectedPhotos}">
                                     <ItemsControl.ItemsPanel>
@@ -376,25 +479,38 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Width="104" Height="78" Margin="0,0,6,6" CornerRadius="7"
-                                                    Background="{DynamicResource Brush.CardWell}"
-                                                    BorderBrush="{DynamicResource Brush.Border}"
-                                                    BorderThickness="1">
+                                            <!-- 演示照片占位：设计稿 .photo-thumb 是深色渐变（#46545E→#1B242B），
+                                                 不随主题走；白字 + "演示"角标保证不会被误认为现场真照片。 -->
+                                            <Border Width="104" Height="84" Margin="0,0,6,6" CornerRadius="7"
+                                                    BorderBrush="#33FFFFFF" BorderThickness="1">
+                                                <Border.Background>
+                                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                        <GradientStop Color="#46545E" Offset="0"/>
+                                                        <GradientStop Color="#1B242B" Offset="0.55"/>
+                                                        <GradientStop Color="#39424A" Offset="1"/>
+                                                    </LinearGradientBrush>
+                                                </Border.Background>
                                                 <Grid>
                                                     <TextBlock Text="▣" FontSize="20"
                                                                HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                               Foreground="{DynamicResource Brush.Faint}"/>
+                                                               Foreground="#66FFFFFF"/>
                                                     <ContentControl Style="{StaticResource Chip}" Tag="plain"
                                                                     HorizontalAlignment="Right"
                                                                     VerticalAlignment="Top" Margin="3"
-                                                                    MinHeight="15" Padding="5,0">
+                                                                    MinHeight="15" Padding="5,0"
+                                                                    Background="#59000000">
                                                         <TextBlock Text="{Binding Index}" FontSize="8"
-                                                                   FontFamily="{DynamicResource Font.Mono}"/>
+                                                                   FontFamily="{DynamicResource Font.Mono}"
+                                                                   Foreground="White"/>
                                                     </ContentControl>
-                                                    <TextBlock Text="{Binding SeqLabel}" FontSize="8"
-                                                               HorizontalAlignment="Left"
-                                                               VerticalAlignment="Bottom" Margin="5,0,0,4"
-                                                               Foreground="{DynamicResource Brush.Muted}"/>
+                                                    <StackPanel Orientation="Horizontal"
+                                                                HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                                                                Margin="5,0,0,4">
+                                                        <TextBlock Text="{Binding SeqLabel}" FontSize="8"
+                                                                   Foreground="#CCFFFFFF"/>
+                                                        <TextBlock Text=" · 演示" FontSize="8"
+                                                                   Foreground="#99FFFFFF"/>
+                                                    </StackPanel>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
@@ -404,14 +520,18 @@
                         </StackPanel>
                     </ScrollViewer>
 
-                    <!-- 底部条 -->
-                    <Grid Grid.Row="3" Margin="16,8,16,11">
-                        <TextBlock Text="点左侧设备切换" Style="{StaticResource T.Tiny}" FontSize="9.5"
-                                   VerticalAlignment="Center"/>
-                        <Button Content="在台账中筛选 →" Style="{StaticResource Btn.Ghost}" Height="26"
-                                FontSize="10.5" Padding="10,0" HorizontalAlignment="Right"
-                                Command="{Binding OpenIssuesCommand}"/>
-                    </Grid>
+                    <!-- 卡底（.card-f） -->
+                    <Border Grid.Row="3" Background="{DynamicResource Brush.CardWell}"
+                            BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,1,0,0"
+                            CornerRadius="0,0,13,13" Padding="14,7">
+                        <Grid>
+                            <TextBlock Text="点左侧设备切换" Style="{StaticResource T.Tiny}" FontSize="9.5"
+                                       VerticalAlignment="Center"/>
+                            <Button Content="在台账中筛选 →" Style="{StaticResource Btn.Ghost}" Height="24"
+                                    FontSize="10" Padding="8,0" HorizontalAlignment="Right"
+                                    Command="{Binding OpenIssuesCommand}"/>
+                        </Grid>
+                    </Border>
                 </Grid>
             </Border>
         </Grid>

@@ -43,6 +43,15 @@ class StageCodes {
         assembly => '装配调试',
         _ => code,
       };
+
+  /// 分段控件用的短名（设计稿 .mseg 的"方案 / 设计 / 物料 / 装配"）。
+  static String shortLabel(String code) => switch (code) {
+        plan => '方案',
+        design => '设计',
+        material => '物料',
+        assembly => '装配',
+        _ => code,
+      };
 }
 
 class IssueStage {

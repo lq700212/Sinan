@@ -1,6 +1,7 @@
 ﻿<Application x:Class="Sinan.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:Sinan.App.Converters"
              ShutdownMode="OnExplicitShutdown">
     <!--
       合并字典顺序是契约：ThemeManager 只替换索引 0（主题键板），
@@ -14,6 +15,8 @@
                 <ResourceDictionary Source="Themes/Sinan.Light.xaml"/>
                 <ResourceDictionary Source="Themes/Sinan.Controls.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+
+            <converters:PaletteBrushConverter x:Key="PaletteBrush"/>
 
             <Style TargetType="ToolTip">
                 <Setter Property="Background" Value="{DynamicResource Brush.Panel}"/>

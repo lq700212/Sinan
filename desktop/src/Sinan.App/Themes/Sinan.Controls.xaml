@@ -183,13 +183,19 @@
     </Style>
 
     <Style x:Key="Btn.Ghost" TargetType="Button" BasedOn="{StaticResource Btn.Base}">
+        <!-- 设计稿 .btn.ghost：透明底 + 1px 边框 + 正文色；悬停才铺主色柔底。
+             之前写成"无边框 + 主色文字"，整页按钮看起来像纯文字链接，
+             与设计稿的胶囊按钮不是一回事。 -->
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="{DynamicResource Brush.Primary}"/>
-        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Fg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+        <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="10,0"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{DynamicResource Brush.PrimaryDim}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.PrimaryLine}"/>
+                <Setter Property="Foreground" Value="{DynamicResource Brush.Primary}"/>
             </Trigger>
         </Style.Triggers>
     </Style>

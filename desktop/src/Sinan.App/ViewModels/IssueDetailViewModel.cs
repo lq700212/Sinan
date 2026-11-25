@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Sinan.App.Mvvm;
 using Sinan.App.Services;
 using Sinan.Core.Models;
+using Sinan.Core.Utils;
 
 namespace Sinan.App.ViewModels;
 
@@ -35,6 +36,8 @@ public sealed class IssueDetailViewModel : ObservableObject
     private string _errorMessage = "";
     private string _noticeMessage = "";
     private bool _isBusy;
+    private bool _isEditingDetails;
+    private bool _isManagingAttachments;
 
     public IssueDetailViewModel(App app, INavigationService nav, Issue issue)
     {
@@ -58,6 +61,8 @@ public sealed class IssueDetailViewModel : ObservableObject
         DeleteAttachmentCommand = new AsyncRelayCommand(DeleteAttachmentAsync);
         BackCommand = new RelayCommand(() => _nav.Back());
         RefreshCommand = new RelayCommand(Reload);
+        ToggleDetailsEditCommand = new RelayCommand(() => IsEditingDetails = !IsEditingDetails);
+        ToggleAttachmentsCommand = new RelayCommand(() => IsManagingAttachments = !IsManagingAttachments);
 
         // 设计稿 dlg-stage / dlg-del / dlg-photo 三个弹窗入口。
         EditStageCommand = new AsyncRelayCommand(EditStageAsync);
@@ -73,7 +78,134 @@ public sealed class IssueDetailViewModel : ObservableObject
     public string MachineCode => _issue.MachineCode;
     public string SubprojectDisplay => string.IsNullOrWhiteSpace(_issue.SubprojectCode) ? "待确认" : _issue.SubprojectCode!;
     public string SeqDisplay => _issue.SeqNo;
-    public string HeaderSubtitle => $"{MachineCode} · 第 {SeqDisplay} 项 · {SubprojectDisplay}";
+    public string DisplaySeqNo => _issue.DisplaySeqNo;
+
+    /// <summary>摘要卡副标题（设计稿 .detail-sub）：机台 · 序号 · 源表行 · 创建时间。</summary>
+    public string HeaderSubtitle =>
+        $"{MachineCode} · 序号 {SeqDisplay} · {SourceRowText} · 创建于 {CreatedShort}";
+
+    /// <summary>摘要卡左侧大号序号（设计稿 .detail-mark）：取序号后两位，纯装饰。</summary>
+    public string SeqBadge
+    {
+        get
+        {
+            var seq = (_issue.SeqNo ?? "").Trim();
+            return seq.Length <= 2 ? seq : seq[^2..];
+        }
+    }
+
+    public string DesignOwnerDisplay =>
+        string.IsNullOrWhiteSpace(_issue.DesignOwner) ? "—" : _issue.DesignOwner;
+    public string DesignDueDisplay =>
+        string.IsNullOrWhiteSpace(_issue.DesignDueRaw) ? "—" : _issue.DesignDueRaw;
+    public string AssemblyOwnerDisplay =>
+        string.IsNullOrWhiteSpace(_issue.AssemblyOwner) ? "—" : _issue.AssemblyOwner;
+    public string AssemblyDueDisplay =>
+        string.IsNullOrWhiteSpace(_issue.AssemblyDueRaw) ? "—" : _issue.AssemblyDueRaw;
+
+    /// <summary>摘要卡右侧两行计划：阶段名 + 责任人 + 日期。</summary>
+    public string DesignPlanLine => $"设计下图 · {DesignOwnerDisplay} · {DesignDueDisplay}";
+    public string AssemblyPlanLine => $"装配调试 · {AssemblyOwnerDisplay} · {AssemblyDueDisplay}";
+
+    /// <summary>解决措施（设计稿 .detail-measure 的 .dm-v）；空值给破折号，不留半截。</summary>
+    public string MeasureDisplay =>
+        string.IsNullOrWhiteSpace(_issue.Solution) ? "—" : _issue.Solution;
+
+    public string SourceRowDisplay => _issue.SourceRow?.ToString() ?? "—";
+    public string SourceRowText => _issue.SourceRow.HasValue
+        ? $"源表第 {_issue.SourceRow} 行"
+        : "无源表行";
+    public string CreatedShort => AppTimeDisplay(_issue.CreatedAt, "MM-dd HH:mm");
+    public string UpdatedShort => AppTimeDisplay(_issue.UpdatedAt, "MM-dd HH:mm");
+
+    /// <summary>倒挂天数与说明（设计稿右栏"计划倒挂"卡）。</summary>
+    public int InvertedDays => _issue.IsInverted ? StageRules.InvertedDays(_issue) : 0;
+    public string InvertedDaysText => InvertedDays > 0 ? $"{InvertedDays} 天" : "无";
+    public bool IsNotInverted => !_issue.IsInverted;
+
+    /// <summary>倒挂卡正文用的短日期（设计稿写 11-05 / 11-01，不带年份）。</summary>
+    public string DesignDueShort => ShortDue(_issue.DesignStage);
+    public string AssemblyDueShort => ShortDue(_issue.AssemblyStage);
+
+    public string InvertedDescription =>
+        $"设计下图计划 {DesignDueShort}，装配调试计划 {AssemblyDueShort}。\n" +
+        (InvertedDays > 0
+            ? "按现计划，装配开始时设计图尚未下发。"
+            : "当前计划顺序正常，未触发倒挂。");
+
+    /// <summary>倒挂排名（设计稿"5 条之一"）：全库倒挂按天数降序排，给当前条的位置。</summary>
+    public string InvertedRankText
+    {
+        get
+        {
+            if (!_issue.IsInverted) return "";
+            var all = _app.Issues.All()
+                .Where(i => i.IsInverted)
+                .OrderByDescending(i => StageRules.InvertedDays(i))
+                .ThenBy(i => i.SeqNo, StringComparer.Ordinal)
+                .ToList();
+            var index = all.FindIndex(i => i.Id == _issue.Id);
+            return index < 0 ? "" : $"第 {index + 1} 条 / 共 {all.Count} 条";
+        }
+    }
+
+    /// <summary>四阶段卡底部"最近更新 xx · 谁"：优先取最新一条留痕的人名。</summary>
+    public string LastUpdatedLine
+    {
+        get
+        {
+            var actor = _issue.Activity
+                .OrderByDescending(a => a.Id)
+                .Select(a => a.UserName)
+                .FirstOrDefault(n => !string.IsNullOrWhiteSpace(n));
+            if (string.IsNullOrWhiteSpace(actor))
+                actor = _issue.Comments.OrderByDescending(c => c.CreatedAt)
+                    .Select(c => c.UserName).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n));
+            return string.IsNullOrWhiteSpace(actor)
+                ? $"最近更新 {UpdatedShort}"
+                : $"最近更新 {UpdatedShort} · {actor}";
+        }
+    }
+
+    /// <summary>阶段备注（设计稿 .stage-note）：取最近更新过且有备注的那一段。</summary>
+    private IssueStage? LatestRemarkStage => _issue.Stages
+        .Where(s => !string.IsNullOrWhiteSpace(s.Remark))
+        .OrderByDescending(s => s.UpdatedAt)
+        .ThenByDescending(s => StageCodes.Index(s.Code))
+        .FirstOrDefault();
+
+    public bool HasStageNote => LatestRemarkStage != null;
+    public string StageNoteLabel => LatestRemarkStage == null
+        ? "阶段备注"
+        : $"阶段备注 · {LatestRemarkStage.Label}";
+    public string StageNoteText => LatestRemarkStage?.Remark ?? "";
+    public string StageNoteTime => LatestRemarkStage == null
+        ? ""
+        : AppTimeDisplay(LatestRemarkStage.UpdatedAt, "MM-dd HH:mm");
+
+    /// <summary>照片标签：有照片写张数，没照片写"暂无照片"，避免出现"现场照片 0 张"。</summary>
+    public string StageNotePhotoText => PhotoCount > 0 ? $"现场照片 {PhotoCount} 张" : "暂无照片";
+
+    /// <summary>同机台问题摘要：条数 + 序号列表（最多 6 个），用于"机台档案"。</summary>
+    public string SameMachineIssueText
+    {
+        get
+        {
+            var siblings = _app.Issues.All()
+                .Where(i => i.MachineId == _issue.MachineId)
+                .OrderBy(i => i.SourceRow ?? int.MaxValue)
+                .ThenBy(i => i.SeqNo, StringComparer.Ordinal)
+                .ToList();
+            if (siblings.Count == 0) return "—";
+            var seqs = string.Join(" / ", siblings.Take(6).Select(i => i.DisplaySeqNo));
+            return $"{siblings.Count} 条（{seqs}）";
+        }
+    }
+
+    /// <summary>主要责任人：优先装配责任人，空则设计责任人。</summary>
+    public string PrimaryOwnerText =>
+        !string.IsNullOrWhiteSpace(_issue.AssemblyOwner) ? _issue.AssemblyOwner :
+        !string.IsNullOrWhiteSpace(_issue.DesignOwner) ? _issue.DesignOwner : "—";
 
     /// <summary>
     /// 问题号（P7391-027）：弹窗标题与"手抄问题号才可删除"都用它。
@@ -188,9 +320,25 @@ public sealed class IssueDetailViewModel : ObservableObject
         private set => SetProperty(ref _isBusy, value);
     }
 
+    /// <summary>摘要卡下的"编辑主信息"折叠面板；设计稿默认只读，编辑是低频操作。</summary>
+    public bool IsEditingDetails
+    {
+        get => _isEditingDetails;
+        set => SetProperty(ref _isEditingDetails, value);
+    }
+
+    /// <summary>阶段备注里的"附件明细"折叠：默认收起，点开才显示文件名与删除入口。</summary>
+    public bool IsManagingAttachments
+    {
+        get => _isManagingAttachments;
+        set => SetProperty(ref _isManagingAttachments, value);
+    }
+
     public bool HasAttachments => Attachments.Count > 0;
     public bool HasComments => Comments.Count > 0;
     public bool HasActivity => Activity.Count > 0;
+    public int CommentCount => Comments.Count;
+    public int ActivityCount => Activity.Count;
 
     public AsyncRelayCommand SaveDetailsCommand { get; }
     public AsyncRelayCommand SetStatusCommand { get; }
@@ -200,6 +348,8 @@ public sealed class IssueDetailViewModel : ObservableObject
     public AsyncRelayCommand DeleteAttachmentCommand { get; }
     public RelayCommand BackCommand { get; }
     public RelayCommand RefreshCommand { get; }
+    public RelayCommand ToggleDetailsEditCommand { get; }
+    public RelayCommand ToggleAttachmentsCommand { get; }
 
     /// <summary>打开「更新阶段」弹窗（设计稿 dlg-stage）。</summary>
     public AsyncRelayCommand EditStageCommand { get; }
@@ -266,14 +416,24 @@ public sealed class IssueDetailViewModel : ObservableObject
         foreach (var comment in _issue.Comments.OrderByDescending(c => c.CreatedAt)) Comments.Add(comment);
 
         Activity.Clear();
-        foreach (var entry in _issue.Activity.OrderByDescending(a => a.Id).Take(40)) Activity.Add(entry);
+        foreach (var entry in _issue.Activity.OrderByDescending(a => a.Id).Take(8)) Activity.Add(entry);
 
         OnPropertiesChanged(nameof(Issue), nameof(StatusDisplay), nameof(ProgressText),
             nameof(OwnerFlow), nameof(DueFlow), nameof(PhotoCount), nameof(OverdueDays),
             nameof(IsInverted), nameof(HasInverted), nameof(HasOverdue), nameof(IsClosed),
             nameof(SourceTrace),
             nameof(CreatedDisplay), nameof(UpdatedDisplay), nameof(HasAttachments),
-            nameof(HasComments), nameof(HasActivity), nameof(HeaderSubtitle));
+            nameof(HasComments), nameof(HasActivity), nameof(HeaderSubtitle),
+            nameof(DisplaySeqNo), nameof(SeqBadge), nameof(DesignOwnerDisplay),
+            nameof(DesignDueDisplay), nameof(AssemblyOwnerDisplay), nameof(AssemblyDueDisplay),
+            nameof(DesignPlanLine), nameof(AssemblyPlanLine), nameof(SourceRowDisplay),
+            nameof(CreatedShort), nameof(UpdatedShort), nameof(InvertedDays),
+            nameof(InvertedDaysText), nameof(InvertedDescription), nameof(SameMachineIssueText),
+            nameof(PrimaryOwnerText), nameof(MeasureDisplay), nameof(SourceRowText),
+            nameof(IsNotInverted), nameof(DesignDueShort), nameof(AssemblyDueShort),
+            nameof(InvertedRankText), nameof(LastUpdatedLine), nameof(HasStageNote),
+            nameof(StageNoteLabel), nameof(StageNoteText), nameof(StageNoteTime),
+            nameof(StageNotePhotoText), nameof(CommentCount), nameof(ActivityCount));
     }
 
     private async Task SaveDetailsAsync()
@@ -623,10 +783,18 @@ public sealed class IssueDetailViewModel : ObservableObject
         string.IsNullOrWhiteSpace(batchId) ? "—" :
             batchId.Length <= 10 ? batchId : batchId[..10];
 
-    private static string AppTimeDisplay(string? iso)
+    private static string AppTimeDisplay(string? iso, string format = "yyyy-MM-dd HH:mm")
     {
         if (string.IsNullOrWhiteSpace(iso)) return "—";
-        return DateTime.TryParse(iso, out var dt) ? dt.ToLocalTime().ToString("yyyy-MM-dd HH:mm") : iso;
+        return DateTime.TryParse(iso, out var dt) ? dt.ToLocalTime().ToString(format) : iso;
+    }
+
+    /// <summary>阶段计划短日期：优先语义日期（MM-dd），其次原文（"已下图"保持原样）。</summary>
+    private static string ShortDue(IssueStage? stage)
+    {
+        if (stage == null) return "—";
+        if (stage.DueDate.HasValue) return stage.DueDate.Value.ToString("MM-dd");
+        return string.IsNullOrWhiteSpace(stage.DueRaw) ? "—" : stage.DueRaw;
     }
 }
 
@@ -644,6 +812,7 @@ public sealed class StageEditor : ObservableObject
     private string _remark;
     private StageState _state;
     private string _actualDateRaw;
+    private readonly DateOnly? _dueDate;
 
     public StageEditor(App app, string issueId, IssueStage stage, IssueDetailViewModel parent)
     {
@@ -653,6 +822,8 @@ public sealed class StageEditor : ObservableObject
         Code = stage.Code;
         Label = stage.Label;
         Version = stage.Version;
+        UpdatedAt = stage.UpdatedAt;
+        _dueDate = stage.DueDate;
         StateOptions = new[]
         {
             new StageStateOption(StageState.NotStarted),
@@ -671,7 +842,87 @@ public sealed class StageEditor : ObservableObject
     public string Code { get; }
     public string Label { get; }
     public int Version { get; }
+    public string UpdatedAt { get; }
     public IReadOnlyList<StageStateOption> StateOptions { get; }
+
+    /// <summary>时间线左侧标记：完成 ✓ / 进行中 ● / 空白无标记。</summary>
+    public string Icon => State switch
+    {
+        StageState.Done => "✓",
+        StageState.InProgress => "●",
+        StageState.NotApplicable => "/",
+        _ => ""
+    };
+
+    public string IconTone => State switch
+    {
+        StageState.Done => "ok",
+        StageState.InProgress => "on",
+        StageState.NotApplicable => "plain",
+        _ => "plain"
+    };
+
+    public bool IsDone => State == StageState.Done;
+    public bool IsCurrent => State == StageState.InProgress;
+
+    /// <summary>责任人是否已填：设计稿未填时显示"—（未填责任人）"，括号里是弱化文字。</summary>
+    public bool HasOwner => !string.IsNullOrWhiteSpace(OwnerText);
+    public string OwnerDisplay => string.IsNullOrWhiteSpace(OwnerText) ? "—" : OwnerText;
+
+    /// <summary>计划原文（"11.5" / "已下图" / "/" 原样保留）。</summary>
+    public string DueDisplay => string.IsNullOrWhiteSpace(DueRaw) ? "—" : DueRaw;
+
+    /// <summary>行内计划列：有语义日期用完整日期（设计稿 2026-11-05），否则用原文。</summary>
+    public string DueFullDisplay => _dueDate.HasValue
+        ? _dueDate.Value.ToString("yyyy-MM-dd")
+        : DueDisplay;
+
+    /// <summary>该阶段是否已逾期（未完成/非不适用，且计划日早于今天）。</summary>
+    public bool IsOverdue => State is StageState.NotStarted or StageState.InProgress
+                             && _dueDate.HasValue && _dueDate.Value < AppTime.Today;
+
+    public string StateWord => State switch
+    {
+        StageState.Done => "已完成",
+        StageState.InProgress => "进行中",
+        StageState.NotApplicable => "不适用",
+        _ => "未填"
+    };
+
+    public string ChipText => State switch
+    {
+        StageState.Done => "完成",
+        StageState.InProgress => "进行中",
+        StageState.NotApplicable => "/",
+        _ => "空白"
+    };
+
+    public string ChipTone => State switch
+    {
+        StageState.Done => "ok",
+        StageState.InProgress => "on",
+        _ => "plain"
+    };
+
+    /// <summary>行尾标签（设计稿 .tag）：逾期优先于阶段状态，绿=完成、琥珀=空白。</summary>
+    public string TagText => IsOverdue
+        ? "逾期"
+        : State switch
+        {
+            StageState.Done => "完成",
+            StageState.InProgress => "进行中",
+            StageState.NotApplicable => "/",
+            _ => "空白"
+        };
+
+    public string TagTone => IsOverdue
+        ? "ng"
+        : State switch
+        {
+            StageState.Done => "ok",
+            StageState.InProgress => "on",
+            _ => "plain"
+        };
 
     public string OwnerText
     {

@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'P7391 安装调试问题闭环',
+                      'P7391 · 现场问题闭环',
                       style: TextStyle(fontSize: 12.5, color: p.muted, letterSpacing: 1),
                     ),
                     const SizedBox(height: 26),
@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Text('现场登录',
+                          Text('工号登录',
                               style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
@@ -106,12 +106,26 @@ class _LoginScreenState extends State<LoginScreen> {
                               prefixIcon: Icon(Icons.lock_outline, size: 18),
                             ),
                           ),
+                          const SizedBox(height: 10),
+                          // 设计稿这里是"已配对 · 192.168.1.26 / 局域网"；
+                          // 当前同步服务尚未联调，只能如实显示"未配对 / 离线"。
+                          Row(
+                            children: [
+                              Icon(Icons.link_off, size: 13, color: p.faint),
+                              const SizedBox(width: 5),
+                              Text('未配对 · 数据先存本机',
+                                  style: TextStyle(fontSize: 10.5, color: p.faint)),
+                              const Spacer(),
+                              const SinanChip(
+                                  text: '离线', tone: 'warn', dense: true),
+                            ],
+                          ),
                           if (_error != null) ...[
                             const SizedBox(height: 10),
                             Text(_error!,
                                 style: TextStyle(fontSize: 11.5, color: p.ng)),
                           ],
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 14),
                           FilledButton(
                             onPressed: _busy ? null : _submit,
                             child: _busy
@@ -147,8 +161,27 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 18),
-                    Text('${AppInfo.productLabel} · 离线副本',
+                    const SizedBox(height: 14),
+                    GlassCard(
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+                      radius: 14,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('离线可用范围',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: p.fg)),
+                          const SizedBox(height: 7),
+                          _capability(p, '查看已同步的 ${widget.state.issues.length} 条问题', true),
+                          _capability(p, '新建问题、拍照、推进阶段', true),
+                          _capability(p, '跨人查询与统计需回到桌面端', false),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text('${AppInfo.label} · 仅限 P7391 调试组',
                         style: TextStyle(fontSize: 10.5, color: p.faint)),
                   ],
                 ),
@@ -156,6 +189,24 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _capability(SinanPalette p, String text, bool ok) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(ok ? Icons.check_circle_outline : Icons.remove_circle_outline,
+              size: 14, color: ok ? p.ok : p.faint),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(text,
+                style: TextStyle(fontSize: 10.5, height: 1.5, color: p.muted)),
+          ),
+        ],
       ),
     );
   }

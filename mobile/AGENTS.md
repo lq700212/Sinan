@@ -50,7 +50,7 @@ mobile/
 ## 3. 版本与平台兼容（改清单前必读）
 
 **版本号（与桌面端各自独立）**：`pubspec.yaml` 的 `version` 是唯一来源，界面只读
-`lib/app_info.dart`。当前 `0.0.1+1`（`+1` 是 build number，Android `versionCode` /
+`lib/app_info.dart`。当前 `0.0.2+2`（`+2` 是 build number，Android `versionCode` /
 iOS `CFBundleVersion`）。
 
 - **默认只升 patch**：`0.0.1 → 0.0.2 → 0.0.3`，永远只动第三位；`0.0.9` 之后是

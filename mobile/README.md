@@ -13,7 +13,7 @@ P7391 安装调试问题闭环系统的 Android 现场端。桌面端（`../desk
 
 | 项 | 值 | 口径 |
 |---|---|---|
-| 手机端版本 | `0.0.1+1` | 与桌面端同为 v0.0.1；唯一来源 `pubspec.yaml`，界面只读 `lib/app_info.dart` |
+| 手机端版本 | `0.0.2+2` | 与桌面端各自独立升版，只动第三位；唯一来源 `pubspec.yaml`，界面只读 `lib/app_info.dart` |
 | Android 最低 | API 24 / Android 7.0 | `minSdk`，Flutter 3.50 引擎下限，主流现场手机都能装 |
 | Android 目标 | API 36 / Android 16 | `targetSdk`，行为适配目标，**不是装机上限** |
 | Android 编译 | API 36 | `compileSdk`，与 Flutter 引擎一致 |

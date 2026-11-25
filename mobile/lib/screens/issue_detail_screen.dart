@@ -10,6 +10,12 @@ import '../widgets/common.dart';
 import '../widgets/photo_tile.dart';
 import 'photo_viewer_screen.dart';
 
+/// 问题详情（设计稿 m-detail）：站在机台边单手看。
+///
+/// - 四阶段压成四行，不画大时间轴，当前卡在哪一行一眼可见；
+/// - 底部固定「加照片 / 推进阶段」，滚动时永远够得着；
+/// - 倒挂只用一句话说清（设计晚于装配 N 天），不展开长文；
+/// - 现场记录与留痕都先落本机，联网后由 outbox 补传，界面不伪造"已同步"。
 class IssueDetailScreen extends StatefulWidget {
   const IssueDetailScreen({
     super.key,
@@ -130,6 +136,40 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
     );
   }
 
+  /// 打开阶段编辑弹窗（设计稿 dlg-m-note「推进阶段」）。
+  /// 传入 code 决定先落在哪个阶段；弹窗内仍可切到其他阶段，现场不用退出来回点。
+  Future<void> _openStageEditor(String code) async {
+    final issue = _issue;
+    if (issue == null) return;
+    final updated = await showModalBottomSheet<Issue>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: context.palette.panel,
+      builder: (_) => _StageEditorSheet(
+        state: widget.state,
+        issue: issue,
+        initialCode: code,
+      ),
+    );
+    if (updated == null || !mounted) return;
+    setState(() => _issue = updated);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('阶段已保存到本机；问题状态按四阶段自动推导。')),
+    );
+  }
+
+  /// 当前阶段：第一个进行中的阶段；没有则取第一个未完成/非不适用的阶段。
+  IssueStage? _currentStage(Issue issue) {
+    for (final s in issue.stages) {
+      if (s.state == StageState.inProgress) return s;
+    }
+    for (final s in issue.stages) {
+      if (!s.isDone && !s.isNa) return s;
+    }
+    return issue.stages.isEmpty ? null : issue.stages.last;
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
@@ -144,31 +184,29 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
                 child: issue == null
                     ? const Center(child: CircularProgressIndicator())
                     : ListView(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 18),
                         children: [
                           _summaryCard(issue, p),
                           const SizedBox(height: 12),
                           SectionTitle(
-                            title: '四阶段推进',
-                            subtitle: '保存后自动重推问题状态',
+                            title: '四阶段',
+                            subtitle: '点某一行直接填写该阶段',
                           ),
-                          const SizedBox(height: 8),
-                          for (final stage in issue.stages)
-                            _StageCard(
-                              key: ValueKey('${stage.code}-${stage.version}'),
-                              state: widget.state,
-                              issue: issue,
-                              stage: stage,
-                              onSaved: (updated) =>
-                                  setState(() => _issue = updated),
-                            ),
-                          const SizedBox(height: 12),
-                          _commentCard(p),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 6),
+                          _stageList(issue, p),
+                          if (Rules.isPlanInverted(issue) ||
+                              Rules.overdueDays(issue) > 0) ...[
+                            const SizedBox(height: 10),
+                            _riskCard(issue, p),
+                          ],
+                          const SizedBox(height: 14),
                           _photoCard(issue, p),
+                          const SizedBox(height: 14),
+                          _commentCard(p),
                         ],
                       ),
               ),
+              if (issue != null) _actionBar(issue, p),
             ],
           ),
         ),
@@ -178,23 +216,33 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
 
   Widget _header(Issue? issue, SinanPalette p) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(6, 8, 12, 6),
+      padding: const EdgeInsets.fromLTRB(6, 6, 12, 4),
       child: Row(
         children: [
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            icon: Icon(Icons.arrow_back, size: 21, color: p.fg),
+            icon: Icon(Icons.arrow_back_ios_new, size: 18, color: p.muted),
             tooltip: '返回',
           ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('问题详情',
+                Text(issue?.id ?? '问题详情',
                     style: TextStyle(
-                        fontSize: 17, fontWeight: FontWeight.w700, color: p.fg)),
-                Text('离线记录 · 保存后进入待同步队列',
-                    style: TextStyle(fontSize: 10.5, color: p.faint)),
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: p.fg,
+                        fontFeatures: const [FontFeature.tabularFigures()])),
+                Text(
+                  issue == null
+                      ? '本机缓存'
+                      : '${issue.subprojectCode ?? '待确认'} · '
+                          '${issue.machineCode} · ${issue.status}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 10.5, color: p.faint),
+                ),
               ],
             ),
           ),
@@ -213,7 +261,8 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
                           height: 7,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: status == issue.status ? p.primary : p.faint,
+                            color:
+                                status == issue.status ? p.primary : p.faint,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -233,39 +282,15 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
     );
   }
 
+  /// 摘要卡：标题 + 解决措施 + 溯源标签。
+  /// 序号/源行保留原表信息，现场对 Excel 时有据可查；本机新建的标"本机新建"。
   Widget _summaryCard(Issue issue, SinanPalette p) {
-    final overdue = Rules.overdueDays(issue);
-    final inverted = Rules.isPlanInverted(issue);
+    final local = issue.id.startsWith('local-');
     return GlassCard(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(issue.machineCode,
-                  style: TextStyle(
-                      fontSize: 11.5,
-                      color: p.muted,
-                      fontFeatures: const [FontFeature.tabularFigures()])),
-              const SizedBox(width: 6),
-              Text('· 序号 ${issue.seqNo}',
-                  style: TextStyle(fontSize: 10.5, color: p.faint)),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(issue.subprojectCode ?? '待确认',
-                    style: TextStyle(
-                        fontSize: 10.5,
-                        color: issue.subprojectCode == null ? p.warn : p.faint)),
-              ),
-              if (inverted) const SinanChip(text: '计划倒挂', tone: 'warn', dense: true),
-              if (overdue > 0) ...[
-                const SizedBox(width: 4),
-                SinanChip(text: '逾期 $overdue 天', tone: 'ng', dense: true),
-              ],
-            ],
-          ),
-          const SizedBox(height: 8),
           Text(issue.title,
               style: TextStyle(
                   fontSize: 17,
@@ -273,147 +298,194 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
                   fontWeight: FontWeight.w700,
                   color: p.fg)),
           if (issue.solution.trim().isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: p.well,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('解决措施',
-                      style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w600,
-                          color: p.faint)),
-                  const SizedBox(height: 3),
-                  Text(issue.solution,
-                      style: TextStyle(fontSize: 12.5, height: 1.5, color: p.fg)),
-                ],
+            const SizedBox(height: 5),
+            Text('解决措施：${issue.solution}',
+                style: TextStyle(fontSize: 11.5, height: 1.55, color: p.muted)),
+          ],
+          const SizedBox(height: 9),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              _tag(p, '序号 ${issue.seqNo}'),
+              _tag(p, issue.sourceRow == null ? '源行 未记录' : '源行 ${issue.sourceRow}'),
+              _tag(p, local ? '本机新建 · 待同步' : '本机缓存',
+                  color: local ? p.warn : p.info),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tag(SinanPalette p, String text, {Color? color}) {
+    final c = color ?? p.faint;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: c.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: c.withValues(alpha: 0.28)),
+      ),
+      child: Text(text,
+          style: TextStyle(
+              fontSize: 9.5,
+              color: c,
+              fontFeatures: const [FontFeature.tabularFigures()])),
+    );
+  }
+
+  /// 四阶段列表：设计稿 `.ph-stage` 四行，一行一个阶段。
+  Widget _stageList(Issue issue, SinanPalette p) {
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: Column(
+        children: [
+          for (var i = 0; i < issue.stages.length; i++) ...[
+            _stageRow(issue, issue.stages[i], p),
+            if (i != issue.stages.length - 1)
+              Divider(height: 1, color: p.sepLine.withValues(alpha: 0.6)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _stageRow(Issue issue, IssueStage stage, SinanPalette p) {
+    final current = _currentStage(issue);
+    final isCurrent = current?.code == stage.code;
+    final owner = stage.hasOwner ? stage.ownerText : '未填责任人';
+    final due = stage.dueRaw.trim().isEmpty ? '—' : stage.dueRaw.trim();
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => _openStageEditor(stage.code),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        child: Row(
+          children: [
+            _stageDot(stage, isCurrent, p),
+            const SizedBox(width: 10),
+            SizedBox(
+              width: 62,
+              child: Text(stage.label,
+                  style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight:
+                          isCurrent ? FontWeight.w700 : FontWeight.w600,
+                      color: stage.isNa ? p.faint : p.fg)),
+            ),
+            Expanded(
+              child: Text(
+                owner,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    fontSize: 11,
+                    color: stage.hasOwner ? p.muted : p.faint),
               ),
             ),
+            Text(due,
+                style: TextStyle(
+                    fontSize: 11,
+                    color: stage.isDone ? p.ok : p.muted,
+                    fontFeatures: const [FontFeature.tabularFigures()])),
+            const SizedBox(width: 2),
+            Icon(Icons.chevron_right, size: 15, color: p.faint),
           ],
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              _miniMetric('${issue.stages.where((s) => s.isDone).length}/4',
-                  '阶段已完成', p.ok),
-              _miniMetric('${issue.stages.where((s) => s.isNa).length}', '不适用', p.faint),
-              // 真实附件优先：本机拍过的照片是硬数据；没有真实附件时才退回种子的
-              // 演示张数（历史 Excel 无附件），并明确标注“演示”，不把占位值当真。
-              _miniMetric(
-                '${_photos.isEmpty ? issue.photoCount : _photos.length}',
-                _photos.isEmpty && issue.photoCount > 0
-                    ? '张照片（演示）'
-                    : '张本机照片',
-                p.accent,
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _miniMetric(String value, String label, Color color) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(value,
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                  fontFeatures: const [FontFeature.tabularFigures()])),
-          Text(label, style: TextStyle(fontSize: 9.5, color: context.palette.faint)),
-        ],
+  /// 阶段圆点：已完成 ✓、不适用 /、进行中实心、未开始空心。
+  Widget _stageDot(IssueStage stage, bool current, SinanPalette p) {
+    if (stage.isDone) {
+      return Container(
+        width: 20,
+        height: 20,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(color: p.okSoft, shape: BoxShape.circle),
+        child: Icon(Icons.check, size: 12, color: p.ok),
+      );
+    }
+    if (stage.isNa) {
+      return Container(
+        width: 20,
+        height: 20,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(color: p.well, shape: BoxShape.circle),
+        child: Text('/', style: TextStyle(fontSize: 11, color: p.faint)),
+      );
+    }
+    return Container(
+      width: 20,
+      height: 20,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: current ? p.primaryDim : Colors.transparent,
+        shape: BoxShape.circle,
+        border: Border.all(
+            color: current ? p.primary : p.faint.withValues(alpha: 0.6),
+            width: current ? 1.6 : 1.2),
       ),
+      child: current
+          ? Container(
+              width: 7,
+              height: 7,
+              decoration:
+                  BoxDecoration(color: p.primary, shape: BoxShape.circle),
+            )
+          : null,
     );
   }
 
-  Widget _commentCard(SinanPalette p) {
+  /// 风险卡：倒挂/逾期各一句话，设计稿明确"不展开长文"。
+  Widget _riskCard(Issue issue, SinanPalette p) {
+    final inverted = Rules.isPlanInverted(issue);
+    final days = Rules.invertedDays(issue);
+    final overdue = Rules.overdueDays(issue);
+    final design = issue.designStage;
+    final assembly = issue.assemblyStage;
     return GlassCard(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      radius: 15,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionTitle(title: '现场评论', subtitle: '${_comments.length} 条'),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _comment,
-                  minLines: 1,
-                  maxLines: 3,
-                  style: const TextStyle(fontSize: 12.5),
-                  decoration: const InputDecoration(
-                    hintText: '记录现场口头结论、临时处理办法等',
-                    isDense: true,
+          if (inverted) ...[
+            Row(
+              children: [
+                const SinanChip(text: '倒挂', tone: 'ng', dense: true),
+                const SizedBox(width: 7),
+                Text('设计晚于装配 $days 天',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: p.fg)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '设计计划 ${design?.dueRaw.trim() ?? '—'}，'
+              '装配计划 ${assembly?.dueRaw.trim() ?? '—'}。'
+              '按现计划，装配开始时图纸还没下发。',
+              style: TextStyle(fontSize: 10.5, height: 1.55, color: p.muted),
+            ),
+          ],
+          if (inverted && overdue > 0) const SizedBox(height: 8),
+          if (overdue > 0)
+            Row(
+              children: [
+                const SinanChip(text: '逾期', tone: 'ng', dense: true),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    '最早计划日已过 $overdue 天；逾期只按可解析的计划日期计算。',
+                    style: TextStyle(fontSize: 10.5, color: p.muted),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              FilledButton(
-                onPressed: _sending ? null : _sendComment,
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(64, 42),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                ),
-                child: _sending
-                    ? const SizedBox(
-                        width: 15,
-                        height: 15,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('发送'),
-              ),
-            ],
-          ),
-          if (_comments.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Text('还没有评论。',
-                  style: TextStyle(fontSize: 11, color: p.faint)),
-            )
-          else
-            for (final c in _comments) ...[
-              const SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: p.well,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(c.author,
-                            style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                color: p.fg)),
-                        const Spacer(),
-                        Text(_formatTime(c.createdAt),
-                            style:
-                                TextStyle(fontSize: 9.5, color: p.faint)),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Text(c.body,
-                        style: TextStyle(
-                            fontSize: 12, height: 1.5, color: p.muted)),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
         ],
       ),
     );
@@ -423,77 +495,251 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
     final realCount = _photos.length;
     final placeholders = (issue.photoCount - realCount).clamp(0, 6);
     final tileWidth =
-        (MediaQuery.sizeOf(context).width - 32 - 28 - 16) / 3;
+        (MediaQuery.sizeOf(context).width - 32 - 24 - 16) / 3;
     final paths = [
       for (final x in _photos)
         if (x.path != null) x.path!,
     ];
-
-    return GlassCard(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionTitle(
-            title: '现场照片',
-            subtitle: realCount == 0
-                ? '本机暂无真实照片'
-                : '$realCount 张 · 已存本机',
-            trailing: placeholders > 0
-                ? const DemoBadge(text: '含演示')
-                : IconButton(
-                    onPressed: _showPhotoSheet,
-                    icon: Icon(Icons.add_a_photo_outlined,
-                        size: 17, color: p.primary),
-                    tooltip: '添加照片',
-                  ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (var i = 0; i < _photos.length; i++)
-                PhotoTile(
-                  filePath: _photos[i].path,
-                  width: tileWidth,
-                  height: tileWidth * 0.82,
-                  caption: _photos[i].attachment.timeLabel,
-                  onTap: () {
-                    final index = paths.indexOf(_photos[i].path ?? '');
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => PhotoViewerScreen(
-                          paths: paths,
-                          initialIndex: index < 0 ? 0 : index,
-                          title: '现场照片',
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              for (var i = 0; i < placeholders; i++)
-                PhotoTile(
-                  width: tileWidth,
-                  height: tileWidth * 0.82,
-                  demo: true,
-                ),
+    // 设计稿标题右侧是「2 / 9 张」：分子是本机真实照片，分母是问题记录的张数。
+    // 分母里有演示占位，所以只要含占位就一直挂「含演示」角标，不把演示值说成实拍。
+    final countText = issue.photoCount == 0
+        ? '本机暂无照片'
+        : '$realCount / ${issue.photoCount} 张';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionTitle(
+          title: '现场记录',
+          subtitle: countText,
+          trailing: placeholders > 0 ? const DemoBadge(text: '含演示') : null,
+        ),
+        const SizedBox(height: 7),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (var i = 0; i < _photos.length; i++)
               PhotoTile(
-                add: true,
+                filePath: _photos[i].path,
                 width: tileWidth,
-                height: tileWidth * 0.82,
-                onTap: _showPhotoSheet,
+                height: tileWidth * 0.86,
+                caption: _photos[i].attachment.timeLabel,
+                onTap: () {
+                  final index = paths.indexOf(_photos[i].path ?? '');
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => PhotoViewerScreen(
+                        paths: paths,
+                        initialIndex: index < 0 ? 0 : index,
+                        title: '现场照片',
+                      ),
+                    ),
+                  );
+                },
+              ),
+            for (var i = 0; i < placeholders; i++)
+              PhotoTile(
+                width: tileWidth,
+                height: tileWidth * 0.86,
+                demo: true,
+              ),
+            PhotoTile(
+              add: true,
+              addLabel: '拍照',
+              width: tileWidth,
+              height: tileWidth * 0.86,
+              onTap: _showPhotoSheet,
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          _photoInfoLine(realCount),
+          style: TextStyle(fontSize: 9.5, height: 1.45, color: p.faint),
+        ),
+      ],
+    );
+  }
+
+  /// 照片卡底部信息行：设计稿是「时间 · 尺寸 · 原图留本机」。
+  /// 宽高没有入库，不编尺寸；用真实的最新拍摄时间与文件总大小。
+  String _photoInfoLine(int realCount) {
+    if (realCount == 0) {
+      return '照片先存本机，联网后按队列补传；历史 Excel 无附件，统计中的张数为演示值。';
+    }
+    final latest = _photos
+        .map((x) => x.attachment.createdAt)
+        .where((s) => s.isNotEmpty)
+        .toList()
+      ..sort();
+    final totalBytes =
+        _photos.fold<int>(0, (sum, x) => sum + x.attachment.size);
+    final sizeText = totalBytes >= 1024 * 1024
+        ? '${(totalBytes / 1024 / 1024).toStringAsFixed(1)} MB'
+        : '${(totalBytes / 1024).round()} KB';
+    final time = latest.isEmpty ? '' : _formatTime(DateTime.tryParse(latest.last));
+    final head = [time, sizeText].where((s) => s.isNotEmpty).join(' · ');
+    return '$head · 原图留本机，导出由桌面端负责。';
+  }
+
+  /// 最近留痕：现场评论即时间线。没有 activity_log 表，不伪造系统事件。
+  Widget _commentCard(SinanPalette p) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionTitle(
+          title: '最近留痕',
+          subtitle: '${_comments.length} 条 · 本机待同步',
+        ),
+        const SizedBox(height: 7),
+        GlassCard(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          radius: 16,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_comments.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text('还没有留痕。现场口头结论、临时处理办法可以先记在这里。',
+                      style: TextStyle(
+                          fontSize: 10.5, height: 1.5, color: p.faint)),
+                )
+              else
+                for (var i = 0; i < _comments.length; i++)
+                  Padding(
+                    padding: EdgeInsets.only(
+                        bottom: i == _comments.length - 1 ? 4 : 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 5),
+                          child: Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: i == 0 ? p.primary : p.faint,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(_comments[i].author,
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: p.fg)),
+                                  const Spacer(),
+                                  Text(_formatTime(_comments[i].createdAt),
+                                      style: TextStyle(
+                                          fontSize: 9.5,
+                                          color: p.faint,
+                                          fontFeatures: const [
+                                            FontFeature.tabularFigures()
+                                          ])),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(_comments[i].body,
+                                  style: TextStyle(
+                                      fontSize: 11.5,
+                                      height: 1.5,
+                                      color: p.muted)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              const SizedBox(height: 6),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _comment,
+                      minLines: 1,
+                      maxLines: 3,
+                      style: const TextStyle(fontSize: 12),
+                      decoration: const InputDecoration(
+                        hintText: '记一条现场留痕',
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: _sending ? null : _sendComment,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(62, 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                    ),
+                    child: _sending
+                        ? const SizedBox(
+                            width: 15,
+                            height: 15,
+                            child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Text('发送'),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 7),
-          Text(
-            realCount == 0
-                ? '照片先存本机，联网后按队列补传；历史 Excel 无附件，统计中的张数为演示值。'
-                : '照片已压缩到长边 1600px 并存在本机；原图随后台补传，导出 ZIP 由桌面端负责。',
-            style: TextStyle(fontSize: 10, height: 1.45, color: p.faint),
+        ),
+      ],
+    );
+  }
+
+  /// 底部固定操作条（设计稿 m-detail）：左侧扫码、右侧推进阶段。
+  /// 扫码能力尚未接入，点击如实说明，不放一个假取景框。
+  Widget _actionBar(Issue issue, SinanPalette p) {
+    final current = _currentStage(issue);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+      decoration: BoxDecoration(
+        color: p.panel.withValues(alpha: 0.96),
+        border: Border(top: BorderSide(color: p.sepLine)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 104,
+            child: OutlinedButton.icon(
+              onPressed: _scanNotEnabled,
+              icon: const Icon(Icons.qr_code_scanner, size: 16),
+              label: const Text('扫码'),
+              style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(46)),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: FilledButton.icon(
+              onPressed:
+                  current == null ? null : () => _openStageEditor(current.code),
+              icon: const Icon(Icons.check_circle_outline, size: 17),
+              label: Text(
+                  current == null ? '推进阶段' : '推进阶段 · ${current.label}'),
+              style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(46)),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _scanNotEnabled() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('扫码定位问题待接入；当前可从台账搜索或机台列表进入，拍照入口在现场记录卡。'),
       ),
     );
   }
@@ -506,36 +752,43 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
   }
 }
 
-class _StageCard extends StatefulWidget {
-  const _StageCard({
-    super.key,
+/// 推进阶段弹窗（设计稿 dlg-m-note）：
+/// 顶部四阶段分段可切换，阶段结果、责任人、计划/实际日期、备注一次填完。
+/// 保存只写本阶段，问题状态由 `Rules` 自动推导；先落本机再进 outbox。
+class _StageEditorSheet extends StatefulWidget {
+  const _StageEditorSheet({
     required this.state,
     required this.issue,
-    required this.stage,
-    required this.onSaved,
+    required this.initialCode,
   });
 
   final AppState state;
   final Issue issue;
-  final IssueStage stage;
-  final ValueChanged<Issue> onSaved;
+  final String initialCode;
 
   @override
-  State<_StageCard> createState() => _StageCardState();
+  State<_StageEditorSheet> createState() => _StageEditorSheetState();
 }
 
-class _StageCardState extends State<_StageCard> {
-  late final TextEditingController _owner =
-      TextEditingController(text: widget.stage.ownerText);
-  late final TextEditingController _due =
-      TextEditingController(text: widget.stage.dueRaw);
-  late final TextEditingController _actual =
-      TextEditingController(text: widget.stage.actualDate);
-  late final TextEditingController _remark =
-      TextEditingController(text: widget.stage.remark);
-  late StageState _state = widget.stage.state;
-  bool _editing = false;
+class _StageEditorSheetState extends State<_StageEditorSheet> {
+  late String _code = widget.initialCode;
+  late final TextEditingController _owner;
+  late final TextEditingController _due;
+  late final TextEditingController _actual;
+  late final TextEditingController _remark;
+  late StageState _state;
   bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final stage = widget.issue.stage(_code) ?? widget.issue.stages.first;
+    _owner = TextEditingController(text: stage.ownerText);
+    _due = TextEditingController(text: stage.dueRaw);
+    _actual = TextEditingController(text: stage.actualDate);
+    _remark = TextEditingController(text: stage.remark);
+    _state = stage.state;
+  }
 
   @override
   void dispose() {
@@ -546,17 +799,33 @@ class _StageCardState extends State<_StageCard> {
     super.dispose();
   }
 
+  /// 切换阶段：把该阶段原文带回输入框，避免把 A 阶段的内容写到 B 阶段。
+  void _switchTo(String code) {
+    final stage = widget.issue.stage(code);
+    if (stage == null) return;
+    setState(() {
+      _code = code;
+      _owner.text = stage.ownerText;
+      _due.text = stage.dueRaw;
+      _actual.text = stage.actualDate;
+      _remark.text = stage.remark;
+      _state = stage.state;
+    });
+  }
+
   Future<void> _save() async {
+    if (_saving) return;
     setState(() => _saving = true);
     var actual = _actual.text.trim();
     if (actual.isEmpty && _state == StageState.done) {
       final now = DateTime.now();
-      actual =
-          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      actual = '${now.year}-'
+          '${now.month.toString().padLeft(2, '0')}-'
+          '${now.day.toString().padLeft(2, '0')}';
     }
     final updated = await widget.state.saveStage(
       issue: widget.issue,
-      code: widget.stage.code,
+      code: _code,
       ownerText: _owner.text,
       dueRaw: _due.text,
       state: _state,
@@ -564,210 +833,235 @@ class _StageCardState extends State<_StageCard> {
       remark: _remark.text,
     );
     if (!mounted) return;
-    setState(() {
-      _saving = false;
-      _editing = false;
-      _actual.text = actual;
-    });
-    widget.onSaved(updated);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${widget.stage.label}已保存。')),
-    );
+    Navigator.of(context).pop(updated);
   }
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final stage = widget.stage;
+    final stage = widget.issue.stage(_code);
     final parsed = Rules.parseRawDate(_due.text);
-    return GlassCard(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
-      radius: 15,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 22,
-                height: 22,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: stage.isDone
-                      ? p.okSoft
-                      : stage.isNa
-                          ? p.well
-                          : p.primaryDim,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  stage.isDone
-                      ? Icons.check
-                      : stage.isNa
-                          ? Icons.remove
-                          : Icons.circle_outlined,
-                  size: 13,
-                  color: stage.isDone
-                      ? p.ok
-                      : stage.isNa
-                          ? p.faint
-                          : p.primary,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(stage.label,
-                  style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: p.fg)),
-              const SizedBox(width: 6),
-              SinanChip(
-                text: stage.state.label,
-                tone: stage.isDone
-                    ? 'ok'
-                    : stage.isNa
-                        ? 'muted'
-                        : stage.hasOwner || stage.hasPlan
-                            ? 'primary'
-                            : 'warn',
-                dense: true,
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: () => setState(() => _editing = !_editing),
-                child: Text(_editing ? '收起' : '编辑',
-                    style: const TextStyle(fontSize: 11.5)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '责任人 ${stage.hasOwner ? stage.ownerText : '未安排'}',
-                  style: TextStyle(fontSize: 11.5, color: p.muted),
-                ),
-              ),
-              Text(
-                '计划 ${stage.dueRaw.isEmpty ? '未排' : stage.dueRaw}',
-                style: TextStyle(
-                    fontSize: 11.5,
-                    color: p.muted,
-                    fontFeatures: const [FontFeature.tabularFigures()]),
-              ),
-            ],
-          ),
-          if (stage.actualDate.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text('实际完成 ${stage.actualDate}',
-                  style: TextStyle(fontSize: 10.5, color: p.ok)),
+    return Padding(
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Text('推进阶段',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: p.fg)),
+                const SizedBox(width: 8),
+                Text(widget.issue.id,
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: p.faint,
+                        fontFeatures: const [FontFeature.tabularFigures()])),
+                const Spacer(),
+                const SinanChip(text: '离线', tone: 'warn', dense: true),
+              ],
             ),
-          if (stage.remark.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 3),
-              child: Text(stage.remark,
-                  style: TextStyle(fontSize: 10.5, color: p.faint)),
+            const SizedBox(height: 12),
+            // 四阶段分段（设计稿 .mseg）
+            Row(
+              children: [
+                for (final code in StageCodes.all) ...[
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _switchTo(code),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 6),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: _code == code ? p.primaryDim : p.well,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: _code == code
+                                ? p.primary.withValues(alpha: 0.45)
+                                : p.cardBorder,
+                          ),
+                        ),
+                        child: Text(
+                          StageCodes.shortLabel(code),
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: _code == code
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: _code == code ? p.primary : p.muted,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
-          if (_editing) ...[
-            const SizedBox(height: 10),
-            const Divider(height: 1),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _owner,
-              style: const TextStyle(fontSize: 12.5),
-              decoration: const InputDecoration(
-                labelText: '责任人（原文，多人用 / 分隔）',
-                isDense: true,
-              ),
+            const SizedBox(height: 14),
+            _label(p, '阶段结果'),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              children: [
+                for (final s in [
+                  StageState.notStarted,
+                  StageState.inProgress,
+                  StageState.done,
+                  StageState.na,
+                ])
+                  ChoiceChip(
+                    label: Text(s.label,
+                        style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: _state == s
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: _state == s ? p.primary : p.muted)),
+                    selected: _state == s,
+                    showCheckmark: false,
+                    side: BorderSide(
+                        color: _state == s
+                            ? p.primary.withValues(alpha: 0.4)
+                            : p.cardBorder),
+                    backgroundColor: p.well,
+                    selectedColor: p.primaryDim,
+                    onSelected: (_) => setState(() => _state = s),
+                  ),
+              ],
             ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _due,
-              style: const TextStyle(fontSize: 12.5),
-              onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                labelText: '计划时间原文（如 11.25 / 已下图 / /）',
-                isDense: true,
-              ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _label(p, '责任人'),
+                      const SizedBox(height: 5),
+                      TextField(
+                        controller: _owner,
+                        style: const TextStyle(fontSize: 12.5),
+                        decoration: const InputDecoration(
+                          hintText: '如 王工/冯工',
+                          isDense: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _label(p, '计划时间原文'),
+                      const SizedBox(height: 5),
+                      TextField(
+                        controller: _due,
+                        style: const TextStyle(fontSize: 12.5),
+                        onChanged: (_) => setState(() {}),
+                        decoration: const InputDecoration(
+                          hintText: '11.25 / 已下图 / /',
+                          isDense: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 4),
             Text(
               _due.text.trim().isEmpty
-                  ? '留空表示未排计划。'
+                  ? '留空表示未排计划；"/"表示本阶段不适用，不参与逾期。'
                   : parsed != null
-                      ? '解析为 ${parsed.year}-${parsed.month.toString().padLeft(2, '0')}-${parsed.day.toString().padLeft(2, '0')}（逾期按此日期算）'
+                      ? '解析为 ${parsed.year}-${parsed.month.toString().padLeft(2, '0')}-${parsed.day.toString().padLeft(2, '0')}，逾期按此日期算。'
                       : Rules.isNotApplicable(_due.text)
                           ? '“/”表示本阶段不适用，不参与逾期计算。'
                           : Rules.meansDrawingIssued(_due.text)
                               ? '“已下图”表示本阶段已完成，无具体日期。'
                               : '无法解析为日期，原文照存，不参与逾期计算。',
-              style: TextStyle(fontSize: 10, color: p.faint),
+              style: TextStyle(fontSize: 9.5, height: 1.4, color: p.faint),
             ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<StageState>(
-              initialValue: _state,
-              isDense: true,
-              decoration: const InputDecoration(
-                labelText: '阶段状态',
-                isDense: true,
-              ),
-              items: [
-                for (final s in StageState.values)
-                  DropdownMenuItem(
-                    value: s,
-                    child: Text(s.label, style: const TextStyle(fontSize: 12.5)),
-                  ),
-              ],
-              onChanged: (v) => setState(() => _state = v ?? _state),
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+            _label(p, '实际完成'),
+            const SizedBox(height: 5),
             TextField(
               controller: _actual,
               style: const TextStyle(fontSize: 12.5),
               decoration: const InputDecoration(
-                labelText: '实际完成日（YYYY-MM-DD，可空）',
+                hintText: 'YYYY-MM-DD，留空自动填今天（已完成时）',
                 isDense: true,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+            _label(p, '备注'),
+            const SizedBox(height: 5),
             TextField(
               controller: _remark,
               style: const TextStyle(fontSize: 12.5),
-              maxLines: 2,
+              minLines: 2,
+              maxLines: 3,
               decoration: const InputDecoration(
-                labelText: '阶段备注',
+                hintText: '现场处理结果、复测数据等',
                 isDense: true,
               ),
             ),
             const SizedBox(height: 10),
+            Text(
+              '先存本机，联网后补传；保存只影响「${stage?.label ?? _code}」，'
+              '问题状态由四阶段自动推导。',
+              style: TextStyle(fontSize: 9.5, height: 1.45, color: p.faint),
+            ),
+            const SizedBox(height: 14),
             Row(
               children: [
                 Expanded(
-                  child: Text('保存只影响本阶段，问题状态由四阶段自动推导。',
-                      style: TextStyle(fontSize: 9.5, color: p.faint)),
-                ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  onPressed: _saving ? null : _save,
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size(92, 40),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: OutlinedButton(
+                    onPressed: _saving
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(46)),
+                    child: const Text('取消'),
                   ),
-                  child: _saving
-                      ? const SizedBox(
-                          width: 15,
-                          height: 15,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Text('保存本阶段'),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: FilledButton(
+                    onPressed: _saving ? null : _save,
+                    style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(46)),
+                    child: _saving
+                        ? const SizedBox(
+                            width: 17,
+                            height: 17,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Text('保存本阶段'),
+                  ),
                 ),
               ],
             ),
           ],
-        ],
+        ),
       ),
     );
+  }
+
+  Widget _label(SinanPalette p, String text) {
+    return Text(text,
+        style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: p.muted));
   }
 }

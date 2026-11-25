@@ -26,6 +26,7 @@ class AppState extends ChangeNotifier {
   List<Issue> _issues = const [];
   IssueStats? _stats;
   int _pendingOutbox = 0;
+  int _todayRecorded = 0;
 
   ThemeMode get themeMode => _themeMode;
   bool get loading => _loading;
@@ -37,6 +38,7 @@ class AppState extends ChangeNotifier {
   List<Issue> get issues => _issues;
   IssueStats? get stats => _stats;
   int get pendingOutbox => _pendingOutbox;
+  int get todayRecorded => _todayRecorded;
 
   /// 首次启动与“重试”共用：读主题、建库、灌种子、拉统计。
   /// 任何一步失败都不能让界面停在启动页，错误交给 `loadError` 由 UI 展示。
@@ -60,6 +62,7 @@ class AppState extends ChangeNotifier {
     _issues = await repository.all();
     _stats = await repository.stats();
     _pendingOutbox = await repository.pendingOutbox();
+    _todayRecorded = await repository.todayOutboxCount();
     notifyListeners();
   }
 

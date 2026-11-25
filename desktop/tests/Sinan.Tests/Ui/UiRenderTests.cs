@@ -25,7 +25,7 @@ namespace Sinan.Tests.Ui;
 ///
 /// 断言分两层：
 /// 1) 像素层：采样颜色数，纯白/纯黑说明没渲染出内容；
-/// 2) 文案层：遍历可视树文本，必须命中页面独有文案（"优先处理清单"等），
+/// 2) 文案层：遍历可视树文本，必须命中页面独有文案（"数据体检"等），
 ///    避免"页面没切换但标题栏一样"造成假绿。
 /// </summary>
 [Collection("WPF-UI")]
@@ -78,14 +78,17 @@ public class UiRenderTests
             var shell = (ShellViewModel)window.DataContext;
             var root = DetachContent(window, 1440, 900);
 
+            // Marker 一律取"该页独有、且不会被外壳标题命中"的文案：
+            // 页面按设计稿重构后旧标题（如"优先处理清单""四阶段完成率"）已不存在，
+            // 这里跟着界面真源改，避免测试自己变成假红/假绿。
             var pages = new (string Key, string Marker, string File)[]
             {
                 (ShellViewModel.PageOverview, "问题分布", "page-overview"),
-                (ShellViewModel.PageDashboard, "优先处理清单", "page-dashboard"),
+                (ShellViewModel.PageDashboard, "数据体检", "page-dashboard"),
                 (ShellViewModel.PageIssues, "问题清单", "page-issues"),
-                (ShellViewModel.PageExchange, "导入 Excel 原表", "page-exchange"),
-                (ShellViewModel.PageReport, "四阶段完成率", "page-report"),
-                (ShellViewModel.PageSettings, "本地数据位置", "page-settings")
+                (ShellViewModel.PageExchange, "列映射", "page-exchange"),
+                (ShellViewModel.PageReport, "计划时间分布", "page-report"),
+                (ShellViewModel.PageSettings, "数据源", "page-settings")
             };
 
             foreach (var (key, marker, file) in pages)

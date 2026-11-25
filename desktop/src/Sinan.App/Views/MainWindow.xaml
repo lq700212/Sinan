@@ -103,7 +103,7 @@
                         </ContentControl>
                         <ContentControl Style="{StaticResource Chip}" Tag="ok" Margin="0,0,5,0">
                             <TextBlock FontSize="10">
-                                <Run Text="{Binding MachineCount, Mode=OneWay}"/><Run Text=" 台机台"/>
+                                <Run Text="{Binding MachineCount, Mode=OneWay}"/><Run Text=" 台设备"/>
                             </TextBlock>
                         </ContentControl>
                         <ContentControl Style="{StaticResource Chip}" Tag="ng">
@@ -115,6 +115,13 @@
 
                     <!-- 右侧操作组 -->
                     <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="← 工作台" Style="{StaticResource Btn.Ghost}" Height="26"
+                                Padding="8,0" FontSize="11.5" Margin="0,0,6,0"
+                                AutomationProperties.Name="返回工作台"
+                                Command="{Binding NavigateCommand}" CommandParameter="dashboard"
+                                Visibility="{Binding IsOverview, Converter={StaticResource TrueToVisibility}}"
+                                shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+
                         <Button Content="← 返回" Style="{StaticResource Btn.Ghost}" Height="26"
                                 Padding="8,0" FontSize="11.5" Margin="0,0,6,0"
                                 AutomationProperties.AutomationId="BackButton"

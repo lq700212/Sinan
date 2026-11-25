@@ -33,8 +33,8 @@ desktop/
 
 ### 1.1 版本号（桌面端）
 
-- 唯一来源：`desktop/src/Directory.Build.props` 的 `<Version>0.0.1</Version>`。
-  改版本只改这一处；`Sinan.App` 通过程序集版本读取，界面由 `AppInfo` 显示 `v0.0.1`，
+- 唯一来源：`desktop/src/Directory.Build.props` 的 `<Version>0.0.2</Version>`。
+  改版本只改这一处；`Sinan.App` 通过程序集版本读取，界面由 `AppInfo` 显示 `v0.0.2`，
   不要在 XAML/代码里另写版本字符串。
 - 升级节奏遵循根总纲：**默认只升 patch**（`0.0.1 → 0.0.2 → 0.0.3`），
   `0.0.9` 之后是 `0.0.10`，不自动进位；只有用户明确要求才动 minor/major。

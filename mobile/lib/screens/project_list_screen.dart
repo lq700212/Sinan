@@ -123,7 +123,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          Text('P7391 安装调试问题闭环',
+          Text('安装调试问题闭环',
               style: TextStyle(
                   fontSize: 15, fontWeight: FontWeight.w700, color: p.fg)),
           const SizedBox(height: 2),
@@ -385,16 +385,13 @@ class _SubprojectTile extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          Text('${summary.machineCodes.length} 台 · ${summary.issueCount} 条',
-              style: TextStyle(fontSize: 10, color: p.muted)),
-          const SizedBox(height: 2),
           Text(
               summary.photoCount > 0
-                  ? '照片 ${summary.photoCount}（演示） · ${summary.owners.length} 位责任人'
-                  : '${summary.owners.length} 位责任人',
+                  ? '${summary.machineCodes.length} 台 · ${summary.issueCount} 条 · 照片 ${summary.photoCount}'
+                  : '${summary.machineCodes.length} 台 · ${summary.issueCount} 条',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 9.5, color: p.faint)),
+              style: TextStyle(fontSize: 10, color: p.muted)),
         ],
       ),
     );

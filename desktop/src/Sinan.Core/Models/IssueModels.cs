@@ -93,6 +93,18 @@ public sealed class Issue
     /// <summary>倒挂徽标文本：天数取最紧的那一阶段，没有倒挂时为空串。</summary>
     public string InvertedText => IsInverted ? $"倒挂 {StageRules.InvertedDays(this)} 天" : "";
 
+    /// <summary>台账 ID 列：序号补足三位（原表允许缺口，不重排）。</summary>
+    public string DisplaySeqNo => (SeqNo ?? "").Trim().PadLeft(3, '0');
+
+    /// <summary>台账"设计 → 装配"第一行：空责任人显示"设计 /"，与设计稿的缺省写法一致。</summary>
+    public string DesignOwnerDisplay =>
+        string.IsNullOrWhiteSpace(DesignOwner) ? "设计 /" : DesignOwner;
+
+    /// <summary>台账"设计 → 装配"第二行：装配责任人 · 装配日期，空值用破折号。</summary>
+    public string AssemblyLine =>
+        "→ " + (string.IsNullOrWhiteSpace(AssemblyOwner) ? "—" : AssemblyOwner) +
+        " · " + (string.IsNullOrWhiteSpace(AssemblyDueRaw) ? "—" : AssemblyDueRaw);
+
     /// <summary>台账 7 列中的"设计 → 装配"合并列文本。</summary>
     public string OwnerFlow
     {

@@ -9,7 +9,7 @@
 ![Flutter](https://img.shields.io/badge/Flutter-Dart%203.14-02569B?logo=flutter&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?logo=sqlite&logoColor=white)
 ![Excel](https://img.shields.io/badge/Excel-.xls%20%2B%20.xlsx-217346?logo=microsoftexcel&logoColor=white)
-![Version](https://img.shields.io/badge/version-v0.0.1-D97706)
+![Version](https://img.shields.io/badge/version-v0.0.2-D97706)
 
 </div>
 
@@ -84,7 +84,7 @@
   <img src="docs/images/mobile/05_sync.png" width="200" alt="本机待传">
 </p>
 
-> 手机端截图为 Android 模拟器实机渲染（1080×2400），账号与数据均为演示值；iOS 构建需 macOS，暂无实机截图。
+> 手机端截图为 Android 模拟器渲染（1080×2400），账号与数据均为演示值；iOS 构建需 macOS，暂无实机截图。
 
 ## 系统级能力（两端共用）
 
@@ -134,7 +134,7 @@
 
 **机台选择与手输**
 
-当前用"手输机台号 + 最近机台"快速定位；相机扫码待真机接入，界面明确标注，不伪造扫码成功。
+当前用"手输机台号 + 全部机台列表"快速定位；相机扫码待真机接入，界面明确标注，不伪造扫码成功。
 
 **明暗双主题**
 
@@ -229,7 +229,7 @@ Sinan/
 | --- | --- |
 | 桌面端 | .NET 10 + WPF（`net10.0-windows`），MVVM，自写最小 `ObservableObject` / `RelayCommand` |
 | 手机端 | Flutter + Dart 3.14，MVVM，`sqflite` + `shared_preferences`（Android 可构建，iOS 仅设计支持） |
-| 手机端兼容 | Android 7.0+（`minSdk` 24 / `targetSdk` 36）、iOS 15.0+；手机端版本 v0.0.1 |
+| 手机端兼容 | Android 7.0+（`minSdk` 24 / `targetSdk` 36）、iOS 15.0+；手机端版本 v0.0.2 |
 | 数据库 | SQLite（WAL，单文件），`Microsoft.Data.Sqlite` 10.0；15 张表 |
 | Excel | NPOI 2.7.3，同时支持 `.xls`（BIFF8）与 `.xlsx` |
 | 复用库 | `Kaleidoscope.UI`：窗基类、标题栏、胶囊圆角控件、圆角自检 |

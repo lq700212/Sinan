@@ -64,19 +64,68 @@ public sealed class OverviewViewModel : ObservableObject
     public List<PhotoBucket> PhotoBuckets => _data.PhotoBuckets;
 
     /// <summary>
-    /// 问题分布图例。WPF 没有 CSS conic-gradient，环形图用"分段堆叠条 + 图例"落地：
-    /// 信息等价（每段条宽 = 该分项目问题占比），且不伪造第三方位图控件。
+    /// 问题分布图例 + 环形图数据。段色按分项目顺序取主题键（01 主橙 / 02 亮橙 /
+    /// 03 深橙 / 待确认 灰），与设计稿 projects 页图例一一对应。
+    ///
+    /// 注意：这里只在 VM 里给"主题键字符串"，不引用 WPF Brush，
+    /// 具体画刷由 DonutChart 在渲染时从当前主题资源解析，明暗主题自动跟随。
     /// </summary>
-    public List<DistributionRow> Distribution => _data.Cards
-        .Where(c => c.IssueCount > 0)
-        .Select(c => new DistributionRow
+    public List<DistributionRow> Distribution
+    {
+        get
         {
-            Label = c.Code,
-            Detail = $"{c.MachineCount} 台 · {c.IssueCount} 条",
-            Percent = IssueCount == 0 ? 0 : c.IssueCount * 100d / IssueCount,
-            IsUnassigned = c.IsUnassigned
-        })
-        .ToList();
+            var keys = new[] { "Brush.Primary", "Brush.Primary2", "Brush.Warn", "Brush.Muted" };
+            var rows = new List<DistributionRow>();
+            for (int i = 0; i < _data.Cards.Count; i++)
+            {
+                var card = _data.Cards[i];
+                if (card.IssueCount <= 0) continue;
+                rows.Add(new DistributionRow
+                {
+                    Label = card.IsUnassigned ? "待确认" : card.Code,
+                    Detail = $"{card.MachineCount} 台 · {card.IssueCount} 条",
+                    Value = card.IssueCount,
+                    Percent = IssueCount == 0 ? 0 : card.IssueCount * 100d / IssueCount,
+                    PaletteKey = card.IsUnassigned ? keys[3] : keys[Math.Min(i, 2)],
+                    IsUnassigned = card.IsUnassigned
+                });
+            }
+            return rows;
+        }
+    }
+
+    /// <summary>
+    /// 阶段填写率卡片内的"现场照片（演示）"四行：条宽按最大分项目归一化，
+    /// 与设计稿 pa-row 的视觉比例一致（不按总量算，否则第一行永远不到 60%）。
+    /// </summary>
+    public List<PhotoRow> PhotoRows
+    {
+        get
+        {
+            int max = _data.PhotoBuckets.Count == 0 ? 1 : Math.Max(1, _data.PhotoBuckets.Max(p => p.Count));
+            var rows = _data.PhotoBuckets
+                .Select(p => new PhotoRow
+                {
+                    Label = p.Label == "待确认" ? "待确认" : p.Label,
+                    Count = p.Count,
+                    BarPercent = p.Count * 100d / max
+                })
+                .ToList();
+
+            // 设计稿固定列四行（含"待确认 0"）；仓储在待确认照片为 0 时会跳过该桶，
+            // 这里补齐只为对齐设计稿的图例结构，不改变任何统计结果。
+            if (rows.Count > 0 && !rows.Any(r => r.Label == "待确认"))
+            {
+                rows.Add(new PhotoRow { Label = "待确认", Count = 0, BarPercent = 0 });
+            }
+            return rows;
+        }
+    }
+
+    public string TotalIssuesText => $"{IssueCount} 条";
+    public string PhotoFooterText => $"照片 {PhotoCount} 张 · {PhotoIssueCount} 条问题有附件";
+    public string PhotoStripSummary => $"{PhotoCount} 张 · {PhotoIssueCount} 条";
+    public string ImportNote => $"最后导入 {LastImportDisplay}";
 
     public string StageNote
     {
@@ -113,10 +162,20 @@ public sealed class DistributionRow
 {
     public string Label { get; set; } = "";
     public string Detail { get; set; } = "";
+    public int Value { get; set; }
     public double Percent { get; set; }
+    public string PaletteKey { get; set; } = "Brush.Primary";
     public bool IsUnassigned { get; set; }
 
     public string PercentText => $"{Percent:0.#}%";
     public string BarWidth => Percent.ToString("0.##");
     public string DetailWithShare => $"{Detail} · {Percent:0.#}%";
+}
+
+/// <summary>阶段卡片底部照片条的一行（条宽按最大分项目归一化）。</summary>
+public sealed class PhotoRow
+{
+    public string Label { get; set; } = "";
+    public int Count { get; set; }
+    public double BarPercent { get; set; }
 }

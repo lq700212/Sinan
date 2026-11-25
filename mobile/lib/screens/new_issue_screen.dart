@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../models/issue.dart';
@@ -177,8 +179,13 @@ class _NewIssueScreenState extends State<NewIssueScreen> {
                       onTap: _pickMachine,
                       child: Row(
                         children: [
-                          Icon(Icons.qr_code_scanner,
-                              size: 17, color: p.primary),
+                          Icon(
+                            _machine.text.isEmpty
+                                ? Icons.qr_code_scanner
+                                : Icons.check_circle_outline,
+                            size: 17,
+                            color: _machine.text.isEmpty ? p.primary : p.ok,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -195,7 +202,13 @@ class _NewIssueScreenState extends State<NewIssueScreen> {
                               ),
                             ),
                           ),
-                          Text('选择 ›',
+                          if (_machine.text.isNotEmpty) ...[
+                            Text('已选择',
+                                style:
+                                    TextStyle(fontSize: 9.5, color: p.ok)),
+                            const SizedBox(width: 8),
+                          ],
+                          Text(_machine.text.isEmpty ? '选择 ›' : '重新选 ›',
                               style:
                                   TextStyle(fontSize: 11, color: p.primary)),
                         ],
@@ -247,24 +260,6 @@ class _NewIssueScreenState extends State<NewIssueScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _label(p, '状态'),
-                              const SizedBox(height: 5),
-                              _StatusDropdown(
-                                value: _status,
-                                onChanged: (s) => setState(() => _status = s),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
                               _label(p, '责任人'),
                               const SizedBox(height: 5),
                               TextField(
@@ -277,7 +272,11 @@ class _NewIssueScreenState extends State<NewIssueScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 8),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,6 +306,20 @@ class _NewIssueScreenState extends State<NewIssueScreen> {
                             ],
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _label(p, '状态'),
+                              const SizedBox(height: 5),
+                              _StatusDropdown(
+                                value: _status,
+                                onChanged: (s) => setState(() => _status = s),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 14),
@@ -314,58 +327,32 @@ class _NewIssueScreenState extends State<NewIssueScreen> {
                       children: [
                         _label(p, '现场照片'),
                         const Spacer(),
-                        Text('${_photos.length} / $_maxPhotos',
+                        Text('最多 $_maxPhotos 张',
                             style:
                                 TextStyle(fontSize: 10.5, color: p.faint)),
                       ],
                     ),
                     const SizedBox(height: 6),
                     SizedBox(
-                      height: 84,
+                      height: 96,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [
                           for (final path in _photos) ...[
-                            SizedBox(
-                              width: 84,
-                              child: Stack(
-                                children: [
-                                  PhotoTile(
-                                    filePath: path,
-                                    width: 84,
-                                    height: 84,
-                                    onTap: () => setState(
-                                        () => _photos.remove(path)),
-                                  ),
-                                  Positioned(
-                                    top: 2,
-                                    right: 2,
-                                    child: GestureDetector(
-                                      onTap: () => setState(
-                                          () => _photos.remove(path)),
-                                      child: Container(
-                                        width: 20,
-                                        height: 20,
-                                        decoration: const BoxDecoration(
-                                          color: Colors.black54,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(Icons.close,
-                                            size: 12, color: Colors.white),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            _DraftPhoto(
+                              path: path,
+                              onRemove: () =>
+                                  setState(() => _photos.remove(path)),
                             ),
                             const SizedBox(width: 6),
                           ],
                           SizedBox(
-                            width: 84,
+                            width: 92,
                             child: PhotoTile(
                               add: true,
-                              width: 84,
-                              height: 84,
+                              addLabel: '拍照 / 相册',
+                              width: 92,
+                              height: 64,
                               onTap: () => _showPhotoSheet(),
                             ),
                           ),
@@ -373,24 +360,34 @@ class _NewIssueScreenState extends State<NewIssueScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: p.well,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: p.cardBorder),
-                      ),
+                    GlassCard(
+                      inset: true,
+                      radius: 12,
+                      padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.info_outline, size: 14, color: p.info),
-                          const SizedBox(width: 6),
+                          Container(
+                            width: 16,
+                            height: 16,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: p.infoSoft,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text('i',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: p.info)),
+                          ),
+                          const SizedBox(width: 7),
                           Expanded(
                             child: Text(
-                              '保存后立即写入本机 SQLite，并进入待传队列；'
-                              '照片压到 1600px 后存在本机，回到局域网再补传。',
+                              '保存后这台手机上有 ${widget.state.pendingOutbox + 1} 条待传。'
+                              '回到局域网打开 App 会自动补传，不需要手动点。',
                               style: TextStyle(
-                                  fontSize: 10, height: 1.5, color: p.faint),
+                                  fontSize: 10, height: 1.5, color: p.muted),
                             ),
                           ),
                         ],
@@ -435,7 +432,7 @@ class _NewIssueScreenState extends State<NewIssueScreen> {
               ],
             ),
           ),
-          const SinanChip(text: '离线记录', tone: 'warn', dense: true),
+          const SinanChip(text: '离线', tone: 'warn', dense: true),
         ],
       ),
     );
@@ -523,6 +520,72 @@ class _NewIssueScreenState extends State<NewIssueScreen> {
             const SizedBox(height: 8),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 新建页的待上传照片卡：缩略图 + 真实文件名 + 真实大小。
+/// 文件名取系统临时路径的 basename，不伪装成相机原文件名；大小读文件本身。
+class _DraftPhoto extends StatelessWidget {
+  const _DraftPhoto({required this.path, required this.onRemove});
+
+  final String path;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final name = path.split(RegExp(r'[\\/]')).last;
+    var sizeText = '';
+    try {
+      final bytes = File(path).lengthSync();
+      sizeText = bytes >= 1024 * 1024
+          ? '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB'
+          : '${(bytes / 1024).round()} KB';
+    } catch (_) {
+      // 文件读不到时只显示"已压缩"，不编一个大小。
+    }
+    return SizedBox(
+      width: 92,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              PhotoTile(
+                filePath: path,
+                width: 92,
+                height: 64,
+                onTap: onRemove,
+              ),
+              Positioned(
+                top: 2,
+                right: 2,
+                child: GestureDetector(
+                  onTap: onRemove,
+                  child: Container(
+                    width: 19,
+                    height: 19,
+                    decoration: const BoxDecoration(
+                      color: Colors.black54,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.close,
+                        size: 12, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 3),
+          Text(name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 9, color: p.muted)),
+          Text(sizeText.isEmpty ? '已压缩' : '$sizeText · 已压缩',
+              style: TextStyle(fontSize: 8, color: p.faint)),
+        ],
       ),
     );
   }

@@ -125,6 +125,7 @@ class _ShellScreenState extends State<ShellScreen> {
                     HomeTodoScreen(
                       state: widget.state,
                       onOpenProjects: () => _select(1),
+                      onOpenSync: () => _select(3),
                     ),
                     ProjectListScreen(
                       state: widget.state,

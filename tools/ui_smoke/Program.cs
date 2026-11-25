@@ -87,6 +87,7 @@ internal static class Program
             if (!options.NoPages)
             {
                 NavigatePages(process, mainHwnd, options);
+                ShootExportMode(mainHwnd, options);
                 NavigateDetailAndSubproject(mainHwnd, options);
                 ShootDialogs(process, mainHwnd, options);
             }
@@ -342,6 +343,45 @@ internal static class Program
         root.FindFirst(TreeScope.Descendants,
             new PropertyCondition(AutomationElement.AutomationIdProperty, id));
 
+    /// <summary>
+    /// 数据交换页在桌面端是一个入口、两种模式（设计稿是 import / export 两个整页）。
+    /// 这里补一张"导出模式"截图：先回数据交换，再点 ModeExportButton。
+    /// </summary>
+    private static void ShootExportMode(nint mainHwnd, Options options)
+    {
+        try
+        {
+            var window = AutomationElement.FromHandle(mainHwnd);
+            if (window == null) return;
+            var tab = TryFindById(window, "exchange");
+            if (tab == null) return;
+            Activate(tab);
+            Thread.Sleep(800);
+
+            window = AutomationElement.FromHandle(mainHwnd);
+            if (window == null) return;
+            var mode = TryFindById(window, "ModeExportButton");
+            if (mode == null)
+            {
+                Console.WriteLine("[nav] 导出模式按钮未找到");
+                return;
+            }
+            Activate(mode);
+            Thread.Sleep(700);
+            RestoreForeground();
+            Console.WriteLine($"[nav] 数据交换·导出 -> {Shoot(mainHwnd, Path.Combine(options.ShotsDir, "04b-exchange-export.png"))}");
+
+            // 切回导入模式，避免后续暗色轮播把 04-exchange 拍成导出页。
+            window = AutomationElement.FromHandle(mainHwnd);
+            var back = window == null ? null : TryFindById(window, "ModeImportButton");
+            if (back != null) { Activate(back); Thread.Sleep(500); RestoreForeground(); }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[nav] 导出模式截图失败：{ex.Message}");
+        }
+    }
+
     // ------------------------------------------------------------------
     // 详情页 / 分项目页 / 弹窗
     // ------------------------------------------------------------------
@@ -430,6 +470,14 @@ internal static class Program
         {
             Activate(exchange);
             Thread.Sleep(900);
+            // 导出按钮只在"导出模式"下出现：数据交换是一个入口两种模式，
+            // 不先切模式会找不到 ExportButton，README 的导出弹窗图就会缺。
+            var mode = TryFindById(AutomationElement.FromHandle(mainHwnd)!, "ModeExportButton");
+            if (mode != null)
+            {
+                Activate(mode);
+                Thread.Sleep(700);
+            }
             var export = TryFindById(AutomationElement.FromHandle(mainHwnd)!, "ExportButton");
             if (export != null)
             {
@@ -445,6 +493,13 @@ internal static class Program
                 {
                     Console.WriteLine("[nav] 导出弹窗未出现");
                 }
+            }
+            // 截完切回导入模式，保持后续截图与手工使用的默认状态一致。
+            var back = TryFindById(AutomationElement.FromHandle(mainHwnd)!, "ModeImportButton");
+            if (back != null)
+            {
+                Activate(back);
+                Thread.Sleep(500);
             }
         }
     }

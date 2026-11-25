@@ -45,7 +45,7 @@ class _SubprojectScreenState extends State<SubprojectScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              _header(context, p, issues.length, inverted),
+              _header(context, p, machines.length, issues.length, inverted),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -141,8 +141,8 @@ class _SubprojectScreenState extends State<SubprojectScreen> {
     );
   }
 
-  Widget _header(
-      BuildContext context, SinanPalette p, int issueCount, int inverted) {
+  Widget _header(BuildContext context, SinanPalette p, int machineCount,
+      int issueCount, int inverted) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(6, 6, 16, 8),
       child: Row(
@@ -162,7 +162,7 @@ class _SubprojectScreenState extends State<SubprojectScreen> {
                         fontWeight: FontWeight.w700,
                         color: p.fg,
                         fontFeatures: const [FontFeature.tabularFigures()])),
-                Text('$issueCount 条问题 · 按机台展开',
+                Text('$machineCount 台设备 · $issueCount 条问题',
                     style: TextStyle(fontSize: 10.5, color: p.faint)),
               ],
             ),

@@ -13,6 +13,7 @@ class PhotoTile extends StatelessWidget {
     this.onTap,
     this.add = false,
     this.demo = false,
+    this.addLabel = '拍照',
     this.width = double.infinity,
     this.height = 82,
   });
@@ -23,6 +24,9 @@ class PhotoTile extends StatelessWidget {
   final VoidCallback? onTap;
   final bool add;
   final bool demo;
+
+  /// 添加格的说明文字：详情页是「拍照」，新建页是「拍照 / 从相册选」。
+  final String addLabel;
   final double width;
   final double height;
 
@@ -43,7 +47,8 @@ class PhotoTile extends StatelessWidget {
           children: [
             Icon(Icons.add_a_photo_outlined, size: 20, color: p.primary),
             const SizedBox(height: 4),
-            Text('拍照',
+            Text(addLabel,
+                textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 10.5, color: p.primary)),
           ],
         ),

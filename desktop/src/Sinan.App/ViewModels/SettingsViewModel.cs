@@ -35,13 +35,50 @@ public sealed class SettingsViewModel : ObservableObject
         var issues = app.Issues.All();
         IssueCount = issues.Count;
         MachineCount = issues.Select(i => i.MachineId).Distinct().Count();
+        OverdueCount = issues.Count(i => i.OverdueDays > 0);
+        InvertedCount = issues.Count(i => i.IsInverted);
         Users = app.Users.ListActive();
         UserCount = Users.Count;
 
         OpenFolderCommand = new RelayCommand(OpenFolder);
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
         OpenLogFileCommand = new RelayCommand(OpenLogFolder);
+
+        // 设计稿左侧固定 6 项，右侧是同一页里纵向排列的卡片（点击目录滚动定位），
+        // 不做"点一项只显示一卡"的切换，否则页面会空掉大半屏。
+        Sections = new[]
+        {
+            new SettingNavItem("data", "数据与备份"),
+            new SettingNavItem("import", "导入规则"),
+            new SettingNavItem("alert", "提醒与逾期"),
+            new SettingNavItem("people", "人员与角色"),
+            new SettingNavItem("mobile", "移动端配对"),
+            new SettingNavItem("about", "关于与许可"),
+        };
+        _sectionItem = Sections[0];
     }
+
+    /// <summary>
+    /// 左侧设置目录（设计稿 settings 页）。
+    /// 用 ListBox 而不是自绘 RadioButton：选中语义由 SelectionItemPattern 提供，
+    /// 读屏与自动化都能定位；样式仍由页面 ItemContainerStyle 控制。
+    /// </summary>
+    public IReadOnlyList<SettingNavItem> Sections { get; }
+
+    private SettingNavItem? _sectionItem;
+
+    /// <summary>当前选中的目录项；变化后由 SettingsPage.xaml.cs 把对应卡片滚到视口顶部。</summary>
+    public SettingNavItem? SelectedSectionItem
+    {
+        get => _sectionItem;
+        set
+        {
+            if (!SetProperty(ref _sectionItem, value) || value == null) return;
+            OnPropertiesChanged(nameof(SelectedSection));
+        }
+    }
+
+    public string SelectedSection => SelectedSectionItem?.Key ?? "data";
 
     /// <summary>
     /// 主题变化时由壳层统一回调（ShellViewModel 持有唯一的 ThemeManager.Changed 订阅）。
@@ -59,7 +96,13 @@ public sealed class SettingsViewModel : ObservableObject
     public int IssueCount { get; }
     public int MachineCount { get; }
     public int UserCount { get; }
+    public int OverdueCount { get; }
+    public int InvertedCount { get; }
     public List<User> Users { get; }
+
+    /// <summary>配对服务实况：MVP 单机版没有启动监听，界面必须如实说"未启用"，不放假二维码。</summary>
+    public string SyncStatusText => "配对服务尚未启用（当前为离线单机版）";
+    public string SyncPortDisplay => "规划端口 5180 · 仅监听局域网";
 
     public string CurrentUserName => _app.Session.User?.Name ?? "—";
     public string CurrentUserRole => _app.Session.User?.RoleDisplay ?? "—";
@@ -120,4 +163,17 @@ public sealed class SettingsViewModel : ObservableObject
     }
 
     private void OpenLogFolder() => OpenFolder(LogsDir);
+}
+
+/// <summary>设置目录的一项：Key 用于定位右侧卡片，Label 是界面文案。</summary>
+public sealed class SettingNavItem
+{
+    public SettingNavItem(string key, string label)
+    {
+        Key = key;
+        Label = label;
+    }
+
+    public string Key { get; }
+    public string Label { get; }
 }

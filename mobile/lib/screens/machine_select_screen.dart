@@ -97,8 +97,8 @@ class _MachineSelectScreenState extends State<MachineSelectScreen> {
                     ],
                     const SizedBox(height: 16),
                     SectionTitle(
-                      title: '最近机台',
-                      subtitle: '按机台号排序',
+                      title: '全部机台',
+                      subtitle: '按机台号排序 · 点选直接带回新建页',
                       trailing: Text('${_machines.length} 台',
                           style: TextStyle(fontSize: 11, color: p.faint)),
                     ),
@@ -109,7 +109,7 @@ class _MachineSelectScreenState extends State<MachineSelectScreen> {
                         description: '先在台账里确认问题已缓存到本机。',
                       )
                     else
-                      for (final m in _machines.take(12))
+                      for (final m in _machines)
                         _MachineTile(
                           machine: m,
                           onTap: () => _confirm(m.machineCode),
@@ -138,17 +138,17 @@ class _MachineSelectScreenState extends State<MachineSelectScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('选择机台',
+                Text('扫码选机台',
                     style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
                         color: p.fg)),
-                Text('手输或从最近机台选择',
+                Text('扫码待接入 · 可手输或选最近机台',
                     style: TextStyle(fontSize: 10.5, color: p.faint)),
               ],
             ),
           ),
-          const SinanChip(text: '离线可用', tone: 'info', dense: true),
+          const SinanChip(text: '离线', tone: 'warn', dense: true),
         ],
       ),
     );
@@ -228,6 +228,8 @@ class _MachineTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
+    // updated_at 是 ISO 时间串，机台卡只显示月-日；解析失败就省略，不硬编日期。
+    final last = _shortDate(machine.lastUpdated);
     return GlassCard(
       margin: const EdgeInsets.only(bottom: 7),
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -260,9 +262,14 @@ class _MachineTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${machine.issueCount} 条问题'
-                  '${machine.inverted > 0 ? ' · 倒挂 ${machine.inverted}' : ''}'
+                  '${last.isEmpty ? '' : ' · 最近 $last'}'
                   '${machine.overdue > 0 ? ' · 逾期 ${machine.overdue}' : ''}',
-                  style: TextStyle(fontSize: 10, color: p.faint),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontSize: 10,
+                      color: p.faint,
+                      fontFeatures: const [FontFeature.tabularFigures()]),
                 ),
               ],
             ),
@@ -278,5 +285,12 @@ class _MachineTile extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  static String _shortDate(String iso) {
+    final parsed = DateTime.tryParse(iso);
+    if (parsed == null) return '';
+    return '${parsed.month.toString().padLeft(2, '0')}-'
+        '${parsed.day.toString().padLeft(2, '0')}';
   }
 }

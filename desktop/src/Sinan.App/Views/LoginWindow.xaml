@@ -210,6 +210,16 @@
                                     Command="{Binding LoginCommand}" IsDefault="True"
                                     Height="38" FontSize="13" HorizontalContentAlignment="Center"/>
 
+                            <!-- 演示账号常驻提示：现场演示不必翻文档；真实使用仍要求改密 -->
+                            <Border Margin="0,10,0,0" Padding="9,7" CornerRadius="8"
+                                    Background="{DynamicResource Brush.CardWell}"
+                                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1">
+                                <TextBlock FontSize="9.5" Foreground="{DynamicResource Brush.Muted}"
+                                           TextWrapping="Wrap" LineHeight="15">
+                                    <Run Text="演示账号："/><Run Text="engineer / 123456" FontFamily="{DynamicResource Font.Mono}"/><Run Text=" · "/><Run Text="admin / 123456" FontFamily="{DynamicResource Font.Mono}"/>
+                                </TextBlock>
+                            </Border>
+
                             <!-- 失败原因就地展开，不弹二级窗 -->
                             <Border Margin="0,12,0,0" Padding="9,7" CornerRadius="8"
                                     Background="{DynamicResource Brush.PrimaryDim}"

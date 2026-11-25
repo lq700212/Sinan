@@ -31,7 +31,7 @@ public sealed class SubprojectViewModel : ObservableObject
     private readonly Dictionary<string, List<Issue>> _issuesByMachine;
 
     private MachineSummary? _selectedMachine;
-    private List<Issue> _selectedIssues = new();
+    private List<SubprojectIssueCard> _selectedIssues = new();
     private List<PhotoThumb> _selectedPhotos = new();
     private bool _isBusy;
 
@@ -83,7 +83,12 @@ public sealed class SubprojectViewModel : ObservableObject
     /// <summary>倒挂 &gt; 0 才显示红标，避免"倒挂 0 条"白占一行位置。</summary>
     public bool HasInverted => InvertedCount > 0;
 
-    public string SummaryText => $"{MachineCount} 台设备 · {IssueCount} 条问题 · {OwnerCount} 位责任人";
+    public string SummaryText =>
+        $"{MachineCount} 台设备 · {IssueCount} 条问题 · {OwnerCount} 位责任人 · 装配已填 {AssemblyFilled} / {IssueCount}";
+
+    /// <summary>装配阶段已填责任人的问题数（口径与总览卡片一致）。</summary>
+    public int AssemblyFilled => _data.AssemblyFilled;
+
     public string PhotoNote => $"照片 {PhotoCount} 张（演示值）";
 
     /// <summary>
@@ -114,16 +119,17 @@ public sealed class SubprojectViewModel : ObservableObject
             if (!SetProperty(ref _selectedMachine, value)) return;
 
             // 切行时重算三块内容并一次性通知，避免 XAML 里三次读属性各算一遍。
-            _selectedIssues = value == null
+            var raw = value == null
                 ? new List<Issue>()
                 : _issuesByMachine.GetValueOrDefault(value.MachineId) ?? new List<Issue>();
-            _selectedPhotos = BuildPhotos(_selectedIssues);
+            _selectedIssues = raw.Select(ToCard).ToList();
+            _selectedPhotos = BuildPhotos(raw);
 
             OnPropertiesChanged(
                 nameof(SelectedIssues), nameof(SelectedPhotos),
                 nameof(HasSelectedMachine), nameof(SelectedTitle), nameof(SelectedIssueCountText),
                 nameof(SelectedOwnerValue),
-                nameof(SelectedPhotoText), nameof(SelectedInvertedText),
+                nameof(SelectedPhotoText), nameof(SelectedPhotoCountText), nameof(SelectedInvertedText),
                 nameof(SelectedHasInverted), nameof(SelectedHasIssues), nameof(SelectedHasPhotos),
                 nameof(SelectedEmptyHint));
         }
@@ -148,6 +154,11 @@ public sealed class SubprojectViewModel : ObservableObject
         ? ""
         : $"照片 {_selectedMachine.PhotoCount} 张（演示值）";
 
+    /// <summary>照片条标题右侧的计数：设计稿写"11-22 上传 · 演示"，我们没有真实上传时间，只报数量。</summary>
+    public string SelectedPhotoCountText => _selectedMachine == null
+        ? ""
+        : $"共 {_selectedMachine.PhotoCount} 张（演示）";
+
     public string SelectedInvertedText => _selectedMachine == null
         ? ""
         : $"倒挂 {_selectedMachine.InvertedCount} 条";
@@ -161,7 +172,58 @@ public sealed class SubprojectViewModel : ObservableObject
         ? "点左侧任意设备查看该机台的问题点"
         : "这台设备暂无问题记录，可直接新建问题";
 
-    public IReadOnlyList<Issue> SelectedIssues => _selectedIssues;
+    public IReadOnlyList<SubprojectIssueCard> SelectedIssues => _selectedIssues;
+
+    /// <summary>
+    /// 把一条问题压成预览卡需要的字段。标签只保留"最需要处理的那一个"：
+    /// 倒挂 &gt; 计划文本（有原文但解析不出日期）&gt; 设计未填，照片计数单独一枚绿标。
+    /// 与设计稿三张演示卡的信息密度一致，避免每条都挂满徽标。
+    /// </summary>
+    private static SubprojectIssueCard ToCard(Issue issue)
+    {
+        string badge = "";
+        string tone = "plain";
+        if (issue.IsInverted)
+        {
+            badge = issue.InvertedText;
+            tone = "ng";
+        }
+        else if (HasPlanText(issue.DesignStage) || HasPlanText(issue.AssemblyStage))
+        {
+            badge = "计划文本";
+            tone = "warn";
+        }
+        else if (string.IsNullOrWhiteSpace(issue.DesignOwner))
+        {
+            badge = "设计未填";
+            tone = "plain";
+        }
+
+        var owner = !string.IsNullOrWhiteSpace(issue.AssemblyOwner) ? issue.AssemblyOwner
+                  : !string.IsNullOrWhiteSpace(issue.DesignOwner) ? issue.DesignOwner
+                  : "未填";
+
+        return new SubprojectIssueCard
+        {
+            Id = issue.Id,
+            CodeText = $"P7391-{issue.DisplaySeqNo}",
+            Title = issue.Title,
+            SolutionLine = string.IsNullOrWhiteSpace(issue.Solution) ? "解决措施：—" : $"解决措施：{issue.Solution}",
+            OwnerText = owner,
+            PlanLine = issue.DesignPlanLine,
+            HasPlanLine = !string.IsNullOrWhiteSpace(issue.DesignDueRaw) ||
+                          !string.IsNullOrWhiteSpace(issue.AssemblyDueRaw),
+            BadgeText = badge,
+            BadgeTag = tone,
+            HasBadge = badge.Length > 0,
+            PhotoText = issue.PhotoText,
+            HasPhoto = issue.HasPhoto
+        };
+    }
+
+    /// <summary>计划列写了原文（例如"已下图"）但解析不出日期：导入时保留原文，界面标"计划文本"。</summary>
+    private static bool HasPlanText(IssueStage? stage) =>
+        stage != null && !string.IsNullOrWhiteSpace(stage.DueRaw) && stage.DueDate == null;
 
     /// <summary>照片条（演示占位）。按"有照片的问题"展开，每条带问题序号便于对应。</summary>
     public IReadOnlyList<PhotoThumb> SelectedPhotos => _selectedPhotos;
@@ -195,6 +257,26 @@ public sealed class SubprojectViewModel : ObservableObject
     public RelayCommand OpenIssuesCommand { get; }
     public RelayCommand OpenIssueCommand { get; }
     public RelayCommand ExportCommand { get; }
+}
+
+/// <summary>
+/// 右侧问题预览卡的数据快照：只放界面要显示的字符串，避免 XAML 里串多个转换器，
+/// 也保证切设备时一次性算好（同屏切换不重复解析日期）。
+/// </summary>
+public sealed class SubprojectIssueCard
+{
+    public string Id { get; init; } = "";
+    public string CodeText { get; init; } = "";
+    public string Title { get; init; } = "";
+    public string SolutionLine { get; init; } = "";
+    public string OwnerText { get; init; } = "";
+    public string PlanLine { get; init; } = "";
+    public bool HasPlanLine { get; init; }
+    public string BadgeText { get; init; } = "";
+    public string BadgeTag { get; init; } = "plain";
+    public bool HasBadge { get; init; }
+    public string PhotoText { get; init; } = "";
+    public bool HasPhoto { get; init; }
 }
 
 /// <summary>照片条里的一张（演示占位，不带真实图片文件）。</summary>

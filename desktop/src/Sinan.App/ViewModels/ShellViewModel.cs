@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Sinan.App.Mvvm;
 using Sinan.App.Services;
+using Sinan.Core.Utils;
 
 namespace Sinan.App.ViewModels;
 
@@ -63,7 +64,7 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
         };
 
         ProjectCode = app.Projects.GetMain()?.Code ?? "P7391";
-        ProjectSubtitle = $"{ProjectCode} · {_subprojectCount} 个分项目 · {_machineCount} 台机台";
+        ProjectSubtitle = $"{ProjectCode} · Program Overview";
         DataAsOf = $"数据截至 {DateTime.Now:MM-dd HH:mm}";
         VersionText = $"{AppInfo.VersionLabel} · 离线模式 · 库 {_app.Database.Paths.DbPath}";
 
@@ -143,6 +144,9 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
 
     public string CurrentKey => _currentKey;
 
+    /// <summary>总览页专用：顶栏显示"← 工作台"（设计稿 projects 页），其他页用返回按钮。</summary>
+    public bool IsOverview => _currentKey == PageOverview;
+
     public RelayCommand NavigateCommand { get; }
     public RelayCommand RefreshCommand { get; }
     public RelayCommand ToggleThemeCommand { get; }
@@ -175,8 +179,10 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
         CanGoBack = true;
         SetActive(null);
         CurrentPage = new IssueDetailViewModel(_app, this, issue);
-        Title = "问题详情";
-        Subtitle = $"{issue.MachineCode} · 第 {issue.SeqNo} 项";
+        // 设计稿 app-bar：标题是问题号（P7391-009），副标题是"问题详情 · 机台号"。
+        Title = $"P7391-{issue.DisplaySeqNo}";
+        Subtitle = $"问题详情 · {issue.MachineCode}";
+        OnPropertiesChanged(nameof(IsOverview), nameof(CanGoBack));
     }
 
     public void NavigateToIssues(string? subprojectCode)
@@ -209,8 +215,10 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
         CanGoBack = true;
         SetActive(PageOverview);
         CurrentPage = page;
-        Title = $"{page.Code} 分项目";
-        Subtitle = $"{page.MachineCount} 台设备 · {page.IssueCount} 条问题 · 设备问题预览";
+        Title = page.Code;
+        // 设计稿 app-title：主标题 P7391-01，副标题"分项目预览 · 10 台设备"。
+        Subtitle = $"分项目预览 · {page.MachineCount} 台设备";
+        OnPropertiesChanged(nameof(IsOverview), nameof(CanGoBack));
     }
 
     public void Back()
@@ -302,6 +310,7 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
         Title = title;
         Subtitle = subtitle;
         DataAsOf = $"数据截至 {DateTime.Now:MM-dd HH:mm}";
+        OnPropertiesChanged(nameof(IsOverview), nameof(CanGoBack));
     }
 
     private object CreatePage(string key) => key switch
@@ -316,13 +325,13 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
 
     private (string Title, string Subtitle) Describe(string key) => key switch
     {
-        PageOverview => ("项目总览", ProjectSubtitle),
-        PageDashboard => ("工作台", $"{ProjectCode} · 今天必须看的一件事"),
-        PageIssues => ("问题台账", $"{IssueTotal} 条 · 计划倒挂 {InvertedCount} 条"),
-        PageExchange => ("数据交换", "Excel 原表进出 · 移动端配对"),
-        PageReport => ("统计报表", "阶段完成率 · 责任人负载 · 照片覆盖"),
-        PageSettings => ("系统设置", "本地数据 · 账号 · 关于"),
-        _ => ("工作台", ProjectSubtitle)
+        PageOverview => ("总项目总览", $"{ProjectCode} · Program Overview"),
+        PageDashboard => ("工作台总览", $"{ProjectCode} · {SubprojectCount} 个分项目"),
+        PageIssues => ("问题台账", $"{ProjectCode} · {IssueTotal} 条 · 倒挂 {InvertedCount} 条"),
+        PageExchange => ("数据交换", "导入 / 导出 · 原表双向通道"),
+        PageReport => ("统计报表", $"Analytics · 截至 {AppTime.Today:MM-dd}"),
+        PageSettings => ("系统设置", $"{ProjectCode} · 本机数据与账号"),
+        _ => ("工作台总览", ProjectSubtitle)
     };
 
     private void SetActive(string? key)

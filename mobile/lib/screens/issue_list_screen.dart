@@ -19,6 +19,7 @@ class IssueListScreen extends StatefulWidget {
 class _IssueListScreenState extends State<IssueListScreen> {
   final _search = TextEditingController();
   String _filter = 'all';
+  String _projectFilter = 'all';
   bool _includeClosed = true;
 
   @override
@@ -27,13 +28,32 @@ class _IssueListScreenState extends State<IssueListScreen> {
     super.dispose();
   }
 
+  /// 单个筛选条件是否命中（不带搜索词）。筛选 chip 的计数也走这里，
+  /// 保证"倒挂 13"点进去就是 13 条，不会出现 chip 数字与列表长度对不上。
+  bool _passesChip(Issue issue, String value) {
+    switch (value) {
+      case 'inverted':
+        return Rules.isPlanInverted(issue);
+      case 'text':
+        return Rules.hasTextPlan(issue);
+      case 'photo':
+        return issue.photoCount > 0;
+      case 'overdue':
+        return Rules.overdueDays(issue) > 0;
+      default:
+        return true;
+    }
+  }
+
   List<Issue> _filtered(List<Issue> source) {
     final keyword = _search.text.trim().toLowerCase();
     var list = source.where((issue) {
       if (!_includeClosed && issue.isClosed) return false;
-      if (_filter == 'inverted' && !Rules.isPlanInverted(issue)) return false;
-      if (_filter == 'overdue' && Rules.overdueDays(issue) <= 0) return false;
-      if (_filter == 'photo' && issue.photoCount <= 0) return false;
+      if (_projectFilter != 'all' &&
+          (issue.subprojectCode ?? '待确认') != _projectFilter) {
+        return false;
+      }
+      if (!_passesChip(issue, _filter)) return false;
       if (keyword.isEmpty) return true;
       final owners = issue.stages.map((s) => s.ownerText).join(' ');
       final haystack =
@@ -92,8 +112,9 @@ class _IssueListScreenState extends State<IssueListScreen> {
                 children: [
                   _filterChip('全部', 'all'),
                   _filterChip('倒挂', 'inverted'),
-                  _filterChip('逾期', 'overdue'),
+                  _filterChip('文本', 'text'),
                   _filterChip('有照片', 'photo'),
+                  _filterChip('逾期', 'overdue'),
                   const SizedBox(width: 4),
                   FilterChip(
                     label: Text('含已关闭', style: TextStyle(fontSize: 11.5, color: p.muted)),
@@ -108,12 +129,31 @@ class _IssueListScreenState extends State<IssueListScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 6),
+            SizedBox(
+              height: 32,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  _projectChip('全部', 'all'),
+                  for (final s in widget.state.stats?.subprojects ?? const [])
+                    _projectChip(
+                      s.code == '待确认' ? '待确认' : s.code,
+                      s.code,
+                      count: s.issueCount,
+                    ),
+                ],
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
               child: Row(
                 children: [
-                  Text('共 ${list.length} 条',
+                  Text('筛出 ${list.length} 条',
                       style: TextStyle(fontSize: 11, color: p.faint)),
+                  Text(' / 共 ${widget.state.issues.length} 条',
+                      style: TextStyle(fontSize: 10.5, color: p.faint)),
                   const Spacer(),
                   Text('倒挂优先 → 逾期最久',
                       style: TextStyle(fontSize: 10.5, color: p.faint)),
@@ -143,10 +183,13 @@ class _IssueListScreenState extends State<IssueListScreen> {
   Widget _filterChip(String label, String value) {
     final p = context.palette;
     final selected = _filter == value;
+    final count = value == 'all'
+        ? widget.state.issues.length
+        : widget.state.issues.where((i) => _passesChip(i, value)).length;
     return Padding(
       padding: const EdgeInsets.only(right: 6),
       child: ChoiceChip(
-        label: Text(label,
+        label: Text('$label $count',
             style: TextStyle(
                 fontSize: 11.5,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
@@ -163,6 +206,37 @@ class _IssueListScreenState extends State<IssueListScreen> {
       ),
     );
   }
+
+  /// 分项目筛选（设计稿 m-list 第二行）：现场按分项目看进度，不必回总览再点。
+  Widget _projectChip(String label, String value, {int? count}) {
+    final p = context.palette;
+    final selected = _projectFilter == value;
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: GestureDetector(
+        onTap: () => setState(() => _projectFilter = value),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: selected ? p.primaryDim : p.well,
+            borderRadius: BorderRadius.circular(99),
+            border: Border.all(
+              color: selected ? p.primary.withValues(alpha: 0.45) : p.cardBorder,
+            ),
+          ),
+          child: Text(
+            count == null ? label : '$label · $count',
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              color: selected ? p.primary : p.muted,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _IssueRow extends StatelessWidget {
@@ -176,10 +250,10 @@ class _IssueRow extends StatelessWidget {
     final p = context.palette;
     final overdue = Rules.overdueDays(issue);
     final inverted = Rules.isPlanInverted(issue);
-    final current = _currentStageText(issue);
+    final textPlan = Rules.hasTextPlan(issue);
     return GlassCard(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       radius: 15,
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
@@ -191,45 +265,36 @@ class _IssueRow extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                decoration: BoxDecoration(
-                  color: p.well,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: p.cardBorder),
+              if (inverted)
+                const SinanChip(text: '倒挂', tone: 'warn', dense: true)
+              else if (textPlan)
+                const SinanChip(text: '文本', tone: 'info', dense: true)
+              else
+                Container(
+                  width: 14,
+                  alignment: Alignment.center,
+                  child: Text('—',
+                      style: TextStyle(fontSize: 10, color: p.faint)),
                 ),
-                child: Text(
-                  '#${issue.seqNo}',
-                  style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: p.muted,
-                      fontFeatures: const [FontFeature.tabularFigures()]),
-                ),
-              ),
               const SizedBox(width: 6),
               Text(issue.machineCode,
                   style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 10.5,
                       color: p.muted,
                       fontFeatures: const [FontFeature.tabularFigures()])),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  issue.subprojectCode ?? '待确认',
-                  style: TextStyle(
-                      fontSize: 10,
-                      color: issue.subprojectCode == null ? p.warn : p.faint),
-                ),
-              ),
+              if (overdue > 0) ...[
+                const SizedBox(width: 5),
+                Text('逾期 $overdue 天',
+                    style: TextStyle(fontSize: 9.5, color: p.ng)),
+              ],
+              const Spacer(),
               SinanChip(
                   text: issue.status,
                   tone: statusTone(issue.status),
                   dense: true),
             ],
           ),
-          const SizedBox(height: 7),
+          const SizedBox(height: 6),
           Text(
             issue.title,
             maxLines: 2,
@@ -240,45 +305,64 @@ class _IssueRow extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: p.fg),
           ),
+          const SizedBox(height: 4),
+          Text(
+            issue.solution.isEmpty ? '尚未填写解决措施' : issue.solution,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 10, color: p.faint),
+          ),
           const SizedBox(height: 7),
           Row(
             children: [
-              StageDots(issue: issue),
-              const SizedBox(width: 6),
               Expanded(
-                child: Text(
-                  current,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 10.5, color: p.muted),
-                ),
-              ),
-              if (inverted)
-                const SinanChip(text: '倒挂', tone: 'warn', dense: true),
-              if (overdue > 0) ...[
-                const SizedBox(width: 4),
-                SinanChip(text: '逾期 $overdue 天', tone: 'ng', dense: true),
-              ],
+                  child: _StageInfo(label: '设计', stage: issue.designStage)),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: _StageInfo(label: '装配', stage: issue.assemblyStage)),
             ],
           ),
         ],
       ),
     );
   }
+}
 
-  static String _currentStageText(Issue issue) {
-    for (final s in issue.stages) {
-      if (s.state == StageState.inProgress) {
-        final who = s.hasOwner ? s.ownerText : '未定责任人';
-        final due = s.dueRaw.isNotEmpty ? '计划 ${s.dueRaw}' : '未排计划';
-        return '${s.label} · $who · $due';
-      }
-    }
-    for (final s in issue.stages) {
-      if (s.state == StageState.notStarted) {
-        return '${s.label} · 未开始';
-      }
-    }
-    return issue.status;
+/// 台账行底部的一阶段摘要：设计 何工 11-05 / 装配 王工/冯工 11-01。
+/// 原文照抄（含 `/` 多人），不把"已下图"改写成日期。
+class _StageInfo extends StatelessWidget {
+  const _StageInfo({required this.label, required this.stage});
+
+  final String label;
+  final IssueStage? stage;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final s = stage;
+    final owner = s == null || s.ownerText.trim().isEmpty
+        ? '未分派'
+        : s.ownerText.trim();
+    final due = s == null || s.dueRaw.trim().isEmpty ? '未排' : s.dueRaw.trim();
+    return Row(
+      children: [
+        Text('$label ',
+            style: TextStyle(fontSize: 9.5, color: p.faint)),
+        Flexible(
+          child: Text(
+            owner,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 10, color: p.muted),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(due,
+            style: TextStyle(
+                fontSize: 9.5,
+                color: p.faint,
+                fontFeatures: const [FontFeature.tabularFigures()])),
+      ],
+    );
   }
 }

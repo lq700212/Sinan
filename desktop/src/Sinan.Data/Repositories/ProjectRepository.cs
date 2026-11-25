@@ -156,6 +156,38 @@ public sealed class ProjectRepository
         var issues = _issues.All();
         var subs = ListSubprojects(project.Id);
 
+        // 计划时间分布：只吃语义日期，文字计划（如"已下图"）单独计数，不混进日期轴。
+        var planDates = issues
+            .SelectMany(i => i.Stages)
+            .Where(s => s.DueDate.HasValue)
+            .GroupBy(s => s.DueDate!.Value)
+            .Select(g => new { Date = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .ThenBy(x => x.Date)
+            .Take(5)
+            .ToList();
+        var maxPlanCount = planDates.Count == 0 ? 0 : planDates[0].Count;
+
+        // 倒挂的装配计划集中情况：全部同一天 / 分散在多个日期，两种说法不能混。
+        var invertedDates = issues
+            .Where(i => i.IsInverted && i.AssemblyStage?.DueDate != null)
+            .GroupBy(i => i.AssemblyStage!.DueDate!.Value)
+            .OrderByDescending(g => g.Count())
+            .ToList();
+        var invertedDateText = invertedDates.Count switch
+        {
+            0 => "倒挂行没有可比较的装配计划日期",
+            1 => $"倒挂的装配计划全部在 {invertedDates[0].Key:MM-dd}（{invertedDates[0].Count()} 条）",
+            _ => $"倒挂的装配计划压在 {invertedDates.Count} 个日期，最多 {invertedDates[0].Key:MM-dd}（{invertedDates[0].Count()} 条）"
+        };
+
+        var topStatus = issues
+            .GroupBy(i => i.Status)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        var completionFilled = issues.Count(i =>
+            !string.IsNullOrWhiteSpace(i.CompletionText) && i.CompletionText.Trim() != "/");
+
         return new ReportData
         {
             TotalIssues = issues.Count,
@@ -168,12 +200,33 @@ public sealed class ProjectRepository
             PhotoLinkedRate = issues.Count == 0
                 ? 0
                 : issues.Count(i => i.PhotoCount > 0) * 100d / issues.Count,
+            SubprojectCount = subs.Count,
             AsOfDisplay = DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
             StageFills = BuildStageFills(issues),
             OwnerLoads = BuildOwnerLoads(issues),
             Subprojects = BuildCards(issues, subs, project.Id),
             PhotoBuckets = BuildPhotoBuckets(issues, subs),
-            CommonIssues = BuildCommonIssues(issues)
+            CommonIssues = BuildCommonIssues(issues),
+            UnassignedMachineCount = issues.Where(i => i.SubprojectId == null)
+                .Select(i => i.MachineId).Distinct().Count(),
+            UnassignedIssueCount = issues.Count(i => i.SubprojectId == null),
+            StageTaskCount = issues.SelectMany(i => i.Stages).Count(s => StageRules.HasOwner(s)),
+            PlanDateBuckets = planDates
+                .Select(x => new PlanDateBucket
+                {
+                    DateText = x.Date.ToString("MM-dd"),
+                    Count = x.Count,
+                    Ratio = maxPlanCount == 0 ? 0 : x.Count * 100d / maxPlanCount
+                })
+                .ToList(),
+            TextPlanCount = issues.SelectMany(i => i.Stages)
+                .Count(s => !string.IsNullOrWhiteSpace(s.DueRaw)
+                            && !RawDateParser.IsNotApplicable(s.DueRaw)
+                            && !s.DueDate.HasValue),
+            InvertedPlanDateText = invertedDateText,
+            TopStatusText = topStatus == null
+                ? "库里还没有问题"
+                : $"「{topStatus.Key}」{topStatus.Count()} 条为最多；完成情况 {completionFilled} / {issues.Count}"
         };
     }
 
@@ -230,6 +283,8 @@ public sealed class ProjectRepository
             InvertedCount = issues.Count(i => i.IsInverted),
             PhotoCount = issues.Sum(i => i.PhotoCount),
             OwnerCount = CountOwners(issues),
+            AssemblyFilled = issues.Count(i => i.AssemblyStage != null &&
+                                                StageRules.HasOwner(i.AssemblyStage)),
             IsUnassigned = isUnassigned,
             Machines = summaries
         };

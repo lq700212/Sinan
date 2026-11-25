@@ -23,6 +23,7 @@ public sealed class IssueListViewModel : ObservableObject
     public const string AllSubprojects = "全部分项目";
     public const string UnassignedSubproject = "待确认";
     public const string AllStatuses = "全部状态";
+    public const string AllOwners = "全部责任人";
 
     private readonly App _app;
     private readonly INavigationService _nav;
@@ -31,10 +32,12 @@ public sealed class IssueListViewModel : ObservableObject
     private string _keyword = "";
     private string _selectedSubproject = AllSubprojects;
     private string _selectedStatus = AllStatuses;
+    private string _selectedOwner = AllOwners;
     private bool _onlyInverted;
     private bool _onlyOverdue;
     private bool _onlyWithPhoto;
     private bool _includeClosed = true;
+    private bool _showMoreFilters;
     private Issue? _selectedIssue;
 
     public IssueListViewModel(App app, INavigationService nav)
@@ -54,9 +57,20 @@ public sealed class IssueListViewModel : ObservableObject
 
         StatusOptions = new[] { AllStatuses }.Concat(IssueStatuses.All).ToArray();
 
+        var owners = _source
+            .SelectMany(i => new[] { i.DesignOwner, i.AssemblyOwner })
+            .SelectMany(TextSplit)
+            .Where(n => n.Length > 0 && n != "/")
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(n => n, StringComparer.Ordinal)
+            .ToList();
+        OwnerOptions = new[] { AllOwners }.Concat(owners).ToArray();
+
         OpenIssueCommand = new RelayCommand(p => OpenIssue(p as string ?? _selectedIssue?.Id));
         ResetCommand = new RelayCommand(ResetFilters);
         RefreshCommand = new RelayCommand(Reload);
+        ToggleMoreFiltersCommand = new RelayCommand(() => ShowMoreFilters = !ShowMoreFilters);
+        SetTabCommand = new RelayCommand(SetTab);
 
         ApplyFilters();
     }
@@ -64,6 +78,7 @@ public sealed class IssueListViewModel : ObservableObject
     public ObservableCollection<Issue> Items { get; } = new();
     public IReadOnlyList<string> SubprojectOptions { get; }
     public IReadOnlyList<string> StatusOptions { get; }
+    public IReadOnlyList<string> OwnerOptions { get; }
 
     public string Keyword
     {
@@ -90,6 +105,21 @@ public sealed class IssueListViewModel : ObservableObject
         {
             if (SetProperty(ref _selectedStatus, value ?? AllStatuses)) ApplyFilters();
         }
+    }
+
+    public string SelectedOwner
+    {
+        get => _selectedOwner;
+        set
+        {
+            if (SetProperty(ref _selectedOwner, value ?? AllOwners)) ApplyFilters();
+        }
+    }
+
+    public bool ShowMoreFilters
+    {
+        get => _showMoreFilters;
+        set => SetProperty(ref _showMoreFilters, value);
     }
 
     public bool OnlyInverted
@@ -142,12 +172,30 @@ public sealed class IssueListViewModel : ObservableObject
 
     public int TotalCount => _source.Count;
     public int VisibleCount => Items.Count;
+    public int InvertedCount => _source.Count(i => i.IsInverted);
+    public int PhotoIssueCount => _source.Count(i => i.PhotoCount > 0);
+    public string ProjectCode => _app.Projects.GetMain()?.Code ?? "P7391";
     public string CountSummary => $"显示 {VisibleCount} / {TotalCount} 条";
+
+    /// <summary>筛选卡面包屑：当前分项目（含"全部分项目"/"待确认"）。</summary>
+    public string BreadcrumbSubproject => SelectedSubproject;
+
+    /// <summary>胶囊 tab 的选中态；重置或改下拉时同步刷新。</summary>
+    public bool IsAllTab => !OnlyInverted && !OnlyOverdue && !OnlyWithPhoto && !HasMoreFilters;
+    public bool IsInvertedTab => OnlyInverted;
+    public bool IsPhotoTab => OnlyWithPhoto;
+
+    private bool HasMoreFilters =>
+        SelectedSubproject != AllSubprojects ||
+        SelectedStatus != AllStatuses ||
+        SelectedOwner != AllOwners ||
+        !IncludeClosed || !string.IsNullOrWhiteSpace(Keyword);
 
     public bool HasActiveFilter =>
         !string.IsNullOrWhiteSpace(Keyword) ||
         SelectedSubproject != AllSubprojects ||
         SelectedStatus != AllStatuses ||
+        SelectedOwner != AllOwners ||
         OnlyInverted || OnlyOverdue || OnlyWithPhoto || !IncludeClosed;
 
     public string FilterHint => HasActiveFilter ? "已按条件筛选" : "显示全部在册问题";
@@ -163,6 +211,19 @@ public sealed class IssueListViewModel : ObservableObject
     public RelayCommand OpenIssueCommand { get; }
     public RelayCommand ResetCommand { get; }
     public RelayCommand RefreshCommand { get; }
+    public RelayCommand ToggleMoreFiltersCommand { get; }
+    public RelayCommand SetTabCommand { get; }
+
+    /// <summary>胶囊 tab：all / inverted / photo。三个互斥，等价于只打开对应筛选。</summary>
+    private void SetTab(object? parameter)
+    {
+        var tab = parameter as string ?? "all";
+        _onlyInverted = tab == "inverted";
+        _onlyOverdue = false;
+        _onlyWithPhoto = tab == "photo";
+        OnPropertiesChanged(nameof(OnlyInverted), nameof(OnlyOverdue), nameof(OnlyWithPhoto));
+        ApplyFilters();
+    }
 
     /// <summary>供导航服务按分项目预筛（总览卡片点击、待确认卡片点击）。</summary>
     public void SetSubprojectFilter(string? subprojectCode)
@@ -192,12 +253,15 @@ public sealed class IssueListViewModel : ObservableObject
         _keyword = "";
         _selectedSubproject = AllSubprojects;
         _selectedStatus = AllStatuses;
+        _selectedOwner = AllOwners;
         _onlyInverted = false;
         _onlyOverdue = false;
         _onlyWithPhoto = false;
         _includeClosed = true;
+        _showMoreFilters = false;
         OnPropertiesChanged(nameof(Keyword), nameof(SelectedSubproject), nameof(SelectedStatus),
-            nameof(OnlyInverted), nameof(OnlyOverdue), nameof(OnlyWithPhoto), nameof(IncludeClosed));
+            nameof(SelectedOwner), nameof(OnlyInverted), nameof(OnlyOverdue), nameof(OnlyWithPhoto),
+            nameof(IncludeClosed), nameof(ShowMoreFilters));
         ApplyFilters();
     }
 
@@ -229,6 +293,13 @@ public sealed class IssueListViewModel : ObservableObject
         if (SelectedStatus != AllStatuses)
             query = query.Where(i => i.Status == SelectedStatus);
 
+        if (SelectedOwner != AllOwners)
+        {
+            query = query.Where(i =>
+                TextSplit(i.DesignOwner).Contains(SelectedOwner, StringComparer.Ordinal) ||
+                TextSplit(i.AssemblyOwner).Contains(SelectedOwner, StringComparer.Ordinal));
+        }
+
         if (OnlyInverted) query = query.Where(i => i.IsInverted);
         if (OnlyOverdue) query = query.Where(i => i.OverdueDays > 0);
         if (OnlyWithPhoto) query = query.Where(i => i.PhotoCount > 0);
@@ -248,8 +319,15 @@ public sealed class IssueListViewModel : ObservableObject
         SelectedIssue = Items.FirstOrDefault();
         OnPropertiesChanged(nameof(VisibleCount), nameof(CountSummary), nameof(HasActiveFilter),
             nameof(FilterHint), nameof(IsEmpty), nameof(IsLibraryEmpty), nameof(EmptyTitle),
-            nameof(EmptyHint));
+            nameof(EmptyHint), nameof(BreadcrumbSubproject), nameof(IsAllTab), nameof(IsInvertedTab),
+            nameof(IsPhotoTab));
     }
+
+    private static IEnumerable<string> TextSplit(string? owners) =>
+        (owners ?? "")
+            .Split(new[] { '/', '、', ',', '，' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(n => n.Trim())
+            .Where(n => n.Length > 0);
 
     private static bool Contains(string? source, string keyword) =>
         !string.IsNullOrWhiteSpace(source) &&

@@ -118,12 +118,34 @@ class Rules {
     return IssueStatuses.forStage(current.code);
   }
 
+  /// 计划列是文字但不是"已下图"：例如现场常见的备注性计划。
+  /// 这类条目不计入日期分布/逾期，但在台账里要能单独筛出来（设计稿 m-list 的"文本"筛选）。
+  static bool hasTextPlan(Issue issue) {
+    for (final s in issue.stages) {
+      final raw = normalize(s.dueRaw);
+      if (raw.isEmpty) continue;
+      if (isNotApplicable(raw) || meansDrawingIssued(raw)) continue;
+      if (parseRawDate(raw) == null) return true;
+    }
+    return false;
+  }
+
   /// 计划倒挂：设计下图计划日晚于装配调试计划日。
   static bool isPlanInverted(Issue issue) {
     final design = issue.designStage?.dueDate;
     final assembly = issue.assemblyStage?.dueDate;
     if (design == null || assembly == null) return false;
     return design.isAfter(assembly);
+  }
+
+  /// 倒挂天数：设计计划日比装配计划日晚多少天（不倒挂返回 0）。
+  /// 详情页只讲一句"设计晚于装配 N 天"，不再让现场读两张日期自己算。
+  static int invertedDays(Issue issue) {
+    final design = issue.designStage?.dueDate;
+    final assembly = issue.assemblyStage?.dueDate;
+    if (design == null || assembly == null) return 0;
+    final diff = design.difference(assembly).inDays;
+    return diff > 0 ? diff : 0;
   }
 
   /// 逾期天数：未完成/非不适用阶段的计划日早于今天的最长天数。

@@ -18,12 +18,20 @@ import 'subproject_screen.dart';
 /// - 扫码 / 拍照是最高频动作，做成并排主按钮；
 /// - 顶部不伪造"已联网"，没有同步服务就如实标"本机缓存"。
 class HomeTodoScreen extends StatelessWidget {
-  const HomeTodoScreen({super.key, required this.state, this.onOpenProjects});
+  const HomeTodoScreen({
+    super.key,
+    required this.state,
+    this.onOpenProjects,
+    this.onOpenSync,
+  });
 
   final AppState state;
 
   /// 点"P7391 总览"切到项目 tab；由 Shell 提供，页面不自己切 tab。
   final VoidCallback? onOpenProjects;
+
+  /// 点"查看"切到同步 tab；同样由 Shell 提供。
+  final VoidCallback? onOpenSync;
 
   @override
   Widget build(BuildContext context) {
@@ -34,8 +42,6 @@ class HomeTodoScreen extends StatelessWidget {
         final open = state.issues.where((i) => !i.isClosed).toList();
         final mine = Rules.myStageTasks(state.issues, state.userName);
         final risky = Rules.attentionOrder(state.issues);
-        final localCount =
-            state.issues.where((i) => i.id.startsWith('local-')).length;
         final inverted = state.stats?.inverted ?? 0;
 
         return ListView(
@@ -82,11 +88,11 @@ class HomeTodoScreen extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: KpiTile(
-                    label: '本机新建',
-                    value: '$localCount',
+                    label: '今日已记录',
+                    value: '${state.todayRecorded}',
                     unit: '条',
-                    sub: '尚未进入桌面主库',
-                    tone: localCount > 0 ? 'ok' : 'primary',
+                    sub: '本机操作 · 待同步',
+                    tone: state.todayRecorded > 0 ? 'ok' : 'primary',
                   ),
                 ),
               ],
@@ -136,6 +142,7 @@ class HomeTodoScreen extends StatelessWidget {
             GlassCard(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
               radius: 14,
+              onTap: onOpenSync,
               child: Row(
                 children: [
                   Icon(Icons.cloud_off_outlined, size: 17, color: p.accent),
@@ -144,20 +151,26 @@ class HomeTodoScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('本机离线副本',
+                        Text('最近同步',
                             style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: p.fg)),
                         const SizedBox(height: 2),
                         Text(
-                          '已缓存 ${state.issues.length} 条问题 · ${state.pendingOutbox} 条待传；'
-                          '桌面端同步服务未启用，不显示假同步结果。',
+                          '未同步 · 桌面端服务未启用；'
+                          '本机缓存 ${state.issues.length} 条 · ${state.pendingOutbox} 条待传',
                           style: TextStyle(fontSize: 10, height: 1.45, color: p.faint),
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(width: 6),
+                  Text('查看 ›',
+                      style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: p.primary)),
                 ],
               ),
             ),
@@ -310,6 +323,7 @@ class _TodoTile extends StatelessWidget {
     final owner = current == null || current.ownerText.isEmpty
         ? '未分派'
         : current.ownerText;
+    final due = current?.dueRaw.trim() ?? '';
 
     return GlassCard(
       margin: const EdgeInsets.only(bottom: 8),
@@ -338,8 +352,13 @@ class _TodoTile extends StatelessWidget {
                       color: p.muted,
                       fontFeatures: const [FontFeature.tabularFigures()])),
               const Spacer(),
-              Text('$stageLabel · $owner',
-                  style: TextStyle(fontSize: 10, color: p.faint)),
+              Text(
+                due.isEmpty ? '$stageLabel · $owner' : '$stageLabel $due',
+                style: TextStyle(
+                    fontSize: 10,
+                    color: p.faint,
+                    fontFeatures: const [FontFeature.tabularFigures()]),
+              ),
             ],
           ),
           const SizedBox(height: 5),
@@ -352,18 +371,28 @@ class _TodoTile extends StatelessWidget {
                   color: p.fg,
                   height: 1.35)),
           const SizedBox(height: 4),
+          Text(
+            issue.solution.isEmpty ? '尚未填写解决措施' : issue.solution,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 10.5, color: p.muted),
+          ),
+          const SizedBox(height: 5),
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  issue.solution.isEmpty ? '尚未填写解决措施' : issue.solution,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 10.5, color: p.muted),
-                ),
+              Text(
+                overdue > 0 ? '距计划日已过 $overdue 天' : '责任人 $owner',
+                style: TextStyle(
+                    fontSize: 9.5,
+                    color: overdue > 0 ? p.ng : p.faint,
+                    fontFeatures: const [FontFeature.tabularFigures()]),
               ),
-              const SizedBox(width: 6),
-              Icon(Icons.chevron_right, size: 16, color: p.faint),
+              const Spacer(),
+              Text('去处理 ›',
+                  style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: p.primary)),
             ],
           ),
         ],

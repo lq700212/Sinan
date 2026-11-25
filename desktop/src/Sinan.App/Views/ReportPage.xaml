@@ -4,337 +4,527 @@
         FontFamily="{DynamicResource Font.Ui}"
         FontSize="{DynamicResource Text.Size.Body}">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Margin="0,0,12,0">
+    <!--
+      ============================================================================
+      统计报表（设计稿 report 页）
+      结构：4 张 KPI → 责任人任务量 + 计划时间分布 → 阶段填写率 / 照片分布 / 本期结论
+      纪律：所有数字来自 ProjectRepository.GetReport()，页面不二次计算百分比；
+            演示附件必须标"演示值"；日期分布只吃语义日期，文字计划单独计数。
+      ============================================================================
+    -->
 
-            <!-- 顶条 -->
-            <Border Style="{StaticResource Card}" Padding="18,14">
-                <Grid>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="统计报表" Style="{StaticResource T.H2}" FontSize="16"/>
-                        <TextBlock Text="·" Style="{StaticResource T.Tiny}" Margin="8,0"/>
-                        <TextBlock Text="{Binding AsOfDisplay}" Style="{StaticResource T.Small}"
-                                   VerticalAlignment="Center"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <TextBlock Text="所有数字实时从数据库计算" Style="{StaticResource T.Tiny}"
-                                   FontSize="10" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                        <Button Content="刷新" Style="{StaticResource Btn.Ghost}" Height="28" FontSize="11"
-                                Padding="0" Command="{Binding RefreshCommand}"/>
-                        <Button Content="去数据交换导出" Style="{StaticResource Btn.Secondary}" Height="30"
-                                Margin="8,0,0,0" FontSize="11.5" Command="{Binding GoExchangeCommand}"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
+    <Grid Margin="0,0,12,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-            <!-- KPI -->
-            <UniformGrid Columns="5" Margin="0,18,0,0">
-                <Border Style="{StaticResource Card}" Padding="16,14" Margin="0,0,12,0">
-                    <StackPanel>
-                        <TextBlock Text="在册问题" Style="{StaticResource T.Tiny}"/>
-                        <TextBlock Text="{Binding TotalIssues}" Style="{StaticResource T.H1}"
-                                   FontFamily="{DynamicResource Font.Mono}" Margin="0,5,0,0"/>
-                        <TextBlock Text="{Binding TotalMachines, StringFormat={}{0} 台机台}"
-                                   Style="{StaticResource T.Tiny}" FontSize="10" Margin="0,3,0,0"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Style="{StaticResource Card}" Padding="16,14" Margin="0,0,12,0">
-                    <StackPanel>
-                        <TextBlock Text="已闭环" Style="{StaticResource T.Tiny}"/>
-                        <TextBlock Text="{Binding ClosedRateText}" Style="{StaticResource T.H1}"
-                                   FontFamily="{DynamicResource Font.Mono}" Margin="0,5,0,0"
-                                   Foreground="{DynamicResource Brush.Ok}"/>
-                        <TextBlock Text="{Binding ClosedCount, StringFormat={}{0} 条已关闭}"
-                                   Style="{StaticResource T.Tiny}" FontSize="10" Margin="0,3,0,0"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Style="{StaticResource Card}" Padding="16,14" Margin="0,0,12,0">
-                    <StackPanel>
-                        <TextBlock Text="计划倒挂" Style="{StaticResource T.Tiny}"/>
-                        <TextBlock Text="{Binding InvertedRateText}" Style="{StaticResource T.H1}"
-                                   FontFamily="{DynamicResource Font.Mono}" Margin="0,5,0,0"
-                                   Foreground="{DynamicResource Brush.Ng}"/>
-                        <TextBlock Text="{Binding InvertedCount, StringFormat={}{0} 条}"
-                                   Style="{StaticResource T.Tiny}" FontSize="10" Margin="0,3,0,0"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Style="{StaticResource Card}" Padding="16,14" Margin="0,0,12,0">
-                    <StackPanel>
-                        <TextBlock Text="逾期未闭环" Style="{StaticResource T.Tiny}"/>
-                        <TextBlock Text="{Binding OverdueCount}" Style="{StaticResource T.H1}"
-                                   FontFamily="{DynamicResource Font.Mono}" Margin="0,5,0,0"
-                                   Foreground="{DynamicResource Brush.Warn}"/>
-                        <TextBlock Text="只读语义计划日期" Style="{StaticResource T.Tiny}" FontSize="10"
-                                   Margin="0,3,0,0"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Style="{StaticResource Card}" Padding="16,14">
-                    <StackPanel>
-                        <TextBlock Text="照片覆盖（演示）" Style="{StaticResource T.Tiny}"/>
-                        <TextBlock Text="{Binding PhotoLinkedRateText}" Style="{StaticResource T.H1}"
-                                   FontFamily="{DynamicResource Font.Mono}" Margin="0,5,0,0"
-                                   Foreground="{DynamicResource Brush.Accent}"/>
-                        <TextBlock Style="{StaticResource T.Tiny}" FontSize="10" Margin="0,3,0,0">
-                            <Run Text="{Binding PhotoCount, Mode=OneWay}"/><Run Text=" 张 / "/><Run Text="{Binding PhotoIssueCount, Mode=OneWay}"/><Run Text=" 条问题"/>
-                        </TextBlock>
-                    </StackPanel>
-                </Border>
-            </UniformGrid>
-
-            <!-- 阶段 + 责任人 -->
-            <Grid Margin="0,18,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="1.15*"/>
-                </Grid.ColumnDefinitions>
-
-                <Border Grid.Column="0" Style="{StaticResource Card}" Padding="18,16" Margin="0,0,14,0">
-                    <StackPanel>
-                        <TextBlock Text="四阶段完成率" Style="{StaticResource T.H2}" FontSize="15"/>
-                        <TextBlock Text="责任人 / 计划填写率；完成与不适用都算已推进"
-                                   Style="{StaticResource T.Tiny}" Margin="0,3,0,12"/>
-
-                        <ItemsControl ItemsSource="{Binding StageFills}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Margin="0,0,0,12">
-                                        <Grid>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Label}" Style="{StaticResource T.Value}"
-                                                           FontSize="12.5"/>
-                                                <ContentControl Style="{StaticResource Chip}" Margin="8,0,0,0"
-                                                                Tag="{Binding BadgeKind}">
-                                                    <TextBlock Text="{Binding Badge}" FontSize="9.5"/>
-                                                </ContentControl>
-                                            </StackPanel>
-                                            <TextBlock Style="{StaticResource T.Mono}" HorizontalAlignment="Right"
-                                                       VerticalAlignment="Center">
-                                                <Run Text="{Binding DoneCount, Mode=OneWay}"/><Run Text=" / "/><Run Text="{Binding Total, Mode=OneWay}"/><Run Text=" 已推进"/>
-                                            </TextBlock>
-                                        </Grid>
-                                        <Grid Margin="0,5,0,0">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="48"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="责任人" Style="{StaticResource T.Tiny}"
-                                                       FontSize="9.5" VerticalAlignment="Center"/>
-                                            <ProgressBar Grid.Column="1" Style="{StaticResource Bar.Thin}"
-                                                         Height="6" Maximum="100"
-                                                         Value="{Binding OwnerPercent, Mode=OneWay}"/>
-                                        </Grid>
-                                        <Grid Margin="0,4,0,0">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="48"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="计划" Style="{StaticResource T.Tiny}"
-                                                       FontSize="9.5" VerticalAlignment="Center"/>
-                                            <ProgressBar Grid.Column="1" Style="{StaticResource Bar.Thin}"
-                                                         Height="6" Maximum="100"
-                                                         Value="{Binding DuePercent, Mode=OneWay}"
-                                                         Foreground="{DynamicResource Brush.Accent}"/>
-                                        </Grid>
-                                        <TextBlock Text="{Binding Detail}" Style="{StaticResource T.Tiny}"
-                                                   FontSize="9.5" Margin="0,3,0,0"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Border>
-
-                <Border Grid.Column="1" Style="{StaticResource Card}" Padding="18,16">
-                    <StackPanel>
-                        <Grid>
-                            <TextBlock Text="责任人负载" Style="{StaticResource T.H2}" FontSize="15"/>
-                            <TextBlock Text="{Binding OwnerFooter}" Style="{StaticResource T.Tiny}"
-                                       HorizontalAlignment="Right" VerticalAlignment="Center"
-                                       MaxWidth="300" TextTrimming="CharacterEllipsis"/>
-                        </Grid>
-                        <TextBlock Text="按阶段任务数排序，最多 12 人" Style="{StaticResource T.Tiny}"
-                                   Margin="0,3,0,10"/>
-
-                        <ItemsControl ItemsSource="{Binding OwnerBars}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,0,0,8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="64"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="86"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding Name}"
-                                                   Style="{StaticResource T.Value}" FontSize="11.5"
-                                                   VerticalAlignment="Center"/>
-                                        <Grid Grid.Column="1" Margin="0,0,10,0" VerticalAlignment="Center">
-                                            <ProgressBar Style="{StaticResource Bar.Thin}" Height="6"
-                                                         Maximum="100" Value="{Binding Ratio, Mode=OneWay}"/>
-                                        </Grid>
-                                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding TaskText}" Style="{StaticResource T.Mono}"
-                                                       FontSize="10" HorizontalAlignment="Right"/>
-                                            <TextBlock Text="{Binding Detail}" Style="{StaticResource T.Tiny}"
-                                                       FontSize="9" HorizontalAlignment="Right"
-                                                       TextTrimming="CharacterEllipsis"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Border>
-            </Grid>
-
-            <!-- 分项目对比 -->
-            <Border Style="{StaticResource Card}" Padding="18,16" Margin="0,18,0,0">
+        <!-- ==================== KPI ==================== -->
+        <UniformGrid Grid.Row="0" Columns="4">
+            <Border Style="{StaticResource Card}" Padding="14,12" Margin="0,0,12,0">
                 <StackPanel>
-                    <Grid>
-                        <TextBlock Text="分项目对比" Style="{StaticResource T.H2}" FontSize="15"/>
-                        <TextBlock Text="点行进入该分项目台账" Style="{StaticResource T.Tiny}"
-                                   HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                    </Grid>
-
-                    <ItemsControl ItemsSource="{Binding Subprojects}" Margin="0,8,0,0">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,0,0,1"
-                                        Padding="0,7">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="110"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="70"/>
-                                            <ColumnDefinition Width="70"/>
-                                            <ColumnDefinition Width="70"/>
-                                            <ColumnDefinition Width="70"/>
-                                            <ColumnDefinition Width="90"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <TextBlock Grid.Column="0" Text="{Binding Code}"
-                                                   FontFamily="{DynamicResource Font.Mono}" FontSize="11.5"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource Brush.Fg}"
-                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Style="{StaticResource T.Small}"
-                                                   FontSize="11" TextTrimming="CharacterEllipsis"
-                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="2" Text="{Binding MachineCount, StringFormat={}{0} 台}"
-                                                   Style="{StaticResource T.Mono}" FontSize="10.5"
-                                                   HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="3" Text="{Binding IssueCount, StringFormat={}{0} 条}"
-                                                   Style="{StaticResource T.Mono}" FontSize="10.5"
-                                                   HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="4" Text="{Binding PhotoCount, StringFormat=照片 {0}}"
-                                                   Style="{StaticResource T.Mono}" FontSize="10"
-                                                   HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="5" Text="{Binding OwnerCount, StringFormat={}{0} 人}"
-                                                   Style="{StaticResource T.Mono}" FontSize="10"
-                                                   HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                                        <Button Grid.Column="6" Content="查看台账 →" Style="{StaticResource Btn.Ghost}"
-                                                Height="24" Padding="0" FontSize="10.5"
-                                                HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                Command="{Binding DataContext.OpenSubprojectCommand,
-                                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding Code}"/>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <TextBlock Text="问题总数" Style="{StaticResource T.Tiny}" FontSize="10.5" FontWeight="SemiBold"/>
+                    <TextBlock Margin="0,6,0,0">
+                        <Run Text="{Binding TotalIssues, Mode=OneWay}" FontSize="22" FontWeight="Bold"
+                             FontFamily="{DynamicResource Font.Mono}"/>
+                        <Run Text=" 条" FontSize="11" Foreground="{DynamicResource Brush.Muted}"/>
+                    </TextBlock>
+                    <TextBlock Text="{Binding IssueSubtitle}" Style="{StaticResource T.Tiny}" FontSize="10"
+                               Margin="0,5,0,0" TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
             </Border>
 
-            <!-- 照片 + 共性问题 -->
-            <Grid Margin="0,18,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="1.2*"/>
-                </Grid.ColumnDefinitions>
+            <Border Style="{StaticResource Card}" Padding="14,12" Margin="0,0,12,0">
+                <StackPanel>
+                    <TextBlock Text="涉及机台" Style="{StaticResource T.Tiny}" FontSize="10.5" FontWeight="SemiBold"/>
+                    <TextBlock Margin="0,6,0,0">
+                        <Run Text="{Binding TotalMachines, Mode=OneWay}" FontSize="22" FontWeight="Bold"
+                             FontFamily="{DynamicResource Font.Mono}"/>
+                        <Run Text=" 台" FontSize="11" Foreground="{DynamicResource Brush.Muted}"/>
+                    </TextBlock>
+                    <TextBlock Text="{Binding MachineSubtitle}" Style="{StaticResource T.Tiny}" FontSize="10"
+                               Margin="0,5,0,0" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </Border>
 
-                <Border Grid.Column="0" Style="{StaticResource Card}" Padding="18,16" Margin="0,0,14,0">
-                    <StackPanel>
-                        <TextBlock Text="照片覆盖（演示值）" Style="{StaticResource T.H2}" FontSize="15"/>
-                        <TextBlock Text="历史 Excel 无附件；演示附件只有元数据" Style="{StaticResource T.Tiny}"
-                                   Margin="0,3,0,12"/>
+            <Border Style="{StaticResource Card}" Padding="14,12" Margin="0,0,12,0">
+                <StackPanel>
+                    <TextBlock Text="计划倒挂" Style="{StaticResource T.Tiny}" FontSize="10.5" FontWeight="SemiBold"/>
+                    <TextBlock Margin="0,6,0,0" Foreground="{DynamicResource Brush.Warn}">
+                        <Run Text="{Binding InvertedCount, Mode=OneWay}" FontSize="22" FontWeight="Bold"
+                             FontFamily="{DynamicResource Font.Mono}"/>
+                        <Run Text=" 条" FontSize="11" Foreground="{DynamicResource Brush.Muted}"/>
+                    </TextBlock>
+                    <TextBlock Text="{Binding InvertedSubtitle}" Style="{StaticResource T.Tiny}" FontSize="10"
+                               Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
 
-                        <ItemsControl ItemsSource="{Binding PhotoBuckets}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Margin="0,0,0,11">
-                                        <Grid>
-                                            <TextBlock Text="{Binding Label}" Style="{StaticResource T.Value}"
-                                                       FontSize="11.5"/>
-                                            <TextBlock Text="{Binding Count, StringFormat={}{0} 张}"
-                                                       Style="{StaticResource T.Mono}"
-                                                       HorizontalAlignment="Right"/>
+            <Border Style="{StaticResource Card}" Padding="14,12">
+                <StackPanel>
+                    <TextBlock Text="现场照片" Style="{StaticResource T.Tiny}" FontSize="10.5" FontWeight="SemiBold"/>
+                    <TextBlock Margin="0,6,0,0" Foreground="{DynamicResource Brush.Ok}">
+                        <Run Text="{Binding PhotoCount, Mode=OneWay}" FontSize="22" FontWeight="Bold"
+                             FontFamily="{DynamicResource Font.Mono}"/>
+                        <Run Text=" 张" FontSize="11" Foreground="{DynamicResource Brush.Muted}"/>
+                    </TextBlock>
+                    <TextBlock Text="{Binding PhotoSubtitle}" Style="{StaticResource T.Tiny}" FontSize="10"
+                               Margin="0,5,0,0" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <!-- ==================== 责任人 + 计划分布 ==================== -->
+        <Grid Grid.Row="1" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 左：责任人任务量 -->
+            <Border Grid.Column="0" Style="{StaticResource Card}" Padding="0" Margin="0,0,12,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="14,12,14,9">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="20" Height="20" CornerRadius="6"
+                                    Background="{DynamicResource Brush.PrimaryDim}">
+                                <TextBlock Text="◍" FontSize="11"
+                                           Foreground="{DynamicResource Brush.Primary}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="责任人任务量" FontSize="12.5" FontWeight="Bold"
+                                       Foreground="{DynamicResource Brush.Fg}"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <ContentControl Style="{StaticResource Chip}" Tag="plain"
+                                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        MinHeight="17" Padding="7,0">
+                            <TextBlock Text="按阶段计数" FontSize="9"/>
+                        </ContentControl>
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Margin="14,0,14,6">
+                            <ItemsControl ItemsSource="{Binding OwnerBars}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,7" Height="18">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="56"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="34"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="10.5"
+                                                       Foreground="{DynamicResource Brush.Muted}"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <ProgressBar Grid.Column="1" Style="{StaticResource Bar.Thin}"
+                                                         Height="7" Maximum="100"
+                                                         Value="{Binding Ratio, Mode=OneWay}"
+                                                         VerticalAlignment="Center" Margin="0,0,9,0"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding TaskText}" FontSize="10"
+                                                       FontFamily="{DynamicResource Font.Mono}"
+                                                       Foreground="{DynamicResource Brush.Fg}"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                         </Grid>
-                                        <ProgressBar Style="{StaticResource Bar.Thin}" Height="6" Maximum="100"
-                                                     Value="{Binding Ratio, Mode=OneWay}" Margin="0,5,0,0"
-                                                     Foreground="{DynamicResource Brush.Accent}"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
 
-                        <Border Style="{StaticResource Hairline}" Margin="0,2,0,8"/>
-                        <TextBlock Style="{StaticResource T.Tiny}" FontSize="9.5" TextWrapping="Wrap">
-                            <Run Text="平均每条问题 "/><Run Text="{Binding PhotoPerIssueText, Mode=OneWay}"/><Run Text=" 张；照片按问题分目录归档，导出 ZIP 带 manifest.csv。"/>
-                        </TextBlock>
-                    </StackPanel>
-                </Border>
+                            <TextBlock Text="{Binding OwnerSummaryText}" Style="{StaticResource T.Tiny}"
+                                       FontSize="9.5" Margin="0,6,0,0" TextWrapping="Wrap"
+                                       LineHeight="15"/>
+                        </StackPanel>
+                    </ScrollViewer>
 
-                <Border Grid.Column="1" Style="{StaticResource Card}" Padding="18,16">
-                    <StackPanel>
+                    <Border Grid.Row="2" Background="{DynamicResource Brush.CardWell}"
+                            BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,1,0,0"
+                            CornerRadius="0,0,13,13" Padding="14,8">
                         <Grid>
-                            <TextBlock Text="共性问题候选" Style="{StaticResource T.H2}" FontSize="15"/>
-                            <ContentControl Style="{StaticResource Chip}" Tag="warn"
-                                            HorizontalAlignment="Right">
-                                <TextBlock Text="仅按标题相似度归并" FontSize="9.5"/>
+                            <TextBlock Text="{Binding OwnerFooter}" Style="{StaticResource T.Tiny}"
+                                       FontSize="10" VerticalAlignment="Center"/>
+                            <ContentControl Style="{StaticResource Chip}" Tag="{Binding OwnerBadgeKind}"
+                                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                                            MinHeight="17" Padding="7,0">
+                                <TextBlock Text="{Binding OwnerBadgeText}" FontSize="9"/>
                             </ContentControl>
                         </Grid>
-                        <TextBlock Text="同一标题出现 ≥2 次时列出，供专项协调会参考；不自动改写问题"
-                                   Style="{StaticResource T.Tiny}" Margin="0,3,0,12"/>
+                    </Border>
+                </Grid>
+            </Border>
 
-                        <ItemsControl ItemsSource="{Binding CommonIssues}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border BorderBrush="{DynamicResource Brush.SepLine}"
-                                            BorderThickness="0,0,0,1" Padding="0,7">
-                                        <Grid>
+            <!-- 右：计划时间分布 -->
+            <Border Grid.Column="1" Style="{StaticResource Card}" Padding="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="14,12,14,9">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="20" Height="20" CornerRadius="6"
+                                    Background="{DynamicResource Brush.PrimaryDim}">
+                                <TextBlock Text="◷" FontSize="11"
+                                           Foreground="{DynamicResource Brush.Primary}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="计划时间分布" FontSize="12.5" FontWeight="Bold"
+                                       Foreground="{DynamicResource Brush.Fg}"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <ContentControl Style="{StaticResource Chip}" Tag="plain"
+                                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        MinHeight="17" Padding="7,0">
+                            <TextBlock Text="前 5 个日期" FontSize="9"/>
+                        </ContentControl>
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel Margin="14,4,14,10">
+                            <ItemsControl ItemsSource="{Binding PlanDateBars}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,8" Height="18">
                                             <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="38"/>
                                                 <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="34"/>
                                             </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                                <TextBlock Text="{Binding Title}" Style="{StaticResource T.Small}"
-                                                           FontSize="11.5" TextWrapping="Wrap"/>
-                                                <TextBlock Text="{Binding Machines}" Style="{StaticResource T.Tiny}"
-                                                           FontSize="9.5" Margin="0,2,0,0"
-                                                           TextTrimming="CharacterEllipsis"/>
-                                            </StackPanel>
-                                            <ContentControl Grid.Column="1" Style="{StaticResource Chip}" Tag="on">
-                                                <TextBlock Text="{Binding Count, StringFormat={}{0} 次}" FontSize="9.5"/>
-                                            </ContentControl>
+                                            <TextBlock Grid.Column="0" Text="{Binding DateText}" FontSize="9.5"
+                                                       FontFamily="{DynamicResource Font.Mono}"
+                                                       Foreground="{DynamicResource Brush.Muted}"
+                                                       VerticalAlignment="Center"/>
+                                            <ProgressBar Grid.Column="1" Style="{StaticResource Bar.Thin}"
+                                                         Height="7" Maximum="100"
+                                                         Value="{Binding Ratio, Mode=OneWay}"
+                                                         VerticalAlignment="Center" Margin="0,0,9,0"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding Count}" FontSize="10"
+                                                       FontFamily="{DynamicResource Font.Mono}"
+                                                       Foreground="{DynamicResource Brush.Fg}"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                         </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
 
-                        <TextBlock Text="当前没有重复标题的问题。"
-                                   Style="{StaticResource T.Tiny}" FontSize="10"
-                                   Visibility="{Binding HasCommonIssues, Converter={StaticResource InverseBoolToVisibility}}"/>
+                            <TextBlock FontSize="10" Margin="0,4,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource T.Tiny}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding PlanDateBars.Count}" Value="0">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                                <Run Text="没有可比较的计划日期。"/>
+                            </TextBlock>
+
+                            <!-- 倒挂装配计划集中情况（设计稿 callout） -->
+                            <Border Style="{StaticResource Card.Inset}" Padding="11,9" Margin="0,8,0,0">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ContentControl Style="{StaticResource Chip}" Tag="warn"
+                                                        MinHeight="17" Padding="7,0">
+                                            <TextBlock Text="{Binding InvertedCount}" FontSize="9"/>
+                                        </ContentControl>
+                                        <TextBlock Text="{Binding Conclusion2}" FontSize="10" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource Brush.Fg}"
+                                                   Margin="7,0,0,0" VerticalAlignment="Center"
+                                                   TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2" Background="{DynamicResource Brush.CardWell}"
+                            BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,1,0,0"
+                            CornerRadius="0,0,13,13" Padding="14,8">
+                        <Grid>
+                            <TextBlock Text="日期来自原表计划列" Style="{StaticResource T.Tiny}"
+                                       FontSize="10" VerticalAlignment="Center"/>
+                            <TextBlock FontSize="9" FontFamily="{DynamicResource Font.Mono}"
+                                       Foreground="{DynamicResource Brush.Muted}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <Run Text="{Binding TextPlanCount, Mode=OneWay}"/><Run Text=" 处文本未计入"/>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ==================== 阶段填写率 / 照片分布 / 本期结论 ==================== -->
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1.12*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 阶段填写率 -->
+            <Border Grid.Column="0" Style="{StaticResource Card}" Padding="14,12" Margin="0,0,12,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,9">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="20" Height="20" CornerRadius="6"
+                                    Background="{DynamicResource Brush.PrimaryDim}">
+                                <TextBlock Text="▥" FontSize="11"
+                                           Foreground="{DynamicResource Brush.Primary}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="阶段填写率" FontSize="12.5" FontWeight="Bold"
+                                       Foreground="{DynamicResource Brush.Fg}"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource T.Tiny}" FontSize="9"
+                                   FontFamily="{DynamicResource Font.Mono}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Run Text="n="/><Run Text="{Binding TotalIssues, Mode=OneWay}"/>
+                        </TextBlock>
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding StageFills}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Height="24">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="56"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="54"/>
+                                        <ColumnDefinition Width="42"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="10"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource Brush.Fg}"
+                                               VerticalAlignment="Center"/>
+                                    <ProgressBar Grid.Column="1" Style="{StaticResource Bar.Thin}"
+                                                 Height="7" Maximum="100"
+                                                 Value="{Binding OwnerPercent, Mode=OneWay}"
+                                                 VerticalAlignment="Center" Margin="0,0,9,0"/>
+                                    <TextBlock Grid.Column="2" FontSize="9.5"
+                                               FontFamily="{DynamicResource Font.Mono}"
+                                               Foreground="{DynamicResource Brush.Muted}"
+                                               HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <Run Text="{Binding OwnerFilled, Mode=OneWay}"/><Run Text=" / "/><Run Text="{Binding Total, Mode=OneWay}"/>
+                                    </TextBlock>
+                                    <TextBlock Grid.Column="3" Text="{Binding Badge}" FontSize="8.5"
+                                               HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding BadgeKind}" Value="on">
+                                                        <Setter Property="Foreground" Value="{DynamicResource Brush.Primary}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding BadgeKind}" Value="ok">
+                                                        <Setter Property="Foreground" Value="{DynamicResource Brush.Ok}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Text="{Binding DesignStageDetail}" Style="{StaticResource T.Tiny}"
+                               FontSize="9.5" Margin="0,9,0,0" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </Border>
+
+            <!-- 照片分布 -->
+            <Border Grid.Column="1" Style="{StaticResource Card}" Padding="14,12" Margin="0,0,12,0">
+                <StackPanel>
+                    <Grid Margin="0,0,0,9">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="20" Height="20" CornerRadius="6"
+                                    Background="{DynamicResource Brush.PrimaryDim}">
+                                <TextBlock Text="▣" FontSize="11"
+                                           Foreground="{DynamicResource Brush.Primary}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="照片分布" FontSize="12.5" FontWeight="Bold"
+                                       Foreground="{DynamicResource Brush.Fg}"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <ContentControl Style="{StaticResource Chip}" Tag="ok"
+                                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        MinHeight="17" Padding="7,0">
+                            <TextBlock FontSize="9">
+                                <Run Text="{Binding PhotoCount, Mode=OneWay}"/><Run Text=" 张"/>
+                            </TextBlock>
+                        </ContentControl>
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{Binding PhotoBuckets}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Height="25">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="78"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="72"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="9.5"
+                                               FontFamily="{DynamicResource Font.Mono}"
+                                               Foreground="{DynamicResource Brush.Fg}"
+                                               VerticalAlignment="Center"/>
+                                    <ProgressBar Grid.Column="1" Style="{StaticResource Bar.Thin}"
+                                                 Height="7" Maximum="100"
+                                                 Value="{Binding Ratio, Mode=OneWay}"
+                                                 VerticalAlignment="Center" Margin="0,0,9,0"
+                                                 Foreground="{DynamicResource Brush.Accent}"/>
+                                    <TextBlock Grid.Column="2" FontSize="9.5"
+                                               FontFamily="{DynamicResource Font.Mono}"
+                                               Foreground="{DynamicResource Brush.Muted}"
+                                               HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <Run Text="{Binding Count, Mode=OneWay}"/><Run Text=" 张 · "/><Run Text="{Binding IssueCount, Mode=OneWay}"/><Run Text=" 条"/>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- 合计行 -->
+                    <Border BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,1,0,0"
+                            Padding="0,2,0,0" Margin="0,2,0,0">
+                        <Grid Height="25" DataContext="{Binding PhotoTotalRow}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="78"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="72"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="9.5"
+                                       FontFamily="{DynamicResource Font.Mono}" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Brush.Fg}"
+                                       VerticalAlignment="Center"/>
+                            <ProgressBar Grid.Column="1" Style="{StaticResource Bar.Thin}"
+                                         Height="7" Maximum="100" Value="{Binding Ratio, Mode=OneWay}"
+                                         VerticalAlignment="Center" Margin="0,0,9,0"
+                                         Foreground="{DynamicResource Brush.Accent}"/>
+                            <TextBlock Grid.Column="2" FontSize="9.5"
+                                       FontFamily="{DynamicResource Font.Mono}"
+                                       Foreground="{DynamicResource Brush.Muted}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <Run Text="{Binding Count, Mode=OneWay}"/><Run Text=" 张 · "/><Run Text="{Binding IssueCount, Mode=OneWay}"/><Run Text=" 条"/>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+
+                    <TextBlock Text="{Binding PhotoFooter}" Style="{StaticResource T.Tiny}"
+                               FontSize="9.5" Margin="0,9,0,0" TextWrapping="Wrap" LineHeight="15"/>
+                </StackPanel>
+            </Border>
+
+            <!-- 本期结论 -->
+            <Border Grid.Column="2" Style="{StaticResource Card}" Padding="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="14,12,14,4">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="20" Height="20" CornerRadius="6"
+                                    Background="{DynamicResource Brush.PrimaryDim}">
+                                <TextBlock Text="✎" FontSize="11"
+                                           Foreground="{DynamicResource Brush.Primary}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Text="本期结论" FontSize="12.5" FontWeight="Bold"
+                                       Foreground="{DynamicResource Brush.Fg}"
+                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
+                        <ContentControl Style="{StaticResource Chip}" Tag="ok"
+                                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                                        MinHeight="17" Padding="7,0">
+                            <TextBlock Text="可直接汇报" FontSize="9"/>
+                        </ContentControl>
+                    </Grid>
+
+                    <StackPanel Grid.Row="1" Margin="14,8,14,8">
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="16" Height="16" CornerRadius="8" VerticalAlignment="Top"
+                                    Background="{DynamicResource Brush.PrimaryDim}" Margin="0,1,0,0">
+                                <TextBlock Text="1" FontSize="9" FontWeight="Bold"
+                                           Foreground="{DynamicResource Brush.Primary}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Grid.Column="1" Text="{Binding Conclusion1}" FontSize="10"
+                                       Margin="8,0,0,0" TextWrapping="Wrap" LineHeight="16"
+                                       Foreground="{DynamicResource Brush.Fg}"/>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="16" Height="16" CornerRadius="8" VerticalAlignment="Top"
+                                    Background="{DynamicResource Brush.WarnSoft}" Margin="0,1,0,0">
+                                <TextBlock Text="2" FontSize="9" FontWeight="Bold"
+                                           Foreground="{DynamicResource Brush.Warn}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Grid.Column="1" Text="{Binding Conclusion2}" FontSize="10"
+                                       Margin="8,0,0,0" TextWrapping="Wrap" LineHeight="16"
+                                       Foreground="{DynamicResource Brush.Fg}"/>
+                        </Grid>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="16" Height="16" CornerRadius="8" VerticalAlignment="Top"
+                                    Background="{DynamicResource Brush.PrimaryDim}" Margin="0,1,0,0">
+                                <TextBlock Text="3" FontSize="9" FontWeight="Bold"
+                                           Foreground="{DynamicResource Brush.Primary}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <TextBlock Grid.Column="1" Text="{Binding Conclusion3}" FontSize="10"
+                                       Margin="8,0,0,0" TextWrapping="Wrap" LineHeight="16"
+                                       Foreground="{DynamicResource Brush.Fg}"/>
+                        </Grid>
                     </StackPanel>
-                </Border>
-            </Grid>
 
-            <TextBlock Style="{StaticResource T.Tiny}" FontSize="10" Margin="2,14,0,0"
-                       Text="统计口径：逾期只看语义计划日；`/`、`已下图`、空白都不参与逾期计算；照片数量为演示值。"/>
-        </StackPanel>
-    </ScrollViewer>
+                    <Border Grid.Row="2" Background="{DynamicResource Brush.CardWell}"
+                            BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,1,0,0"
+                            CornerRadius="0,0,13,13" Padding="14,7">
+                        <Grid>
+                            <TextBlock FontSize="9" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Muted}">
+                                <Run Text="口径："/><Run Text="{Binding AsOfDay, Mode=OneWay}"/>
+                            </TextBlock>
+                            <Button Content="导出结论" Style="{StaticResource Btn.Ghost}" Height="24"
+                                    FontSize="10" Padding="9,0"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Command="{Binding GoExchangeCommand}"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
 </UserControl>

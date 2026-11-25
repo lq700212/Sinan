@@ -110,6 +110,10 @@ public sealed class SubprojectDetail
     public int InvertedCount { get; set; }
     public int PhotoCount { get; set; }
     public int OwnerCount { get; set; }
+
+    /// <summary>装配阶段已填责任人的问题数；与总览卡片同口径（StageRules.HasOwner）。</summary>
+    public int AssemblyFilled { get; set; }
+
     public bool IsUnassigned { get; set; }
     public List<MachineSummary> Machines { get; set; } = new();
 }
@@ -146,12 +150,42 @@ public sealed class ReportData
     public int PhotoCount { get; set; }
     public int PhotoIssueCount { get; set; }
     public double PhotoLinkedRate { get; set; }
+
+    /// <summary>真实分项目数（不含"待确认"虚拟分组）。</summary>
+    public int SubprojectCount { get; set; }
     public string AsOfDisplay { get; set; } = "";
     public List<StageFill> StageFills { get; set; } = new();
     public List<OwnerLoad> OwnerLoads { get; set; } = new();
     public List<SubprojectCard> Subprojects { get; set; } = new();
     public List<PhotoBucket> PhotoBuckets { get; set; } = new();
     public List<CommonIssue> CommonIssues { get; set; } = new();
+
+    /// <summary>分项目为空的机台 / 问题数（机台号异常、无法自动归组的那部分）。</summary>
+    public int UnassignedMachineCount { get; set; }
+    public int UnassignedIssueCount { get; set; }
+
+    /// <summary>全部阶段任务数（有责任人的阶段条目合计），用于"共 N 个阶段任务"。</summary>
+    public int StageTaskCount { get; set; }
+
+    /// <summary>计划时间分布：按语义计划日聚合，取数量最多的前 5 个日期。</summary>
+    public List<PlanDateBucket> PlanDateBuckets { get; set; } = new();
+
+    /// <summary>计划列有原文但解析不成日期的数量（如"已下图"），不计入日期分布。</summary>
+    public int TextPlanCount { get; set; }
+
+    /// <summary>倒挂行的装配计划日期集中情况，一句人话（本期结论第 2 条）。</summary>
+    public string InvertedPlanDateText { get; set; } = "";
+
+    /// <summary>状态分布里数量最多的状态与条数（本期结论第 1 条）。</summary>
+    public string TopStatusText { get; set; } = "";
+}
+
+/// <summary>计划时间分布的一根横条（设计稿 report 页"计划时间分布"）。</summary>
+public sealed class PlanDateBucket
+{
+    public string DateText { get; set; } = "";
+    public int Count { get; set; }
+    public double Ratio { get; set; }
 }
 
 public sealed class CommonIssue

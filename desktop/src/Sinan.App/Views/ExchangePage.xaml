@@ -6,10 +6,11 @@
 
     <!--
       ============================================================================
-      数据交换（设计稿 p3 import / p4 export）
-      左：导入四步向导（选择文件 → 列映射 → 校验预览 → 确认导入）
-      右：导出（范围 + 版式三选一 + 选项 + 结果）
-      纪律：预览不写库；原表永不被修改；导出统一落 archive\exports 不弹保存框。
+      数据交换（设计稿 p3 import / p4 export · 两个独立整页）
+      设计稿把导入与导出做成两页，侧栏同一个入口。这里用顶部分段按钮切换：
+        · 导入页：步骤条 + 左"源文件/列映射" + 右"校验结果"
+        · 导出页：左"范围/格式/选项" + 右"版式预览"
+      纪律：预览不写库；原表永不被修改；导出统一落 archive\exports，不弹保存框。
       ============================================================================
     -->
 
@@ -20,20 +21,48 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- ==================== 顶部状态条 ==================== -->
-        <Border Grid.Row="0" Style="{StaticResource Card}" Padding="18,13">
+        <!-- ==================== 模式切换 + 数据目录 ==================== -->
+        <Border Grid.Row="0" Style="{StaticResource Card}" Padding="12,10">
             <Grid>
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="数据交换" Style="{StaticResource T.H2}" FontSize="16"/>
-                    <TextBlock Text="·" Style="{StaticResource T.Tiny}" Margin="8,0"/>
-                    <TextBlock Text="Excel 原表双向通道" Style="{StaticResource T.Small}"
-                               VerticalAlignment="Center"/>
+                    <!-- 分段按钮：选中态走主色渐变，未选中走 ghost -->
+                    <Button Content="导入原表" Height="28" FontSize="11" Padding="12,0"
+                            AutomationProperties.AutomationId="ModeImportButton"
+                            Command="{Binding SetModeCommand}" CommandParameter="import">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource Btn.Ghost}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsImportMode}" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource Brush.PrimaryGrad}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}"/>
+                                        <Setter Property="BorderBrush" Value="Transparent"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button Content="导出中心" Height="28" FontSize="11" Padding="12,0" Margin="6,0,0,0"
+                            AutomationProperties.AutomationId="ModeExportButton"
+                            Command="{Binding SetModeCommand}" CommandParameter="export">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource Btn.Ghost}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsExportMode}" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource Brush.PrimaryGrad}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}"/>
+                                        <Setter Property="BorderBrush" Value="Transparent"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <TextBlock Text="{Binding LastImportDisplay, StringFormat=最近导入：{0}}"
+                               Style="{StaticResource T.Tiny}" FontSize="10"
+                               VerticalAlignment="Center" Margin="14,0,0,0"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding LastImportDisplay, StringFormat=最近导入：{0}}"
-                               Style="{StaticResource T.Tiny}" FontSize="10"/>
                     <Button Content="打开数据目录" Style="{StaticResource Btn.Ghost}" Height="26"
-                            Padding="0" FontSize="10.5" Margin="12,0,0,0"
+                            FontSize="10.5" Padding="10,0"
                             AutomationProperties.AutomationId="OpenDataFolderButton"
                             Command="{Binding OpenDataFolderCommand}"/>
                 </StackPanel>
@@ -60,505 +89,724 @@
             </Border>
         </StackPanel>
 
-        <!-- ==================== 主体两栏 ==================== -->
-        <Grid Grid.Row="2" Margin="0,12,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.45*"/>
-                <ColumnDefinition Width="1*"/>
-            </Grid.ColumnDefinitions>
+        <!-- ==================== 导入页 ==================== -->
+        <Grid Grid.Row="2" Margin="0,12,0,0"
+              Visibility="{Binding IsImportMode, Converter={StaticResource TrueToVisibility}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-            <!-- ===== 左：导入四步向导 ===== -->
-            <Border Grid.Column="0" Style="{StaticResource Card}" Padding="18,15" Margin="0,0,12,0">
+            <!-- 步骤条（.steps）：已完成绿✓ / 当前主色 / 未到灰 -->
+            <Border Grid.Row="0" Style="{StaticResource Card}" Padding="14,10">
                 <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- 标题 + 步骤条 -->
-                    <StackPanel Grid.Row="0">
-                        <Grid>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="导入 Excel 原表" Style="{StaticResource T.H2}" FontSize="15"/>
-                                <ContentControl Style="{StaticResource Chip}" Tag="warn" Margin="8,0,0,0">
-                                    <TextBlock Text="预览不写库" FontSize="9.5"/>
-                                </ContentControl>
-                            </StackPanel>
-                            <Button Content="选择文件并解析" Style="{StaticResource Btn.Secondary}" Height="30"
-                                    HorizontalAlignment="Right" FontSize="11.5" Padding="12,0"
-                                    AutomationProperties.AutomationId="PreviewButton"
-                                    Command="{Binding PreviewCommand}"/>
-                        </Grid>
-
-                        <!-- 四步条：当前步高亮，已完成的步可点回看 -->
-                        <Grid Margin="0,12,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-
-                            <Button Grid.Column="0" Command="{Binding GoStepCommand}" CommandParameter="1">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <StackPanel Orientation="Horizontal" Background="Transparent">
-                                            <Border x:Name="Dot" Width="22" Height="22" CornerRadius="11"
-                                                    Background="{DynamicResource Brush.CardWell}"
-                                                    BorderBrush="{DynamicResource Brush.Border}"
-                                                    BorderThickness="1">
-                                                <TextBlock x:Name="Num" Text="1" FontSize="10.5"
-                                                           FontFamily="{DynamicResource Font.Mono}"
-                                                           HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center"
-                                                           Foreground="{DynamicResource Brush.Muted}"/>
-                                            </Border>
-                                            <TextBlock x:Name="Cap" Text="选择文件" FontSize="11"
-                                                       Margin="6,0,0,0" VerticalAlignment="Center"
-                                                       Foreground="{DynamicResource Brush.Muted}"/>
-                                        </StackPanel>
-                                        <ControlTemplate.Triggers>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="22" Height="22" CornerRadius="11">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{DynamicResource Brush.CardWell}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsStep1Done}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Ok}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Ok}"/>
+                                            </DataTrigger>
                                             <DataTrigger Binding="{Binding IsStep1}" Value="True">
-                                                <Setter TargetName="Dot" Property="Background"
-                                                        Value="{DynamicResource Brush.PrimaryDim}"/>
-                                                <Setter TargetName="Dot" Property="BorderBrush"
-                                                        Value="{DynamicResource Brush.PrimaryLine}"/>
-                                                <Setter TargetName="Num" Property="Foreground"
-                                                        Value="{DynamicResource Brush.Primary}"/>
-                                                <Setter TargetName="Cap" Property="Foreground"
-                                                        Value="{DynamicResource Brush.Primary}"/>
-                                                <Setter TargetName="Cap" Property="FontWeight" Value="SemiBold"/>
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Primary}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Primary}"/>
                                             </DataTrigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
-                            <Border Grid.Column="1" Height="1" Margin="8,0"
-                                    Background="{DynamicResource Brush.SepLine}" VerticalAlignment="Center"/>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock FontSize="10.5" FontFamily="{DynamicResource Font.Mono}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="1"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsStep1Done}" Value="True">
+                                                    <Setter Property="Text" Value="✓"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsStep1}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                            <TextBlock Text="选择文件" FontSize="11" Margin="6,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Muted}"/>
+                        </StackPanel>
+                        <Border Width="26" Height="1" Margin="9,0"
+                                Background="{DynamicResource Brush.SepLine}" VerticalAlignment="Center"/>
 
-                            <Button Grid.Column="2" Command="{Binding GoStepCommand}" CommandParameter="2">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <StackPanel Orientation="Horizontal" Background="Transparent">
-                                            <Border x:Name="Dot" Width="22" Height="22" CornerRadius="11"
-                                                    Background="{DynamicResource Brush.CardWell}"
-                                                    BorderBrush="{DynamicResource Brush.Border}"
-                                                    BorderThickness="1">
-                                                <TextBlock x:Name="Num" Text="2" FontSize="10.5"
-                                                           FontFamily="{DynamicResource Font.Mono}"
-                                                           HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center"
-                                                           Foreground="{DynamicResource Brush.Muted}"/>
-                                            </Border>
-                                            <TextBlock x:Name="Cap" Text="列映射" FontSize="11"
-                                                       Margin="6,0,0,0" VerticalAlignment="Center"
-                                                       Foreground="{DynamicResource Brush.Muted}"/>
-                                        </StackPanel>
-                                        <ControlTemplate.Triggers>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="22" Height="22" CornerRadius="11">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{DynamicResource Brush.CardWell}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsStep2Done}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Ok}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Ok}"/>
+                                            </DataTrigger>
                                             <DataTrigger Binding="{Binding IsStep2}" Value="True">
-                                                <Setter TargetName="Dot" Property="Background"
-                                                        Value="{DynamicResource Brush.PrimaryDim}"/>
-                                                <Setter TargetName="Dot" Property="BorderBrush"
-                                                        Value="{DynamicResource Brush.PrimaryLine}"/>
-                                                <Setter TargetName="Num" Property="Foreground"
-                                                        Value="{DynamicResource Brush.Primary}"/>
-                                                <Setter TargetName="Cap" Property="Foreground"
-                                                        Value="{DynamicResource Brush.Primary}"/>
-                                                <Setter TargetName="Cap" Property="FontWeight" Value="SemiBold"/>
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Primary}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Primary}"/>
                                             </DataTrigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
-                            <Border Grid.Column="3" Height="1" Margin="8,0"
-                                    Background="{DynamicResource Brush.SepLine}" VerticalAlignment="Center"/>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock FontSize="10.5" FontFamily="{DynamicResource Font.Mono}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="2"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsStep2Done}" Value="True">
+                                                    <Setter Property="Text" Value="✓"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsStep2}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                            <TextBlock Text="列映射" FontSize="11" Margin="6,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Muted}"/>
+                        </StackPanel>
+                        <Border Width="26" Height="1" Margin="9,0"
+                                Background="{DynamicResource Brush.SepLine}" VerticalAlignment="Center"/>
 
-                            <Button Grid.Column="4" Command="{Binding GoStepCommand}" CommandParameter="3">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <StackPanel Orientation="Horizontal" Background="Transparent">
-                                            <Border x:Name="Dot" Width="22" Height="22" CornerRadius="11"
-                                                    Background="{DynamicResource Brush.CardWell}"
-                                                    BorderBrush="{DynamicResource Brush.Border}"
-                                                    BorderThickness="1">
-                                                <TextBlock x:Name="Num" Text="3" FontSize="10.5"
-                                                           FontFamily="{DynamicResource Font.Mono}"
-                                                           HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center"
-                                                           Foreground="{DynamicResource Brush.Muted}"/>
-                                            </Border>
-                                            <TextBlock x:Name="Cap" Text="校验预览" FontSize="11"
-                                                       Margin="6,0,0,0" VerticalAlignment="Center"
-                                                       Foreground="{DynamicResource Brush.Muted}"/>
-                                        </StackPanel>
-                                        <ControlTemplate.Triggers>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="22" Height="22" CornerRadius="11">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{DynamicResource Brush.CardWell}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsStep3Done}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Ok}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Ok}"/>
+                                            </DataTrigger>
                                             <DataTrigger Binding="{Binding IsStep3}" Value="True">
-                                                <Setter TargetName="Dot" Property="Background"
-                                                        Value="{DynamicResource Brush.PrimaryDim}"/>
-                                                <Setter TargetName="Dot" Property="BorderBrush"
-                                                        Value="{DynamicResource Brush.PrimaryLine}"/>
-                                                <Setter TargetName="Num" Property="Foreground"
-                                                        Value="{DynamicResource Brush.Primary}"/>
-                                                <Setter TargetName="Cap" Property="Foreground"
-                                                        Value="{DynamicResource Brush.Primary}"/>
-                                                <Setter TargetName="Cap" Property="FontWeight" Value="SemiBold"/>
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Primary}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Primary}"/>
                                             </DataTrigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
-                            <Border Grid.Column="5" Height="1" Margin="8,0"
-                                    Background="{DynamicResource Brush.SepLine}" VerticalAlignment="Center"/>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock FontSize="10.5" FontFamily="{DynamicResource Font.Mono}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="3"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsStep3Done}" Value="True">
+                                                    <Setter Property="Text" Value="✓"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsStep3}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                            <TextBlock Text="校验预览" FontSize="11" Margin="6,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Muted}"/>
+                        </StackPanel>
+                        <Border Width="26" Height="1" Margin="9,0"
+                                Background="{DynamicResource Brush.SepLine}" VerticalAlignment="Center"/>
 
-                            <Button Grid.Column="6" Command="{Binding GoStepCommand}" CommandParameter="4">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <StackPanel Orientation="Horizontal" Background="Transparent">
-                                            <Border x:Name="Dot" Width="22" Height="22" CornerRadius="11"
-                                                    Background="{DynamicResource Brush.CardWell}"
-                                                    BorderBrush="{DynamicResource Brush.Border}"
-                                                    BorderThickness="1">
-                                                <TextBlock x:Name="Num" Text="4" FontSize="10.5"
-                                                           FontFamily="{DynamicResource Font.Mono}"
-                                                           HorizontalAlignment="Center"
-                                                           VerticalAlignment="Center"
-                                                           Foreground="{DynamicResource Brush.Muted}"/>
-                                            </Border>
-                                            <TextBlock x:Name="Cap" Text="确认导入" FontSize="11"
-                                                       Margin="6,0,0,0" VerticalAlignment="Center"
-                                                       Foreground="{DynamicResource Brush.Muted}"/>
-                                        </StackPanel>
-                                        <ControlTemplate.Triggers>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="22" Height="22" CornerRadius="11">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{DynamicResource Brush.CardWell}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+                                        <Setter Property="BorderThickness" Value="1"/>
+                                        <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsStep4}" Value="True">
-                                                <Setter TargetName="Dot" Property="Background"
-                                                        Value="{DynamicResource Brush.PrimaryDim}"/>
-                                                <Setter TargetName="Dot" Property="BorderBrush"
-                                                        Value="{DynamicResource Brush.PrimaryLine}"/>
-                                                <Setter TargetName="Num" Property="Foreground"
-                                                        Value="{DynamicResource Brush.Primary}"/>
-                                                <Setter TargetName="Cap" Property="Foreground"
-                                                        Value="{DynamicResource Brush.Primary}"/>
-                                                <Setter TargetName="Cap" Property="FontWeight" Value="SemiBold"/>
+                                                <Setter Property="Background" Value="{DynamicResource Brush.Primary}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Primary}"/>
                                             </DataTrigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
-                        </Grid>
-
-                        <!-- 当前步说明 -->
-                        <Border Background="{DynamicResource Brush.CardWell}" CornerRadius="9"
-                                Padding="11,7" Margin="0,11,0,0">
-                            <TextBlock Style="{StaticResource T.Tiny}" FontSize="10" TextWrapping="Wrap">
-                                <Run Text="{Binding StepTitle, Mode=OneWay}" FontWeight="SemiBold"/>
-                                <Run Text="  "/>
-                                <Run Text="{Binding StepHint, Mode=OneWay}"/>
-                            </TextBlock>
-                        </Border>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="4" FontSize="10.5" FontFamily="{DynamicResource Font.Mono}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsStep4}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                            <TextBlock Text="确认导入" FontSize="11" Margin="6,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Muted}"/>
+                        </StackPanel>
                     </StackPanel>
 
-                    <!-- 已选文件摘要（有预览时常驻，任何步骤都能看到源文件） -->
-                    <Border Grid.Row="1" Background="{DynamicResource Brush.CardWell}"
-                            BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
-                            CornerRadius="12" Padding="12,9" Margin="0,10,0,0"
-                            Visibility="{Binding HasPreview, Converter={StaticResource TrueToVisibility}}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Width="34" Height="34" CornerRadius="8"
-                                    Background="{DynamicResource Brush.PrimaryDim}" Margin="0,0,10,0">
-                                <TextBlock Text="XLS" FontSize="9" FontWeight="Bold"
-                                           FontFamily="{DynamicResource Font.Mono}"
-                                           Foreground="{DynamicResource Brush.Primary}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Preview.FileName}" FontSize="12" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource Brush.Fg}"
-                                           TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Text="{Binding Preview.FilePath}" Style="{StaticResource T.Mono}"
-                                           FontSize="9" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Orientation="Horizontal">
-                                <ContentControl Style="{StaticResource Chip}" Tag="ok" Margin="0,0,8,0">
-                                    <TextBlock Text="{Binding Preview.Total, StringFormat=有效 {0} 条}" FontSize="9.5"/>
-                                </ContentControl>
-                                <ContentControl Style="{StaticResource Chip}" Tag="warn"
-                                                Visibility="{Binding Preview.ErrorCount, Converter={StaticResource NullToVisibility}}">
-                                    <TextBlock Text="{Binding Preview.ErrorCount, StringFormat=错误 {0}}" FontSize="9.5"/>
-                                </ContentControl>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <!-- 分步内容 -->
-                    <Grid Grid.Row="2" Margin="0,12,0,0">
-                        <!-- 第 1 步：还没有预览时的引导 -->
-                        <Border Padding="20" CornerRadius="12"
-                                Background="{DynamicResource Brush.CardWell}"
-                                BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
-                                VerticalAlignment="Top"
-                                Visibility="{Binding HasPreview, Converter={StaticResource InverseBoolToVisibility}}">
-                            <StackPanel>
-                                <TextBlock Text="还没有选择文件" Style="{StaticResource T.Value}"
-                                           FontSize="13" HorizontalAlignment="Center" Margin="0,10,0,0"/>
-                                <TextBlock Style="{StaticResource T.Tiny}" FontSize="10.5"
-                                           TextWrapping="Wrap" TextAlignment="Center"
-                                           Margin="0,7,0,0"
-                                           Text="支持 .xls 与 .xlsx。点右上「选择文件并解析」，系统自动探测表头行、识别四阶段列，并在写入前给出逐行预览。"/>
-                                <Button Content="选择文件并解析" Style="{StaticResource Btn.Primary}"
-                                        Height="34" Width="150" Margin="0,14,0,10"
-                                        HorizontalAlignment="Center"
-                                        Command="{Binding PreviewCommand}"/>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- 第 2 步：列映射（解析产物，只读展示识别结果） -->
-                        <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      Visibility="{Binding IsStep2, Converter={StaticResource TrueToVisibility}}">
-                            <StackPanel>
-                                <TextBlock Text="系统识别出的列映射" Style="{StaticResource T.Label}" Margin="2,0,0,6"/>
-                                <Border Background="{DynamicResource Brush.CardWell}"
-                                        BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
-                                        CornerRadius="10" Padding="12,10">
-                                    <StackPanel>
-                                        <Grid Margin="0,0,0,7">
-                                            <TextBlock Text="表头行" Style="{StaticResource T.Tiny}" FontSize="10"/>
-                                            <TextBlock Text="{Binding Preview.HeaderRowText}"
-                                                       Style="{StaticResource T.Mono}" FontSize="10"
-                                                       HorizontalAlignment="Right"/>
-                                        </Grid>
-                                        <Grid Margin="0,0,0,7">
-                                            <TextBlock Text="原始行数 / 有效问题" Style="{StaticResource T.Tiny}" FontSize="10"/>
-                                            <TextBlock FontSize="10" HorizontalAlignment="Right"
-                                                       FontFamily="{DynamicResource Font.Mono}">
-                                                <Run Text="{Binding Preview.SourceRowCount, Mode=OneWay}"/>
-                                                <Run Text=" / "/>
-                                                <Run Text="{Binding Preview.Total, Mode=OneWay}"/>
-                                            </TextBlock>
-                                        </Grid>
-                                        <Border Style="{StaticResource Hairline}" Margin="0,4,0,8"/>
-                                        <TextBlock Style="{StaticResource T.Tiny}" FontSize="10"
-                                                   TextWrapping="Wrap" LineHeight="18"
-                                                   Text="序号 / 机台号 / 存在问题 / 解决措施 + 四阶段的责任人与计划共 12 列按表头文字自动映射；分项目号由机台号百位段派生（1xx→P7391-01、2xx→02、3xx→03）。识别不出的列留空，不猜测。"/>
-                                    </StackPanel>
-                                </Border>
-
-                                <TextBlock Style="{StaticResource T.Tiny}" FontSize="9.5" TextWrapping="Wrap"
-                                           Margin="2,10,0,0"
-                                           Text="映射规则与 Excel 无损口径见 desktop/AGENTS.md 第 6.1 节：日期原文照存（11.5 不会被格式化成年份）、`/` 与空白严格区分、序号不重排。"/>
-                            </StackPanel>
-                        </ScrollViewer>
-
-                        <!-- 第 3 步：校验预览（逐行表） -->
-                        <Grid Visibility="{Binding IsStep3, Converter={StaticResource TrueToVisibility}}">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-
-                            <Grid Grid.Row="0" Margin="2,0,2,7">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="逐行校验" Style="{StaticResource T.H2}" FontSize="13"/>
-                                    <TextBlock Text="{Binding Preview.Total, StringFormat=共 {0} 行}"
-                                               Style="{StaticResource T.Tiny}" Margin="8,0,0,0"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <ContentControl Style="{StaticResource Chip}" Tag="ok" Margin="0,0,6,0">
-                                        <TextBlock Text="{Binding Preview.InsertCount, StringFormat=新增 {0}}" FontSize="9"/>
-                                    </ContentControl>
-                                    <ContentControl Style="{StaticResource Chip}" Tag="info" Margin="0,0,6,0">
-                                        <TextBlock Text="{Binding Preview.UpdateCount, StringFormat=更新 {0}}" FontSize="9"/>
-                                    </ContentControl>
-                                    <ContentControl Style="{StaticResource Chip}" Tag="plain" Margin="0,0,6,0">
-                                        <TextBlock Text="{Binding Preview.UnchangedCount, StringFormat=无变化 {0}}" FontSize="9"/>
-                                    </ContentControl>
-                                    <ContentControl Style="{StaticResource Chip}" Tag="ng">
-                                        <TextBlock Text="{Binding Preview.ConflictCount, StringFormat=冲突 {0}}" FontSize="9"/>
-                                    </ContentControl>
-                                </StackPanel>
-                            </Grid>
-
-                            <ListView Grid.Row="1" Style="{StaticResource Grid.Table}"
-                                      ItemsSource="{Binding Rows}">
-                                <ListView.View>
-                                    <GridView>
-                                        <GridViewColumn Header="源行" Width="50"
-                                                        HeaderContainerStyle="{StaticResource Grid.Header}">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding SourceRow}" Margin="8,0,0,0"
-                                                               FontFamily="{DynamicResource Font.Mono}"
-                                                               FontSize="11" VerticalAlignment="Center"/>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="机台号" Width="94"
-                                                        HeaderContainerStyle="{StaticResource Grid.Header}">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding MachineCode}" Margin="8,0,0,0"
-                                                               FontFamily="{DynamicResource Font.Mono}"
-                                                               FontSize="11" VerticalAlignment="Center"/>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="问题" Width="210"
-                                                        HeaderContainerStyle="{StaticResource Grid.Header}">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding Title}" Margin="8,0,0,0"
-                                                               FontSize="11" TextTrimming="CharacterEllipsis"
-                                                               VerticalAlignment="Center"/>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="类型" Width="66"
-                                                        HeaderContainerStyle="{StaticResource Grid.Header}">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <ContentControl Style="{StaticResource Chip}"
-                                                                    Tag="{Binding KindKind}" Margin="6,0,0,0"
-                                                                    Padding="6,1">
-                                                        <TextBlock Text="{Binding KindDisplay}" FontSize="9"/>
-                                                    </ContentControl>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Header="提示" Width="200"
-                                                        HeaderContainerStyle="{StaticResource Grid.Header}">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding WarningText}" Margin="8,0,0,0"
-                                                               Style="{StaticResource T.Tiny}" FontSize="9.5"
-                                                               TextTrimming="CharacterEllipsis"
-                                                               VerticalAlignment="Center"
-                                                               ToolTip="{Binding WarningText}"/>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                    </GridView>
-                                </ListView.View>
-                            </ListView>
-                        </Grid>
-
-                        <!-- 第 4 步：确认导入 -->
-                        <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      Visibility="{Binding IsStep4, Converter={StaticResource TrueToVisibility}}">
-                            <StackPanel>
-                                <!-- 写入结果（导入后） -->
-                                <Border Background="{DynamicResource Brush.OkSoft}"
-                                        BorderBrush="{DynamicResource Brush.OkLine}" BorderThickness="1"
-                                        CornerRadius="10" Padding="12,9" Margin="0,0,0,12"
-                                        Visibility="{Binding HasImportResult, Converter={StaticResource TrueToVisibility}}">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding ImportResultSummary}" Style="{StaticResource T.Value}"
-                                                   FontSize="12" Foreground="{DynamicResource Brush.Ok}"/>
-                                        <TextBlock Text="{Binding ImportMessages}" Style="{StaticResource T.Tiny}"
-                                                   FontSize="9.5" TextWrapping="Wrap" Margin="0,4,0,0"/>
-                                    </StackPanel>
-                                </Border>
-
-                                <TextBlock Text="写入策略" Style="{StaticResource T.Label}" Margin="2,0,0,6"/>
-                                <ComboBox Style="{StaticResource Input.Combo}" Height="34"
-                                          AutomationProperties.AutomationId="StrategyCombo"
-                                          ItemsSource="{Binding Strategies}"
-                                          SelectedItem="{Binding Strategy, Mode=TwoWay}">
-                                    <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Label}"/>
-                                        </DataTemplate>
-                                    </ComboBox.ItemTemplate>
-                                </ComboBox>
-                                <TextBlock Text="{Binding Strategy.Hint}" Style="{StaticResource T.Tiny}"
-                                           FontSize="9.5" TextWrapping="Wrap" Margin="2,5,0,0"/>
-
-                                <Border Style="{StaticResource Card.Inset}" Padding="12,10" Margin="0,14,0,0">
-                                    <StackPanel>
-                                        <TextBlock Text="写入前请确认" Style="{StaticResource T.Tiny}" FontSize="10"
-                                                   FontWeight="SemiBold"/>
-                                        <TextBlock Style="{StaticResource T.Small}" FontSize="11"
-                                                   TextWrapping="Wrap" Margin="0,4,0,0" LineHeight="19">
-                                            <Run Text="将写入 "/>
-                                            <Run Text="{Binding Preview.Total, Mode=OneWay}" FontWeight="Bold"/>
-                                            <Run Text=" 行 · 新增 "/>
-                                            <Run Text="{Binding Preview.InsertCount, Mode=OneWay}"/>
-                                            <Run Text=" · 更新 "/>
-                                            <Run Text="{Binding Preview.UpdateCount, Mode=OneWay}"/>
-                                            <Run Text=" · 冲突 "/>
-                                            <Run Text="{Binding Preview.ConflictCount, Mode=OneWay}"/>
-                                        </TextBlock>
-                                        <TextBlock Style="{StaticResource T.Tiny}" FontSize="9.5"
-                                                   TextWrapping="Wrap" Margin="0,5,0,0"
-                                                   Text="写入会记录批次号与逐行来源（源表第几行），可整批回溯；原 Excel 文件永不被修改。"/>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </Grid>
-
-                    <!-- 底部：步进按钮 -->
-                    <Grid Grid.Row="3" Margin="0,12,0,0">
-                        <TextBlock Text="导入可整批回滚 · 原 xls 永不被修改"
-                                   Style="{StaticResource T.Tiny}" FontSize="9.5" VerticalAlignment="Center"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="上一步" Style="{StaticResource Btn.Ghost}" Height="32" Width="76"
-                                    AutomationProperties.AutomationId="StepBackButton"
-                                    Command="{Binding StepBackCommand}"/>
-                            <Button Content="下一步" Style="{StaticResource Btn.Secondary}" Height="32" Width="76"
-                                    Margin="8,0,0,0"
-                                    AutomationProperties.AutomationId="StepNextButton"
-                                    Command="{Binding StepNextCommand}"
-                                    Visibility="{Binding IsStep4, Converter={StaticResource InverseBoolToVisibility}}"/>
-                            <Button Content="清空预览" Style="{StaticResource Btn.Ghost}" Height="32" Width="82"
-                                    Margin="8,0,0,0"
-                                    AutomationProperties.AutomationId="ClearPreviewButton"
-                                    Command="{Binding ClearPreviewCommand}"/>
-                            <Button Content="写入数据库" Style="{StaticResource Btn.Primary}" Height="32" Width="104"
-                                    Margin="8,0,0,0" FontSize="11.5"
-                                    AutomationProperties.AutomationId="ApplyButton"
-                                    IsEnabled="{Binding CanApply}"
-                                    Command="{Binding ApplyCommand}"/>
-                        </StackPanel>
-                    </Grid>
+                    <ContentControl Style="{StaticResource Chip}" Tag="on"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding BatchBadgeText}" FontSize="9.5"/>
+                    </ContentControl>
                 </Grid>
             </Border>
 
-            <!-- ===== 右：导出 ===== -->
-            <Grid Grid.Column="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+            <!-- 两列：左源文件/列映射（1fr），右校验结果（1.15fr） -->
+            <Grid Grid.Row="1" Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1.15*"/>
+                </Grid.ColumnDefinitions>
 
-                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Disabled">
-                <StackPanel>
+                <Grid Grid.Column="0" Margin="0,0,12,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                    <!-- 导出范围 -->
-                    <Border Style="{StaticResource Card}" Padding="16,14">
+                    <!-- 源文件卡 -->
+                    <Border Grid.Row="0" Style="{StaticResource Card}" Padding="0">
                         <StackPanel>
-                            <Grid Margin="0,0,0,9">
-                                <TextBlock Text="导出范围" Style="{StaticResource T.H2}" FontSize="14"/>
-                                <ContentControl Style="{StaticResource Chip}" Tag="on"
-                                                HorizontalAlignment="Right">
-                                    <TextBlock Text="按库内实况" FontSize="9.5"/>
-                                </ContentControl>
+                            <Border Background="{DynamicResource Brush.CardWell}"
+                                    BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,0,0,1"
+                                    CornerRadius="18,18,0,0" Padding="14,8">
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="20" Height="20" CornerRadius="6"
+                                                Background="{DynamicResource Brush.PrimaryDim}">
+                                            <TextBlock Text="▤" FontSize="10"
+                                                       Foreground="{DynamicResource Brush.Primary}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="源文件" FontSize="12.5" FontWeight="Bold"
+                                                   Foreground="{DynamicResource Brush.Fg}"
+                                                   VerticalAlignment="Center" Margin="7,0,0,0"/>
+                                        <ContentControl Style="{StaticResource Chip}" Tag="ok" Margin="8,0,0,0"
+                                                        Visibility="{Binding HasPreview, Converter={StaticResource TrueToVisibility}}">
+                                            <TextBlock Text="已读取" FontSize="9.5"/>
+                                        </ContentControl>
+                                    </StackPanel>
+                                    <Button Content="选择文件并解析" Style="{StaticResource Btn.Ghost}"
+                                            Height="26" FontSize="10.5" Padding="10,0"
+                                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                                            AutomationProperties.AutomationId="PreviewButton"
+                                            Command="{Binding PreviewCommand}"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- 未选文件：空状态 -->
+                            <StackPanel Margin="14,18,14,18"
+                                        Visibility="{Binding HasPreview, Converter={StaticResource InverseBoolToVisibility}}">
+                                <TextBlock Text="还没有选择文件" Style="{StaticResource T.Value}"
+                                           FontSize="12.5" HorizontalAlignment="Center"/>
+                                <TextBlock Style="{StaticResource T.Tiny}" FontSize="10"
+                                           TextWrapping="Wrap" TextAlignment="Center" Margin="0,6,0,0"
+                                           Text="支持 .xls 与 .xlsx。系统自动探测表头行、识别四阶段列，写入前给出逐行预览。"/>
+                                <Button Content="选择文件并解析" Style="{StaticResource Btn.Primary}"
+                                        Height="30" Width="132" Margin="0,12,0,0"
+                                        HorizontalAlignment="Center" FontSize="11"
+                                        Command="{Binding PreviewCommand}"/>
+                            </StackPanel>
+
+                            <!-- 已选文件：文件盒 + kv 摘要 -->
+                            <StackPanel Margin="14,10,14,12"
+                                        Visibility="{Binding HasPreview, Converter={StaticResource TrueToVisibility}}">
+                                <Border Background="{DynamicResource Brush.CardWell}"
+                                        BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="1"
+                                        CornerRadius="8" Padding="9,8">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="34" Height="38" CornerRadius="5"
+                                                Background="{DynamicResource Brush.OkSoft}" Margin="0,0,10,0">
+                                            <TextBlock Text="XLS" FontSize="9" FontWeight="Bold"
+                                                       FontFamily="{DynamicResource Font.Mono}"
+                                                       Foreground="{DynamicResource Brush.Ok}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Preview.FileName}" FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource Brush.Fg}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Preview.FilePath}" FontSize="9"
+                                                       FontFamily="{DynamicResource Font.Mono}"
+                                                       Foreground="{DynamicResource Brush.Muted}"
+                                                       TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Content="更换" Style="{StaticResource Btn.Ghost}"
+                                                Height="24" FontSize="10" Padding="8,0"
+                                                VerticalAlignment="Center"
+                                                Command="{Binding PreviewCommand}"/>
+                                    </Grid>
+                                </Border>
+
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="76"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="22"/>
+                                        <RowDefinition Height="22"/>
+                                        <RowDefinition Height="22"/>
+                                        <RowDefinition Height="22"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Text="工作表" Style="{StaticResource T.Tiny}" FontSize="10"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="首个工作表（自动）" FontSize="10.5"
+                                               Foreground="{DynamicResource Brush.Fg}"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Row="1" Text="表头行" Style="{StaticResource T.Tiny}" FontSize="10"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Preview.HeaderRowText}"
+                                               FontSize="10.5" Foreground="{DynamicResource Brush.Fg}"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Row="2" Text="原始行数" Style="{StaticResource T.Tiny}" FontSize="10"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1"
+                                               Text="{Binding Preview.SourceRowCount, StringFormat={}{0} 行}"
+                                               FontSize="10.5" Foreground="{DynamicResource Brush.Fg}"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Row="3" Text="有效问题" Style="{StaticResource T.Tiny}" FontSize="10"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" FontSize="10.5"
+                                               Foreground="{DynamicResource Brush.Fg}"
+                                               VerticalAlignment="Center">
+                                        <Run Text="{Binding Preview.Total, Mode=OneWay}" FontWeight="Bold"/>
+                                        <Run Text=" 条（剔除空行 / 小计）"/>
+                                    </TextBlock>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 列映射卡 -->
+                    <Border Grid.Row="1" Style="{StaticResource Card}" Padding="0" Margin="0,12,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0" Background="{DynamicResource Brush.CardWell}"
+                                    BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,0,0,1"
+                                    CornerRadius="18,18,0,0" Padding="14,8">
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="20" Height="20" CornerRadius="6"
+                                                Background="{DynamicResource Brush.PrimaryDim}">
+                                            <TextBlock Text="▥" FontSize="10"
+                                                       Foreground="{DynamicResource Brush.Primary}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="列映射" FontSize="12.5" FontWeight="Bold"
+                                                   Foreground="{DynamicResource Brush.Fg}"
+                                                   VerticalAlignment="Center" Margin="7,0,0,0"/>
+                                    </StackPanel>
+                                    <ContentControl Style="{StaticResource Chip}" Tag="ok"
+                                                    HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <TextBlock Text="12 / 12 已识别" FontSize="9.5"/>
+                                    </ContentControl>
+                                </Grid>
+                            </Border>
+
+                            <!-- 自绘三列表格：原表列 / 系统字段 / 说明 -->
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel>
+                                    <Border Background="{DynamicResource Brush.TheadBg}"
+                                            BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,0,0,1">
+                                        <Grid Height="28">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="104"/>
+                                                <ColumnDefinition Width="196"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="原表列" Margin="14,0,0,0" FontSize="10"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource Brush.TheadFg}"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="系统字段" Margin="10,0,0,0" FontSize="10"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource Brush.TheadFg}"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="说明" Margin="10,0,0,0" FontSize="10"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource Brush.TheadFg}"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                    <ItemsControl ItemsSource="{Binding ColumnMappings}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border BorderBrush="{DynamicResource Brush.SepLine}"
+                                                        BorderThickness="0,0,0,1">
+                                                    <Grid Height="26">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="104"/>
+                                                            <ColumnDefinition Width="196"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding Source}" Margin="14,0,0,0"
+                                                                   FontSize="10"
+                                                                   Foreground="{DynamicResource Brush.Fg}"
+                                                                   VerticalAlignment="Center"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Grid.Column="1" Text="{Binding Target}"
+                                                                   Margin="10,0,0,0" FontSize="10"
+                                                                   Foreground="{DynamicResource Brush.Fg}"
+                                                                   VerticalAlignment="Center"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Grid.Column="2" Text="{Binding Note}"
+                                                                   Margin="10,0,12,0" FontSize="9.5"
+                                                                   Foreground="{DynamicResource Brush.Muted}"
+                                                                   VerticalAlignment="Center"
+                                                                   TextTrimming="CharacterEllipsis"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <Border Grid.Row="2" Background="{DynamicResource Brush.CardWell}"
+                                    BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,1,0,0"
+                                    CornerRadius="0,0,13,13" Padding="14,7">
+                                <TextBlock Text="自动映射按表头文字 + 相邻列组合判断；识别不出的列留空，不猜。"
+                                           Style="{StaticResource T.Tiny}" FontSize="9.5"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- 右：校验结果 -->
+                <Border Grid.Column="1" Style="{StaticResource Card}" Padding="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Background="{DynamicResource Brush.CardWell}"
+                                BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,0,0,1"
+                                CornerRadius="18,18,0,0" Padding="14,8">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="20" Height="20" CornerRadius="6"
+                                            Background="{DynamicResource Brush.WarnSoft}">
+                                        <TextBlock Text="⚠" FontSize="10"
+                                                   Foreground="{DynamicResource Brush.Warn}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="校验结果" FontSize="12.5" FontWeight="Bold"
+                                               Foreground="{DynamicResource Brush.Fg}"
+                                               VerticalAlignment="Center" Margin="7,0,0,0"/>
+                                    <ContentControl Style="{StaticResource Chip}" Tag="warn" Margin="8,0,0,0"
+                                                    Visibility="{Binding HasPreview, Converter={StaticResource TrueToVisibility}}">
+                                        <TextBlock Text="导入不阻断" FontSize="9.5"/>
+                                    </ContentControl>
+                                    <ContentControl Style="{StaticResource Chip}" Tag="ok" Margin="6,0,0,0"
+                                                    Visibility="{Binding HasPreview, Converter={StaticResource TrueToVisibility}}">
+                                        <TextBlock Text="0 条阻断" FontSize="9.5"/>
+                                    </ContentControl>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Preview.Total, StringFormat={}{0} 条}"
+                                           FontFamily="{DynamicResource Font.Mono}" FontSize="10"
+                                           Foreground="{DynamicResource Brush.Muted}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
+                        </Border>
+
+                        <!-- 未选文件 -->
+                        <StackPanel Grid.Row="1" Margin="20,30,20,20"
+                                    Visibility="{Binding HasPreview, Converter={StaticResource InverseBoolToVisibility}}">
+                            <TextBlock Text="解析后在这里列出会阻断 / 仅提示的问题"
+                                       Style="{StaticResource T.Tiny}" FontSize="10.5"
+                                       HorizontalAlignment="Center" TextWrapping="Wrap"
+                                       TextAlignment="Center"/>
+                        </StackPanel>
+
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      Visibility="{Binding HasPreview, Converter={StaticResource TrueToVisibility}}">
+                            <StackPanel Margin="14,10,14,12">
+
+                                <!-- 计划倒挂 -->
+                                <Border Background="{DynamicResource Brush.CardWell}"
+                                        BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                                        CornerRadius="7" Margin="0,0,0,9">
+                                    <Grid>
+                                        <Border Width="4" HorizontalAlignment="Left" CornerRadius="2"
+                                                Background="{DynamicResource Brush.Warn}"/>
+                                        <StackPanel Margin="11,9,11,9">
+                                            <Grid>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ContentControl Style="{StaticResource Chip}" Tag="warn">
+                                                        <TextBlock Text="提示" FontSize="9"/>
+                                                    </ContentControl>
+                                                    <TextBlock FontSize="11" FontWeight="Bold" Margin="7,0,0,0"
+                                                               VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource Brush.Fg}">
+                                                        <Run Text="{Binding Preview.InvertedRowCount, Mode=OneWay}"/>
+                                                        <Run Text=" 条计划倒挂"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                            </Grid>
+                                            <TextBlock FontSize="10" Margin="0,5,0,0" TextWrapping="Wrap"
+                                                       LineHeight="17"
+                                                       Foreground="{DynamicResource Brush.Muted}"
+                                                       Text="设计下图计划日晚于装配调试计划日。导入不阻断，导入后在台账标红，需业务确认新日期。"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- 文字计划 -->
+                                <Border Background="{DynamicResource Brush.CardWell}"
+                                        BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                                        CornerRadius="7" Margin="0,0,0,9">
+                                    <Grid>
+                                        <Border Width="4" HorizontalAlignment="Left" CornerRadius="2"
+                                                Background="{DynamicResource Brush.Warn}"/>
+                                        <StackPanel Margin="11,9,11,9">
+                                            <StackPanel Orientation="Horizontal">
+                                                <ContentControl Style="{StaticResource Chip}" Tag="warn">
+                                                    <TextBlock Text="提示" FontSize="9"/>
+                                                </ContentControl>
+                                                <TextBlock FontSize="11" FontWeight="Bold" Margin="7,0,0,0"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource Brush.Fg}">
+                                                    <Run Text="{Binding Preview.TextPlanRowCount, Mode=OneWay}"/>
+                                                    <Run Text=" 处计划列是文字"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <TextBlock FontSize="10" Margin="0,5,0,0" TextWrapping="Wrap"
+                                                       LineHeight="17"
+                                                       Foreground="{DynamicResource Brush.Muted}"
+                                                       Text="无法参与日期比较。按原样保留并在界面标黄，不改写原表。"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- 机台号异常 -->
+                                <Border Background="{DynamicResource Brush.CardWell}"
+                                        BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                                        CornerRadius="7" Margin="0,0,0,9">
+                                    <Grid>
+                                        <Border Width="4" HorizontalAlignment="Left" CornerRadius="2"
+                                                Background="{DynamicResource Brush.Info}"/>
+                                        <StackPanel Margin="11,9,11,9">
+                                            <StackPanel Orientation="Horizontal">
+                                                <ContentControl Style="{StaticResource Chip}" Tag="info">
+                                                    <TextBlock Text="信息" FontSize="9"/>
+                                                </ContentControl>
+                                                <TextBlock FontSize="11" FontWeight="Bold" Margin="7,0,0,0"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource Brush.Fg}">
+                                                    <Run Text="{Binding Preview.MachineWarningCount, Mode=OneWay}"/>
+                                                    <Run Text=" 处机台号不符合规则"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <TextBlock FontSize="10" Margin="0,5,0,0" TextWrapping="Wrap"
+                                                       LineHeight="17"
+                                                       Foreground="{DynamicResource Brush.Muted}"
+                                                       Text="按原值导入，仅提示，不改写；导入后进“待确认”，由人工归组。"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- 分项目归组 -->
+                                <Border Background="{DynamicResource Brush.CardWell}"
+                                        BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                                        CornerRadius="7" Margin="0,0,0,9">
+                                    <Grid>
+                                        <Border Width="4" HorizontalAlignment="Left" CornerRadius="2"
+                                                Background="{DynamicResource Brush.Info}"/>
+                                        <StackPanel Margin="11,9,11,9">
+                                            <StackPanel Orientation="Horizontal">
+                                                <ContentControl Style="{StaticResource Chip}" Tag="info">
+                                                    <TextBlock Text="信息" FontSize="9"/>
+                                                </ContentControl>
+                                                <TextBlock Text="分项目自动归组" FontSize="11" FontWeight="Bold"
+                                                           Margin="7,0,0,0" VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource Brush.Fg}"/>
+                                            </StackPanel>
+                                            <TextBlock FontSize="10" Margin="0,5,0,0" TextWrapping="Wrap"
+                                                       LineHeight="17"
+                                                       Foreground="{DynamicResource Brush.Muted}"
+                                                       Text="按机台号百位段归入 P7391-01 / 02 / 03；无法匹配的机台号导入后进“待确认”。"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- 必填与唯一性 -->
+                                <Border Background="{DynamicResource Brush.CardWell}"
+                                        BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                                        CornerRadius="7" Margin="0,0,0,9">
+                                    <Grid>
+                                        <Border Width="4" HorizontalAlignment="Left" CornerRadius="2"
+                                                Background="{DynamicResource Brush.Ok}"/>
+                                        <StackPanel Margin="11,9,11,9">
+                                            <StackPanel Orientation="Horizontal">
+                                                <ContentControl Style="{StaticResource Chip}" Tag="ok">
+                                                    <TextBlock Text="通过" FontSize="9"/>
+                                                </ContentControl>
+                                                <TextBlock Text="必填与唯一性检查" FontSize="11" FontWeight="Bold"
+                                                           Margin="7,0,0,0" VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource Brush.Fg}"/>
+                                                <TextBlock FontSize="9.5" FontFamily="{DynamicResource Font.Mono}"
+                                                           Foreground="{DynamicResource Brush.Muted}"
+                                                           Margin="8,0,0,0" VerticalAlignment="Center">
+                                                    <Run Text="{Binding Preview.Total, Mode=OneWay}"/>
+                                                    <Run Text=" / "/>
+                                                    <Run Text="{Binding Preview.Total, Mode=OneWay}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <TextBlock FontSize="10" Margin="0,5,0,0" TextWrapping="Wrap"
+                                                       LineHeight="17"
+                                                       Foreground="{DynamicResource Brush.Muted}"
+                                                       Text="ID 无重复、机台号非空、问题标题非空；源行号已记录，可逐行回溯原表。"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- 完成情况 -->
+                                <Border Background="{DynamicResource Brush.CardWell}"
+                                        BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                                        CornerRadius="7">
+                                    <Grid>
+                                        <Border Width="4" HorizontalAlignment="Left" CornerRadius="2"
+                                                Background="{DynamicResource Brush.Border}"/>
+                                        <StackPanel Margin="11,9,11,9">
+                                            <StackPanel Orientation="Horizontal">
+                                                <ContentControl Style="{StaticResource Chip}" Tag="plain">
+                                                    <TextBlock Text="信息" FontSize="9"/>
+                                                </ContentControl>
+                                                <TextBlock FontSize="11" FontWeight="Bold" Margin="7,0,0,0"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource Brush.Fg}">
+                                                    <Run Text="完成情况 0 / "/>
+                                                    <Run Text="{Binding Preview.Total, Mode=OneWay}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <TextBlock FontSize="10" Margin="0,5,0,0" TextWrapping="Wrap"
+                                                       LineHeight="17"
+                                                       Foreground="{DynamicResource Brush.Muted}"
+                                                       Text="导入后全部按“未完成”处理；后续在详情页或手机端推进。"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- 卡底：写入策略 + 主操作 -->
+                        <Border Grid.Row="2" Background="{DynamicResource Brush.CardWell}"
+                                BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,1,0,0"
+                                CornerRadius="0,0,13,13" Padding="14,8">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="写入策略" Style="{StaticResource T.Tiny}" FontSize="9.5"
+                                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <ComboBox Style="{StaticResource Input.Combo}" Height="26" Width="168"
+                                              FontSize="10"
+                                              AutomationProperties.AutomationId="StrategyCombo"
+                                              ItemsSource="{Binding Strategies}"
+                                              SelectedItem="{Binding Strategy, Mode=TwoWay}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Label}" FontSize="10"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="清空预览" Style="{StaticResource Btn.Ghost}" Height="28"
+                                            FontSize="10.5" Padding="10,0"
+                                            AutomationProperties.AutomationId="ClearPreviewButton"
+                                            Command="{Binding ClearPreviewCommand}"/>
+                                    <Button Content="写入数据库" Style="{StaticResource Btn.Primary}" Height="28"
+                                            FontSize="10.5" Padding="14,0" Margin="6,0,0,0"
+                                            AutomationProperties.AutomationId="ApplyButton"
+                                            IsEnabled="{Binding CanApply}"
+                                            Command="{Binding ApplyCommand}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ==================== 导出页 ==================== -->
+        <Grid Grid.Row="2" Margin="0,12,0,0"
+              Visibility="{Binding IsExportMode, Converter={StaticResource TrueToVisibility}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="340"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 左：范围 / 格式 / 选项 -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Margin="0,0,12,0">
+                <StackPanel>
+                    <!-- 导出范围 -->
+                    <Border Style="{StaticResource Card}" Padding="0">
+                        <StackPanel>
+                            <Border Background="{DynamicResource Brush.CardWell}"
+                                    BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,0,0,1"
+                                    CornerRadius="18,18,0,0" Padding="14,8">
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="20" Height="20" CornerRadius="6"
+                                                Background="{DynamicResource Brush.PrimaryDim}">
+                                            <TextBlock Text="◫" FontSize="10"
+                                                       Foreground="{DynamicResource Brush.Primary}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="导出范围" FontSize="12.5" FontWeight="Bold"
+                                                   Foreground="{DynamicResource Brush.Fg}"
+                                                   VerticalAlignment="Center" Margin="7,0,0,0"/>
+                                    </StackPanel>
+                                    <ContentControl Style="{StaticResource Chip}" Tag="on"
+                                                    HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <TextBlock Text="按库内实况" FontSize="9.5"/>
+                                    </ContentControl>
+                                </Grid>
+                            </Border>
+
                             <ListBox ItemsSource="{Binding Scopes}"
                                      SelectedItem="{Binding Scope, Mode=TwoWay}"
                                      Background="Transparent" BorderThickness="0"
+                                     Margin="10,8,10,10"
                                      AutomationProperties.AutomationId="ScopeList"
                                      ScrollViewer.VerticalScrollBarVisibility="Disabled">
                                 <ListBox.ItemContainerStyle>
@@ -570,8 +818,8 @@
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="ListBoxItem">
-                                                    <Border x:Name="Bd" CornerRadius="9" Padding="10,7"
-                                                            Background="{DynamicResource Brush.CardWell}"
+                                                    <Border x:Name="Bd" CornerRadius="8" Padding="9,7"
+                                                            Background="{DynamicResource Brush.Panel}"
                                                             BorderBrush="{DynamicResource Brush.Border}"
                                                             BorderThickness="1">
                                                         <ContentPresenter/>
@@ -586,8 +834,6 @@
                                                                     Value="{DynamicResource Brush.PrimaryDim}"/>
                                                             <Setter TargetName="Bd" Property="BorderBrush"
                                                                     Value="{DynamicResource Brush.Primary}"/>
-                                                            <Setter TargetName="Bd" Property="BorderThickness"
-                                                                    Value="1.5"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
@@ -597,32 +843,59 @@
                                 </ListBox.ItemContainerStyle>
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel AutomationProperties.Name="{Binding AccessibleName}">
-                                            <TextBlock Text="{Binding Label}" FontSize="11.5" FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource Brush.Fg}"/>
-                                            <TextBlock Text="{Binding Hint}" FontSize="9.5"
-                                                       TextWrapping="Wrap" Margin="0,2,0,0"
-                                                       Foreground="{DynamicResource Brush.Muted}"/>
-                                        </StackPanel>
+                                        <Grid AutomationProperties.Name="{Binding AccessibleName}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Label}" FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource Brush.Fg}"/>
+                                                <TextBlock Text="{Binding Hint}" FontSize="9"
+                                                           TextWrapping="Wrap" Margin="0,2,0,0"
+                                                           Foreground="{DynamicResource Brush.Muted}"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding CountText}"
+                                                       FontFamily="{DynamicResource Font.Mono}" FontSize="9.5"
+                                                       Foreground="{DynamicResource Brush.Muted}"
+                                                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                        </Grid>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
                         </StackPanel>
                     </Border>
 
-                    <!-- 输出格式三选一 -->
-                    <Border Style="{StaticResource Card}" Padding="16,14" Margin="0,12,0,0">
+                    <!-- 输出格式 -->
+                    <Border Style="{StaticResource Card}" Padding="0" Margin="0,12,0,0">
                         <StackPanel>
-                            <Grid Margin="0,0,0,9">
-                                <TextBlock Text="输出格式" Style="{StaticResource T.H2}" FontSize="14"/>
-                                <ContentControl Style="{StaticResource Chip}" Tag="plain"
-                                                HorizontalAlignment="Right">
-                                    <TextBlock Text="xlsx" FontSize="9.5"/>
-                                </ContentControl>
-                            </Grid>
+                            <Border Background="{DynamicResource Brush.CardWell}"
+                                    BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,0,0,1"
+                                    CornerRadius="18,18,0,0" Padding="14,8">
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="20" Height="20" CornerRadius="6"
+                                                Background="{DynamicResource Brush.PrimaryDim}">
+                                            <TextBlock Text="▤" FontSize="10"
+                                                       Foreground="{DynamicResource Brush.Primary}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="输出格式" FontSize="12.5" FontWeight="Bold"
+                                                   Foreground="{DynamicResource Brush.Fg}"
+                                                   VerticalAlignment="Center" Margin="7,0,0,0"/>
+                                    </StackPanel>
+                                    <ContentControl Style="{StaticResource Chip}" Tag="plain"
+                                                    HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <TextBlock Text="xlsx" FontSize="9.5"/>
+                                    </ContentControl>
+                                </Grid>
+                            </Border>
+
                             <ListBox ItemsSource="{Binding Layouts}"
                                      SelectedItem="{Binding Layout, Mode=TwoWay}"
                                      Background="Transparent" BorderThickness="0"
+                                     Margin="10,8,10,10"
                                      AutomationProperties.AutomationId="LayoutList"
                                      ScrollViewer.VerticalScrollBarVisibility="Disabled">
                                 <ListBox.ItemContainerStyle>
@@ -634,8 +907,8 @@
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="ListBoxItem">
-                                                    <Border x:Name="Bd" CornerRadius="9" Padding="10,7"
-                                                            Background="{DynamicResource Brush.CardWell}"
+                                                    <Border x:Name="Bd" CornerRadius="8" Padding="9,7"
+                                                            Background="{DynamicResource Brush.Panel}"
                                                             BorderBrush="{DynamicResource Brush.Border}"
                                                             BorderThickness="1">
                                                         <ContentPresenter/>
@@ -650,8 +923,6 @@
                                                                     Value="{DynamicResource Brush.PrimaryDim}"/>
                                                             <Setter TargetName="Bd" Property="BorderBrush"
                                                                     Value="{DynamicResource Brush.Primary}"/>
-                                                            <Setter TargetName="Bd" Property="BorderThickness"
-                                                                    Value="1.5"/>
                                                         </Trigger>
                                                     </ControlTemplate.Triggers>
                                                 </ControlTemplate>
@@ -661,112 +932,390 @@
                                 </ListBox.ItemContainerStyle>
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel AutomationProperties.Name="{Binding AccessibleName}">
-                                            <TextBlock Text="{Binding Label}" FontSize="11.5" FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource Brush.Fg}"/>
-                                            <TextBlock Text="{Binding Hint}" FontSize="9.5"
-                                                       TextWrapping="Wrap" Margin="0,2,0,0"
-                                                       Foreground="{DynamicResource Brush.Muted}"/>
-                                        </StackPanel>
+                                        <Grid AutomationProperties.Name="{Binding AccessibleName}">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Label}" FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource Brush.Fg}"/>
+                                                <TextBlock Text="{Binding Hint}" FontSize="9"
+                                                           TextWrapping="Wrap" Margin="0,2,0,0"
+                                                           Foreground="{DynamicResource Brush.Muted}"/>
+                                            </StackPanel>
+                                        </Grid>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
                         </StackPanel>
                     </Border>
 
-                    <!-- 选项 + 开始导出 -->
-                    <Border Style="{StaticResource Card}" Padding="16,14" Margin="0,12,0,0">
+                    <!-- 选项 -->
+                    <Border Style="{StaticResource Card}" Padding="0" Margin="0,12,0,0">
                         <StackPanel>
-                            <TextBlock Text="选项" Style="{StaticResource T.H2}" FontSize="14" Margin="0,0,0,9"/>
-                            <CheckBox Style="{StaticResource Check.Box}" Content="包含附件清单 manifest.csv"
-                                      Margin="0,0,0,7"
-                                      AutomationProperties.AutomationId="IncludeAttachmentsCheck"
-                                      IsChecked="{Binding IncludeAttachments, Mode=TwoWay}"/>
-                            <CheckBox Style="{StaticResource Check.Box}" Content="附修改留痕工作表"
-                                      IsChecked="{Binding IncludeChangeLog, Mode=TwoWay}"/>
-
-                            <Border Style="{StaticResource Hairline}" Margin="0,10,0,9"/>
-                            <TextBlock Text="回写规则" Style="{StaticResource T.Tiny}" FontSize="10"
-                                       FontWeight="SemiBold"/>
-                            <TextBlock Style="{StaticResource T.Tiny}" FontSize="9.5" TextWrapping="Wrap"
-                                       Margin="0,3,0,0"
-                                       Text="按 ID 匹配已有行 → 更新四阶段与状态；原表有、系统无的行 → 新增；系统有、原表无的行 → 保留并在报告里列出，不擅自删除。"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- 移动端配对 -->
-                    <Border Style="{StaticResource Card}" Padding="16,14" Margin="0,12,0,0">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,9">
-                                <TextBlock Text="移动端配对" Style="{StaticResource T.H2}" FontSize="14"/>
-                                <ContentControl Style="{StaticResource Chip}" Tag="warn"
-                                                HorizontalAlignment="Right">
-                                    <TextBlock Text="尚未启用" FontSize="9.5"/>
-                                </ContentControl>
-                            </Grid>
-
-                            <Border Background="{DynamicResource Brush.WarnSoft}"
-                                    BorderBrush="{DynamicResource Brush.WarnLine}" BorderThickness="1"
-                                    CornerRadius="10" Padding="11,9">
-                                <TextBlock Text="{Binding SyncStatusText}" Style="{StaticResource T.Small}"
-                                           FontSize="11" TextWrapping="Wrap"
-                                           Foreground="{DynamicResource Brush.Warn}"/>
+                            <Border Background="{DynamicResource Brush.CardWell}"
+                                    BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,0,0,1"
+                                    CornerRadius="18,18,0,0" Padding="14,8">
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="20" Height="20" CornerRadius="6"
+                                                Background="{DynamicResource Brush.PrimaryDim}">
+                                            <TextBlock Text="⚙" FontSize="10"
+                                                       Foreground="{DynamicResource Brush.Primary}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock Text="选项" FontSize="12.5" FontWeight="Bold"
+                                                   Foreground="{DynamicResource Brush.Fg}"
+                                                   VerticalAlignment="Center" Margin="7,0,0,0"/>
+                                    </StackPanel>
+                                    <TextBlock Text="默认值已按现场习惯"
+                                               Style="{StaticResource T.Tiny}" FontSize="9"
+                                               HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
                             </Border>
-
-                            <TextBlock Style="{StaticResource T.Tiny}" FontSize="9.5" TextWrapping="Wrap"
-                                       Margin="0,8,0,0"
-                                       Text="移动端离线优先：本地记录、拍照后进 outbox，联网时增量上传。桌面端为唯一主库，冲突按 version 判，手机端必须人工选择保留哪一份。"/>
-                            <TextBlock Text="{Binding SyncPortDisplay}" Style="{StaticResource T.Mono}"
-                                       FontSize="9.5" Margin="0,6,0,0"/>
-                            <TextBlock Style="{StaticResource T.Tiny}" FontSize="9.5" TextWrapping="Wrap"
-                                       Margin="0,4,0,0"
-                                       Text="当前版本为离线单机批：不显示配对码，也不假装手机已连接。"/>
-
-                            <Border Style="{StaticResource Hairline}" Margin="0,10,0,8"/>
-                            <TextBlock Text="本机数据位置" Style="{StaticResource T.Tiny}" FontSize="10"/>
-                            <TextBlock Text="{Binding DbPathDisplay}" Style="{StaticResource T.Mono}"
-                                       FontSize="9" TextTrimming="CharacterEllipsis" Margin="0,3,0,0"/>
-                            <TextBlock Text="{Binding AttachmentsDirDisplay}" Style="{StaticResource T.Mono}"
-                                       FontSize="9" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                            <StackPanel Margin="14,10,14,12">
+                                <!-- 固定行为（原表版式自带，不给开关，避免"关了其实没关"） -->
+                                <Grid Margin="0,0,0,7">
+                                    <TextBlock Text="倒挂 / 逾期行标红" FontSize="10.5"
+                                               Foreground="{DynamicResource Brush.Fg}"
+                                               VerticalAlignment="Center"/>
+                                    <ContentControl Style="{StaticResource Chip}" Tag="ok"
+                                                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                    MinHeight="16" Padding="7,0">
+                                        <TextBlock Text="固定" FontSize="9"/>
+                                    </ContentControl>
+                                </Grid>
+                                <Grid Margin="0,0,0,9">
+                                    <TextBlock Text="保留“/”与空白差异" FontSize="10.5"
+                                               Foreground="{DynamicResource Brush.Fg}"
+                                               VerticalAlignment="Center"/>
+                                    <ContentControl Style="{StaticResource Chip}" Tag="ok"
+                                                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                    MinHeight="16" Padding="7,0">
+                                        <TextBlock Text="固定" FontSize="9"/>
+                                    </ContentControl>
+                                </Grid>
+                                <CheckBox Style="{StaticResource Check.Box}" FontSize="10.5"
+                                          Content="附照片清单 manifest.csv"
+                                          IsChecked="{Binding IncludeAttachments, Mode=TwoWay}"/>
+                                <CheckBox Style="{StaticResource Check.Box}" FontSize="10.5" Margin="0,7,0,0"
+                                          Content="附“修改留痕”工作表"
+                                          IsChecked="{Binding IncludeChangeLog, Mode=TwoWay}"/>
+                                <Border Height="1" Margin="0,9,0,8"
+                                        Background="{DynamicResource Brush.SepLine}"/>
+                                <Grid>
+                                    <TextBlock Text="覆盖原始 xls 文件" FontSize="10.5" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource Brush.Ng}"
+                                               VerticalAlignment="Center"/>
+                                    <ContentControl Style="{StaticResource Chip}" Tag="plain"
+                                                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                    MinHeight="16" Padding="7,0">
+                                        <TextBlock Text="不支持" FontSize="9"/>
+                                    </ContentControl>
+                                </Grid>
+                                <TextBlock FontSize="9" Margin="0,5,0,0" TextWrapping="Wrap" LineHeight="15"
+                                           Foreground="{DynamicResource Brush.Muted}"
+                                           Text="导出始终写新文件，原表只读；倒挂 / 逾期标红与“/”、空白差异由原表版式固定处理。"/>
+                            </StackPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>
-                </ScrollViewer>
+            </ScrollViewer>
 
-                <!--
-                  导出主操作固定在右栏底部：1440×900 下三张卡（范围/格式/选项）会把内容
-                  顶出可视区，按钮若留在滚动区里就必须先滚到底才能点——自动化还会把它判成
-                  offscreen。主操作常驻可见，滚动区只放"看"的内容。
-                -->
-                <Border Grid.Row="1" Style="{StaticResource Card}" Padding="14,11" Margin="0,12,0,0">
-                    <StackPanel>
-                        <TextBlock Text="{Binding ExportEstimateText}" Style="{StaticResource T.Tiny}"
-                                   FontSize="10" TextWrapping="Wrap"/>
-                        <TextBlock Text="{Binding ExportDirDisplay}" Style="{StaticResource T.Mono}"
-                                   FontSize="9" TextTrimming="CharacterEllipsis" Margin="0,3,0,0"/>
+            <!-- 右：版式预览 -->
+            <Border Grid.Column="1" Style="{StaticResource Card}" Padding="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                        <Button Content="开始导出" Style="{StaticResource Btn.Primary}" Height="34"
-                                Margin="0,9,0,0"
-                                AutomationProperties.AutomationId="ExportButton"
-                                Command="{Binding ExportCommand}"/>
-
-                        <Border Background="{DynamicResource Brush.CardWell}"
-                                BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
-                                CornerRadius="10" Padding="11,8" Margin="0,9,0,0"
-                                Visibility="{Binding HasExportResult, Converter={StaticResource TrueToVisibility}}">
-                            <StackPanel>
-                                <TextBlock Text="{Binding ExportResultSummary}" Style="{StaticResource T.Value}"
-                                           FontSize="11.5"/>
-                                <TextBlock Text="{Binding ExportResult.OutputPath}" Style="{StaticResource T.Mono}"
-                                           FontSize="9" TextTrimming="CharacterEllipsis" Margin="0,3,0,0"/>
-                                <Button Content="打开导出目录 →" Style="{StaticResource Btn.Ghost}" Height="24"
-                                        Padding="0" FontSize="10.5" HorizontalAlignment="Left"
-                                        Margin="0,4,0,0" Command="{Binding OpenExportFolderCommand}"/>
+                    <Border Grid.Row="0" Background="{DynamicResource Brush.CardWell}"
+                            BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,0,0,1"
+                            CornerRadius="18,18,0,0" Padding="14,8">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="20" Height="20" CornerRadius="6"
+                                        Background="{DynamicResource Brush.PrimaryDim}">
+                                    <TextBlock Text="◉" FontSize="10"
+                                               Foreground="{DynamicResource Brush.Primary}"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="版式预览" FontSize="12.5" FontWeight="Bold"
+                                           Foreground="{DynamicResource Brush.Fg}"
+                                           VerticalAlignment="Center" Margin="7,0,0,0"/>
+                                <ContentControl Style="{StaticResource Chip}" Tag="plain" Margin="8,0,0,0">
+                                    <TextBlock Text="前 4 行" FontSize="9.5"/>
+                                </ContentControl>
                             </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
-            </Grid>
+                            <TextBlock Text="列宽按原表比例" Style="{StaticResource T.Tiny}" FontSize="9"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Auto" Padding="0">
+                        <StackPanel Margin="14,12,14,12">
+                            <!-- 迷你表：两行表头（四阶段分组）+ 4 行数据，列序与客户原表一致 -->
+                            <Border BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                                    CornerRadius="8" ClipToBounds="True">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="34"/>
+                                        <ColumnDefinition Width="74"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="48"/>
+                                        <ColumnDefinition Width="44"/>
+                                        <ColumnDefinition Width="48"/>
+                                        <ColumnDefinition Width="44"/>
+                                        <ColumnDefinition Width="48"/>
+                                        <ColumnDefinition Width="44"/>
+                                        <ColumnDefinition Width="48"/>
+                                        <ColumnDefinition Width="44"/>
+                                        <ColumnDefinition Width="52"/>
+                                        <ColumnDefinition Width="56"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="24"/>
+                                        <RowDefinition Height="24"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- 表头背景（两行通铺） -->
+                                    <Border Grid.Row="0" Grid.RowSpan="2" Grid.ColumnSpan="14"
+                                            Background="{DynamicResource Brush.TheadBg}"/>
+                                    <Border Grid.Row="1" Grid.ColumnSpan="14"
+                                            BorderBrush="{DynamicResource Brush.SepLine}"
+                                            BorderThickness="0,0,0,1"/>
+
+                                    <!-- 第一行：跨两行的列名 -->
+                                    <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Text="序号" FontSize="9"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TheadFg}"/>
+                                    <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Text="机台号" FontSize="9"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TheadFg}"/>
+                                    <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="2" Text="存在问题" FontSize="9"
+                                               Margin="5,0,0,0" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TheadFg}"/>
+                                    <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="3" Text="解决措施" FontSize="9"
+                                               Margin="5,0,0,0" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TheadFg}"/>
+
+                                    <!-- 第一行：四阶段分组 -->
+                                    <Border Grid.Row="0" Grid.Column="4" Grid.ColumnSpan="2"
+                                            Background="{DynamicResource Brush.PrimaryDim}"
+                                            BorderBrush="{DynamicResource Brush.SepLine}"
+                                            BorderThickness="1,0,0,0">
+                                        <TextBlock Text="方案确定" FontSize="9" FontWeight="Bold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource Brush.Primary}"/>
+                                    </Border>
+                                    <Border Grid.Row="0" Grid.Column="6" Grid.ColumnSpan="2"
+                                            Background="{DynamicResource Brush.PrimaryDim}"
+                                            BorderBrush="{DynamicResource Brush.SepLine}"
+                                            BorderThickness="1,0,0,0">
+                                        <TextBlock Text="设计下图" FontSize="9" FontWeight="Bold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource Brush.Primary}"/>
+                                    </Border>
+                                    <Border Grid.Row="0" Grid.Column="8" Grid.ColumnSpan="2"
+                                            Background="{DynamicResource Brush.PrimaryDim}"
+                                            BorderBrush="{DynamicResource Brush.SepLine}"
+                                            BorderThickness="1,0,0,0">
+                                        <TextBlock Text="物料准备" FontSize="9" FontWeight="Bold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource Brush.Primary}"/>
+                                    </Border>
+                                    <Border Grid.Row="0" Grid.Column="10" Grid.ColumnSpan="2"
+                                            Background="{DynamicResource Brush.PrimaryDim}"
+                                            BorderBrush="{DynamicResource Brush.SepLine}"
+                                            BorderThickness="1,0,1,0">
+                                        <TextBlock Text="装配调试" FontSize="9" FontWeight="Bold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource Brush.Primary}"/>
+                                    </Border>
+                                    <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="12" Text="状态" FontSize="9"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TheadFg}"/>
+                                    <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="13" Text="完成情况" FontSize="9"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TheadFg}"/>
+
+                                    <!-- 第二行：每阶段的责任人 / 计划 -->
+                                    <TextBlock Grid.Row="1" Grid.Column="4" Text="责任人" FontSize="8.5"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TheadFg}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="5" Text="计划" FontSize="8.5"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TheadFg}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="6" Text="责任人" FontSize="8.5"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TheadFg}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="7" Text="计划" FontSize="8.5"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TheadFg}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="8" Text="责任人" FontSize="8.5"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TheadFg}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="9" Text="计划" FontSize="8.5"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TheadFg}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="10" Text="责任人" FontSize="8.5"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TheadFg}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="11" Text="计划" FontSize="8.5"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TheadFg}"/>
+
+                                    <ItemsControl Grid.Row="2" Grid.ColumnSpan="14" ItemsSource="{Binding ExportPreviewRows}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Height="26">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="34"/>
+                                                        <ColumnDefinition Width="74"/>
+                                                        <ColumnDefinition Width="150"/>
+                                                        <ColumnDefinition Width="140"/>
+                                                        <ColumnDefinition Width="48"/>
+                                                        <ColumnDefinition Width="44"/>
+                                                        <ColumnDefinition Width="48"/>
+                                                        <ColumnDefinition Width="44"/>
+                                                        <ColumnDefinition Width="48"/>
+                                                        <ColumnDefinition Width="44"/>
+                                                        <ColumnDefinition Width="48"/>
+                                                        <ColumnDefinition Width="44"/>
+                                                        <ColumnDefinition Width="52"/>
+                                                        <ColumnDefinition Width="56"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Grid.ColumnSpan="14" BorderBrush="{DynamicResource Brush.SepLine}"
+                                                            BorderThickness="0,0,0,1"/>
+                                                    <TextBlock Grid.Column="0" Text="{Binding SeqNo}" FontSize="9"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               FontFamily="{DynamicResource Font.Mono}"
+                                                               Foreground="{DynamicResource Brush.Muted}"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding MachineCode}" FontSize="9"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               FontFamily="{DynamicResource Font.Mono}"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding Title}" FontSize="9"
+                                                               Margin="5,0,5,0" VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="{DynamicResource Brush.Fg}"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsInverted}" Value="True">
+                                                                        <Setter Property="Foreground" Value="{DynamicResource Brush.Ng}"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                    <TextBlock Grid.Column="3" Text="{Binding Solution}" FontSize="9"
+                                                               Margin="5,0,5,0" VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Foreground="{DynamicResource Brush.Muted}"/>
+                                                    <TextBlock Grid.Column="4" Text="{Binding PlanOwner}" FontSize="9"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource Brush.Muted}"/>
+                                                    <TextBlock Grid.Column="5" Text="{Binding PlanDue}" FontSize="9"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               FontFamily="{DynamicResource Font.Mono}"
+                                                               Foreground="{DynamicResource Brush.Muted}"/>
+                                                    <TextBlock Grid.Column="6" Text="{Binding DesignOwner}" FontSize="9"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource Brush.Muted}"/>
+                                                    <TextBlock Grid.Column="7" Text="{Binding DesignDue}" FontSize="9"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               FontFamily="{DynamicResource Font.Mono}"
+                                                               Foreground="{DynamicResource Brush.Muted}"/>
+                                                    <TextBlock Grid.Column="8" Text="{Binding MaterialOwner}" FontSize="9"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource Brush.Muted}"/>
+                                                    <TextBlock Grid.Column="9" Text="{Binding MaterialDue}" FontSize="9"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               FontFamily="{DynamicResource Font.Mono}"
+                                                               Foreground="{DynamicResource Brush.Muted}"/>
+                                                    <TextBlock Grid.Column="10" Text="{Binding AssemblyOwner}" FontSize="9"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource Brush.Muted}"/>
+                                                    <TextBlock Grid.Column="11" Text="{Binding AssemblyDue}" FontSize="9"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               FontFamily="{DynamicResource Font.Mono}"
+                                                               Foreground="{DynamicResource Brush.Muted}"/>
+                                                    <TextBlock Grid.Column="12" Text="{Binding Status}" FontSize="9"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource Brush.Muted}"/>
+                                                    <TextBlock Grid.Column="13" Text="{Binding Completion}" FontSize="9"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource Brush.Muted}"
+                                                               TextTrimming="CharacterEllipsis"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Grid>
+                            </Border>
+
+                            <!-- 版式特征标签 -->
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <ContentControl Style="{StaticResource Chip}" Tag="ok">
+                                    <TextBlock Text="合并表头" FontSize="9"/>
+                                </ContentControl>
+                                <ContentControl Style="{StaticResource Chip}" Tag="ok" Margin="5,0,0,0">
+                                    <TextBlock Text="四阶段分组" FontSize="9"/>
+                                </ContentControl>
+                                <ContentControl Style="{StaticResource Chip}" Tag="ok" Margin="5,0,0,0">
+                                    <TextBlock Text="列宽保持" FontSize="9"/>
+                                </ContentControl>
+                                <ContentControl Style="{StaticResource Chip}" Tag="plain" Margin="5,0,0,0">
+                                    <TextBlock Text="倒挂标红" FontSize="9"/>
+                                </ContentControl>
+                                <TextBlock Text="预览为静态示意，实际列宽按源表映射" FontSize="9"
+                                           Margin="10,0,0,0" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Muted}"/>
+                            </StackPanel>
+
+                            <!-- 回写规则 -->
+                            <Border Style="{StaticResource Card.Inset}" Padding="12,10" Margin="0,12,0,0">
+                                <TextBlock FontSize="9.5" LineHeight="18" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource Brush.Muted}">
+                                    <Run Text="回写规则：" FontWeight="Bold"/>
+                                    <Run Text="按 ID 匹配已有行 → 更新四阶段与状态；原表有、系统无 → 新增；系统有、原表无 → 保留并在报告里列出，不擅自删除。"/>
+                                    <LineBreak/>
+                                    <Run Text="照片规则：" FontWeight="Bold"/>
+                                    <Run Text="图片不写进 Excel 单元格，导出 ZIP（photos/P7391-xxx/）+ manifest.csv（问题号、文件名、拍摄时间、SHA256）。"/>
+                                </TextBlock>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2" Background="{DynamicResource Brush.CardWell}"
+                            BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,1,0,0"
+                            CornerRadius="0,0,13,13" Padding="14,8">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding ExportEstimateText}" Style="{StaticResource T.Tiny}"
+                                           FontSize="10" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding ExportDirDisplay}" FontSize="9" Margin="10,0,0,0"
+                                           FontFamily="{DynamicResource Font.Mono}"
+                                           Foreground="{DynamicResource Brush.Muted}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" MaxWidth="320"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="打开导出目录" Style="{StaticResource Btn.Ghost}" Height="26"
+                                        FontSize="10" Padding="9,0"
+                                        Command="{Binding OpenExportFolderCommand}"/>
+                                <Button Content="开始导出" Style="{StaticResource Btn.Primary}" Height="26"
+                                        FontSize="10.5" Padding="12,0" Margin="6,0,0,0"
+                                        AutomationProperties.AutomationId="ExportButton"
+                                        Command="{Binding ExportCommand}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

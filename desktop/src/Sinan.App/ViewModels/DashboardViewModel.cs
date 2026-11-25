@@ -28,6 +28,11 @@ public sealed class DashboardViewModel : ObservableObject
         _nav = nav;
         _data = app.Projects.GetDashboard(app.Session.User ?? new User());
 
+        var allIssues = app.Issues.All();
+        var unassigned = allIssues.Where(i => i.SubprojectId == null).ToList();
+        UnassignedIssueCount = unassigned.Count;
+        UnassignedMachineCount = unassigned.Select(i => i.MachineId).Distinct().Count();
+
         OpenIssueCommand = new RelayCommand(p => _nav.NavigateToIssue(p as string ?? ""));
         GoIssuesCommand = new RelayCommand(() => _nav.Navigate(ShellViewModel.PageIssues));
         GoReportCommand = new RelayCommand(() => _nav.Navigate(ShellViewModel.PageReport));
@@ -49,11 +54,16 @@ public sealed class DashboardViewModel : ObservableObject
     public string DataAsOfDisplay => _data.DataAsOfDisplay;
 
     public List<StageFill> StageFills => _data.StageFills;
-    public List<OwnerLoad> OwnerLoads => _data.OwnerLoads.Take(8).ToList();
+    public List<OwnerLoad> OwnerLoads => _data.OwnerLoads.Take(11).ToList();
     public List<Issue> Risks => _data.Risks;
     public List<Issue> Recent => _data.Recent;
     public int OwnerTotal => _data.OwnerLoads.Count;
+    public int StageTaskTotal => _data.StageTaskCount;
     public Issue? FocusIssue => _data.FocusIssue;
+
+    /// <summary>未归入分项目的问题/机台数（KPI 副标题与"数据待处理"共用）。</summary>
+    public int UnassignedIssueCount { get; }
+    public int UnassignedMachineCount { get; }
 
     public string FocusTitle => InvertedCount > 0
         ? $"计划倒挂 {InvertedCount} 条"
@@ -107,6 +117,22 @@ public sealed class DashboardViewModel : ObservableObject
                     Hint = string.Join(" / ", _data.Risks.Where(i => i.IsInverted)
                         .Select(i => i.SubprojectCode?.Replace("P7391-", "") ?? "??").Distinct().Take(6)),
                     Action = "去校正", Command = GoIssuesCommand
+                });
+
+            // 计划列写成"已下图"等非日期文本：设计稿第二条"文本"。
+            // 只数原文等于"已下图"的计划单元格，与导入解析的 TextUtil 判据一致。
+            var textAnomalies = _app.Issues.All()
+                .SelectMany(i => i.Stages)
+                .Count(s => (s.DueRaw ?? "").Trim() == "已下图");
+            if (textAnomalies > 0)
+                rows.Add(new HealthRow
+                {
+                    Tag = "文本", Kind = "warn",
+                    Title = $"{textAnomalies} 处计划列写成“已下图”",
+                    Hint = string.Join(" / ", _app.Issues.All()
+                        .Where(i => i.Stages.Any(s => (s.DueRaw ?? "").Trim() == "已下图"))
+                        .Select(i => i.SeqNo.PadLeft(3, '0')).Distinct().Take(6)),
+                    Action = "去转换", Command = GoExchangeCommand
                 });
 
             if (OverdueCount > 0)

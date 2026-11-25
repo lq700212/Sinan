@@ -4,6 +4,24 @@
         FontFamily="{DynamicResource Font.Ui}"
         FontSize="{DynamicResource Text.Size.Body}">
 
+    <UserControl.Resources>
+        <!-- 筛选胶囊 tab：未选中是灰字透明底，选中用主色浅底（设计稿 .chip.on）。 -->
+        <Style x:Key="FilterTab" TargetType="Button" BasedOn="{StaticResource Btn.Ghost}">
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="FontSize" Value="10.5"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}"/>
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource Brush.PrimaryDim}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource Brush.Primary}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -13,24 +31,34 @@
         <!-- ==================== 筛选卡 ==================== -->
         <Border Grid.Row="0" Style="{StaticResource Card}" Padding="14,12" Margin="0,0,12,0">
             <StackPanel>
-                <Grid Margin="0,0,0,8">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="问题台账" Style="{StaticResource T.H2}" FontSize="15"/>
-                        <TextBlock Text="{Binding CountSummary}" Style="{StaticResource T.Tiny}"
-                                   Margin="10,0,0,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="·" Style="{StaticResource T.Tiny}" Margin="6,0"/>
-                        <TextBlock Text="{Binding FilterHint}" Style="{StaticResource T.Tiny}"
-                                   VerticalAlignment="Center"/>
+                <!-- 面包屑：总项目 › 当前分项目 › 全部设备（设计稿 .crumbbar） -->
+                <Grid Margin="1,0,1,7">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock FontFamily="{DynamicResource Font.Mono}" FontSize="10"
+                                   FontWeight="Bold" Foreground="{DynamicResource Brush.Fg}">
+                            <Run Text="{Binding ProjectCode, Mode=OneWay}"/><Run Text=" 总项目"/>
+                        </TextBlock>
+                        <TextBlock Text="›" FontSize="11" Margin="7,0"
+                                   Foreground="{DynamicResource Brush.Faint}"/>
+                        <TextBlock Text="{Binding BreadcrumbSubproject}" FontSize="10.5"
+                                   Foreground="{DynamicResource Brush.Fg}"/>
+                        <TextBlock Text="›" FontSize="11" Margin="7,0"
+                                   Foreground="{DynamicResource Brush.Faint}"/>
+                        <TextBlock Text="全部设备" FontSize="10.5"
+                                   Foreground="{DynamicResource Brush.Muted}"/>
                     </StackPanel>
-                    <TextBlock Text="点击任意行打开详情，或双击行" Style="{StaticResource T.Tiny}"
-                               HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    <TextBlock Style="{StaticResource T.Tiny}" FontSize="10"
+                               HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Run Text="共 "/><Run Text="{Binding TotalCount, Mode=OneWay}"/><Run Text=" 条 · "/><Run Text="{Binding InvertedCount, Mode=OneWay}"/><Run Text=" 条倒挂"/>
+                    </TextBlock>
                 </Grid>
 
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="126"/>
+                        <ColumnDefinition Width="118"/>
+                        <ColumnDefinition Width="104"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
@@ -44,7 +72,7 @@
                                    Foreground="{DynamicResource Brush.Muted}"
                                    VerticalAlignment="Center" Margin="2,0,6,0"/>
                         <Grid Grid.Column="1">
-                            <TextBox Style="{StaticResource Input.Text}" Height="34"
+                            <TextBox Style="{StaticResource Input.Text}" Height="32"
                                      Text="{Binding Keyword, UpdateSourceTrigger=PropertyChanged}"
                                      AutomationProperties.Name="搜索问题、机台号、序号或责任人"
                                      ToolTip="搜索问题 / 机台号 / 序号 / 责任人"/>
@@ -75,36 +103,77 @@
                         </Grid>
                     </Grid>
 
-                    <ComboBox Grid.Column="1" Style="{StaticResource Input.Combo}" Width="150" Height="34"
+                    <ComboBox Grid.Column="1" Style="{StaticResource Input.Combo}" Height="32"
                               Margin="0,0,8,0" ItemsSource="{Binding SubprojectOptions}"
                               SelectedItem="{Binding SelectedSubproject, Mode=TwoWay}"
                               ToolTip="按分项目筛选"/>
 
-                    <ComboBox Grid.Column="2" Style="{StaticResource Input.Combo}" Width="126" Height="34"
+                    <ComboBox Grid.Column="2" Style="{StaticResource Input.Combo}" Height="32"
+                              Margin="0,0,8,0" ItemsSource="{Binding OwnerOptions}"
+                              SelectedItem="{Binding SelectedOwner, Mode=TwoWay}"
+                              ToolTip="按责任人筛选"/>
+
+                    <ComboBox Grid.Column="3" Style="{StaticResource Input.Combo}" Height="32"
                               Margin="0,0,8,0" ItemsSource="{Binding StatusOptions}"
                               SelectedItem="{Binding SelectedStatus, Mode=TwoWay}"
                               ToolTip="按状态筛选"/>
 
-                    <Button Grid.Column="3" Content="重置" Style="{StaticResource Btn.Secondary}" Height="34"
-                            Width="64" Margin="0,0,8,0" Command="{Binding ResetCommand}"
-                            IsEnabled="{Binding HasActiveFilter}"/>
+                    <Button Grid.Column="4" Style="{StaticResource Btn.Ghost}" Height="32"
+                            Margin="0,0,4,0" Padding="9,0" FontSize="10.5"
+                            Command="{Binding ToggleMoreFiltersCommand}"
+                            AutomationProperties.Name="更多筛选">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="更多筛选"/>
+                            <TextBlock Text="▾" Margin="4,0,0,0" FontSize="9" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
-                    <Button Grid.Column="4" Content="刷新" Style="{StaticResource Btn.Ghost}" Height="34"
-                            Width="60" Command="{Binding RefreshCommand}"/>
+                    <Button Grid.Column="5" Content="重置" Style="{StaticResource Btn.Ghost}" Height="32"
+                            Padding="9,0" FontSize="10.5" Command="{Binding ResetCommand}"
+                            IsEnabled="{Binding HasActiveFilter}"
+                            AutomationProperties.Name="重置筛选"/>
                 </Grid>
 
-                <StackPanel Orientation="Horizontal" Margin="0,9,0,0">
-                    <CheckBox Style="{StaticResource Check.Box}" Content="只看倒挂" Margin="0,0,16,0"
-                              IsChecked="{Binding OnlyInverted, Mode=TwoWay}"/>
+                <!-- 更多筛选：默认折叠，点"更多筛选 ▾"展开（设计稿只把常用三项放在第一行）。 -->
+                <StackPanel Orientation="Horizontal" Margin="1,8,0,0"
+                            Visibility="{Binding ShowMoreFilters, Converter={StaticResource TrueToVisibility}}">
                     <CheckBox Style="{StaticResource Check.Box}" Content="只看逾期" Margin="0,0,16,0"
                               IsChecked="{Binding OnlyOverdue, Mode=TwoWay}"/>
-                    <CheckBox Style="{StaticResource Check.Box}" Content="有照片" Margin="0,0,16,0"
-                              IsChecked="{Binding OnlyWithPhoto, Mode=TwoWay}"/>
                     <CheckBox Style="{StaticResource Check.Box}" Content="含已关闭" Margin="0,0,16,0"
                               IsChecked="{Binding IncludeClosed, Mode=TwoWay}"/>
                     <TextBlock Text="计划原文照存；`/` 表示不适用，不参与逾期计算"
                                Style="{StaticResource T.Tiny}" FontSize="10" VerticalAlignment="Center"/>
                 </StackPanel>
+
+                <!-- 筛选胶囊 tab + 真实排序口径 -->
+                <Grid Margin="0,8,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource FilterTab}" Tag="{Binding IsAllTab}"
+                                Command="{Binding SetTabCommand}" CommandParameter="all"
+                                AutomationProperties.Name="全部问题">
+                            <TextBlock FontSize="10.5">
+                                <Run Text="全部 "/><Run Text="{Binding TotalCount, Mode=OneWay}"/>
+                            </TextBlock>
+                        </Button>
+                        <Button Style="{StaticResource FilterTab}" Tag="{Binding IsInvertedTab}"
+                                Command="{Binding SetTabCommand}" CommandParameter="inverted"
+                                AutomationProperties.Name="只看计划倒挂">
+                            <TextBlock FontSize="10.5">
+                                <Run Text="计划倒挂 "/><Run Text="{Binding InvertedCount, Mode=OneWay}"/>
+                            </TextBlock>
+                        </Button>
+                        <Button Style="{StaticResource FilterTab}" Tag="{Binding IsPhotoTab}"
+                                Command="{Binding SetTabCommand}" CommandParameter="photo"
+                                AutomationProperties.Name="只看有照片">
+                            <TextBlock FontSize="10.5">
+                                <Run Text="有照片 "/><Run Text="{Binding PhotoIssueCount, Mode=OneWay}"/>
+                            </TextBlock>
+                        </Button>
+                    </StackPanel>
+                    <TextBlock Text="排序：倒挂优先 → 逾期最久 → 源表行号"
+                               Style="{StaticResource T.Tiny}" FontSize="9.5"
+                               HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </Grid>
             </StackPanel>
         </Border>
 
@@ -128,23 +197,28 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0" Margin="18,14,18,10">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="问题清单" Style="{StaticResource T.H2}" FontSize="15"/>
-                        <ContentControl Style="{StaticResource Chip}" Tag="on" Margin="10,0,0,0">
-                            <TextBlock Text="{Binding VisibleCount, StringFormat={}{0} 条}" FontSize="10"/>
+                <Grid Grid.Row="0" Margin="18,11,18,8">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="问题清单" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <ContentControl Style="{StaticResource Chip}" Tag="on" Margin="8,0,0,0"
+                                        MinHeight="19" Padding="7,0">
+                            <TextBlock Text="{Binding VisibleCount, StringFormat={}{0} 条}" FontSize="9.5"/>
                         </ContentControl>
-                        <ContentControl Style="{StaticResource Chip}" Tag="ng" Margin="6,0,0,0"
-                                        Visibility="{Binding HasActiveFilter, Converter={StaticResource TrueToVisibility}}">
-                            <TextBlock Text="筛选生效" FontSize="10"/>
+                        <ContentControl Style="{StaticResource Chip}" Tag="ng" Margin="5,0,0,0"
+                                        MinHeight="19" Padding="7,0">
+                            <TextBlock Text="{Binding InvertedCount, StringFormat={}{0} 倒挂}" FontSize="9.5"/>
                         </ContentControl>
                     </StackPanel>
-                    <Button Content="打开选中问题 →" Style="{StaticResource Btn.Secondary}" Height="30"
-                            FontSize="11.5" HorizontalAlignment="Right"
-                            AutomationProperties.AutomationId="OpenSelectedIssueButton"
-                            IsEnabled="{Binding HasSelection}"
-                            Command="{Binding OpenIssueCommand}"
-                            CommandParameter="{Binding SelectedIssue.Id}"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <TextBlock Text="点击任意行查看四阶段详情" Style="{StaticResource T.Tiny}"
+                                   FontSize="9.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Button Content="打开选中 →" Style="{StaticResource Btn.Ghost}" Height="23"
+                                Padding="8,0" FontSize="10"
+                                AutomationProperties.AutomationId="OpenSelectedIssueButton"
+                                IsEnabled="{Binding HasSelection}"
+                                Command="{Binding OpenIssueCommand}"
+                                CommandParameter="{Binding SelectedIssue.Id}"/>
+                    </StackPanel>
                 </Grid>
 
                 <ListView Grid.Row="1" Style="{StaticResource Grid.Table}" Margin="8,0,8,0"
@@ -152,20 +226,27 @@
                           ItemsSource="{Binding Items}"
                           SelectedItem="{Binding SelectedIssue, Mode=TwoWay}"
                           MouseDoubleClick="OnRowDoubleClick">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem" BasedOn="{StaticResource Grid.Row}">
+                            <Setter Property="MinHeight" Value="40"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Header="序号" Width="60"
+                            <GridViewColumn Header="ID" Width="92"
                                             HeaderContainerStyle="{StaticResource Grid.Header}">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding SeqNo}" Margin="10,0,0,0"
-                                                   FontFamily="{DynamicResource Font.Mono}" FontSize="12"
-                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Margin="10,0,0,0"
+                                                   FontFamily="{DynamicResource Font.Mono}" FontSize="11"
+                                                   VerticalAlignment="Center">
+                                            <Run Text="{Binding DataContext.ProjectCode, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=OneWay}"/><Run Text="-"/><Run Text="{Binding DisplaySeqNo, Mode=OneWay}"/>
+                                        </TextBlock>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
 
-                            <GridViewColumn Header="机台号" Width="102"
+                            <GridViewColumn Header="机台号" Width="100"
                                             HeaderContainerStyle="{StaticResource Grid.Header}">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
@@ -178,7 +259,7 @@
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
 
-                            <GridViewColumn Header="存在问题" Width="300"
+                            <GridViewColumn Header="存在问题" Width="320"
                                             HeaderContainerStyle="{StaticResource Grid.Header}">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
@@ -199,7 +280,7 @@
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
 
-                            <GridViewColumn Header="解决措施" Width="250"
+                            <GridViewColumn Header="解决措施" Width="300"
                                             HeaderContainerStyle="{StaticResource Grid.Header}">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
@@ -211,24 +292,32 @@
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
 
-                            <GridViewColumn Header="设计 → 装配" Width="192"
+                            <GridViewColumn Header="设计 → 装配" Width="196"
                                             HeaderContainerStyle="{StaticResource Grid.Header}">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Margin="10,5" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding OwnerFlow}" FontSize="11.5"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       Foreground="{DynamicResource Brush.Fg}"/>
-                                            <TextBlock Text="{Binding DueFlow}" FontSize="10"
-                                                       FontFamily="{DynamicResource Font.Mono}"
+                                        <StackPanel Margin="10,4" VerticalAlignment="Center">
+                                            <!-- 第一行：设计责任人（粗）+ 设计日期（mono 小字）；
+                                                 第二行：→ 装配责任人 · 装配日期，与设计稿一致。 -->
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding DesignOwnerDisplay}"
+                                                           FontSize="11" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource Brush.Fg}"
+                                                           TextTrimming="CharacterEllipsis" MaxWidth="92"/>
+                                                <TextBlock Text="{Binding DesignDueRaw}"
+                                                           FontFamily="{DynamicResource Font.Mono}" FontSize="9"
+                                                           Foreground="{DynamicResource Brush.Muted}"
+                                                           Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding AssemblyLine}" FontSize="10" Margin="0,1,0,0"
                                                        Foreground="{DynamicResource Brush.Muted}"
-                                                       TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                                       TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
 
-                            <GridViewColumn Header="照片" Width="52"
+                            <GridViewColumn Header="照片" Width="50"
                                             HeaderContainerStyle="{StaticResource Grid.Header}">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
@@ -251,7 +340,7 @@
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
 
-                            <GridViewColumn Header="状态" Width="118"
+                            <GridViewColumn Header="状态" Width="122"
                                             HeaderContainerStyle="{StaticResource Grid.Header}">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
