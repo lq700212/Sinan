@@ -8,7 +8,7 @@
   - 复用 Kaleidoscope.UI：窗口骨架用 ChromeBorderlessWindow/ChromeDialogWindow，
     转换器用 UiConverters，本文件只补玻璃态视觉语言（与库内 Kx 族不同族）。
 
-  圆角口径（2026-11-24 参照 AIris 圆角整改沉淀，详见 AGENTS.md 第 8 节）：
+  圆角口径（2026-11-24 参照 AIris 圆角整改沉淀，详见 desktop/AGENTS.md 第 4.1 节）：
   - 设计稿只有三档 —— 卡片 20（radius）/ 内卡 16（card-r-sm = 20-4）/ 胶囊（btnradius:99）；
   - 胶囊**必须**用库内 KxCapsuleBorder（Kaleidoscope.UI.Views，一行标签即可），
     **禁止写 CornerRadius="99"**：WPF 的 Border 把横向/纵向半径分别钳到 宽/2、高/2，
@@ -21,7 +21,7 @@
     换算口径与 KxCapsuleBorder 完全一致（半高/半宽）。
 
   复用索引见 desktop/ThirdParty/Kaleidoscope/Kaleidoscope.UI/README.md；
-  本项目自绘件登记在 AGENTS.md「自绘控件清单」。
+  本项目自绘件登记在 desktop/AGENTS.md 第 3 节（控件复用）。
   ============================================================================
 -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -108,7 +108,7 @@
         <Setter Property="Effect" Value="{DynamicResource Fx.CardShadow}"/>
     </Style>
 
-    <!-- 卡套卡/表格容器：不透明，保证文字与网格可读（AGENTS.md 第 4 节） -->
+    <!-- 卡套卡/表格容器：不透明，保证文字与网格可读（desktop/AGENTS.md 第 4 节） -->
     <Style x:Key="Card.Inset" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource Brush.CardWell}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>

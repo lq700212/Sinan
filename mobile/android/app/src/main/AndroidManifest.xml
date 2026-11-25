@@ -1,8 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 现场端与桌面端主库通过局域网 HTTP 同步（默认端口 5180，无 TLS）。
+         INTERNET 必须放在 main：debug/profile 清单只在开发期合并，release 包不会带上。 -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="司南"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
+        <!-- usesCleartextTraffic：Android 9（API 28）起默认禁止明文 HTTP，
+             而桌面端同步服务是局域网内的 http://<IP>:5180。
+             只在现场局域网使用，未接外网；后续若上 TLS 再收回此开关。 -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

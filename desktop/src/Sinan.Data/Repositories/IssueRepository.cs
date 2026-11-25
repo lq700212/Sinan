@@ -574,6 +574,13 @@ public sealed class IssueRepository
     private static List<Issue> LoadIssues(SqliteConnection connection, SqliteTransaction? transaction,
         string baseSql, List<string> conditions, Action<SqliteParameterCollection>? addParams, int limit)
     {
+        // 必须先让 addParams 填充 conditions，再拼 SQL：
+        // 早期版本先判断 conditions.Count 再调用 addParams，导致 List() 里动态添加的
+        // 状态/关键字/分项目条件全部失效（SQL 只带基础 WHERE，返回全量后被内存过滤掩盖）。
+        using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        addParams?.Invoke(command.Parameters);
+
         var sql = baseSql;
         if (conditions.Count > 0)
             sql += " AND " + string.Join(" AND ", conditions);
@@ -583,12 +590,9 @@ public sealed class IssueRepository
         var issues = new List<Issue>();
         var index = new Dictionary<string, Issue>(StringComparer.Ordinal);
 
-        using (var command = connection.CreateCommand())
+        command.CommandText = sql;
+        using (var reader = command.ExecuteReader())
         {
-            command.Transaction = transaction;
-            command.CommandText = sql;
-            addParams?.Invoke(command.Parameters);
-            using var reader = command.ExecuteReader();
             while (reader.Read())
             {
                 var issue = MapIssue(reader);

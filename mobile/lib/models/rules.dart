@@ -65,6 +65,19 @@ class Rules {
     return StageState.inProgress;
   }
 
+  /// 新建问题时所选"责任阶段"的初始状态。
+  ///
+  /// 与 [inferState] 的区别：这里用户已经明确"这条问题现在归这个阶段"，
+  /// 即使责任人/日期没填，也必须是"进行中"——否则会出现
+  /// "状态=装配中、四个阶段却全是未开始"的自相矛盾。
+  /// 只有 `/`（不适用）与 `已下图`（已完成）保留原语义。
+  static StageState initialStageState(String ownerText, String dueRaw) {
+    final due = normalize(dueRaw);
+    if (isNotApplicable(due)) return StageState.na;
+    if (meansDrawingIssued(due)) return StageState.done;
+    return StageState.inProgress;
+  }
+
   /// 由四阶段推导状态：完成情况有文本或全部适用阶段完成 → 待验证；
   /// 否则取第一个未完成阶段映射状态；第一道工序完全没安排才算待分派。
   static String deriveStatus(List<IssueStage> stages,
@@ -139,5 +152,48 @@ class Rules {
     if (seq >= 200 && seq <= 299) return 'P7391-02';
     if (seq >= 300 && seq <= 399) return 'P7391-03';
     return null;
+  }
+
+  /// 机台号格式：P7391 + 3 位序号，允许 `-1` 后缀。
+  /// `P73913118` 这类笔误不匹配格式，但历史数据仍按原文保留（不静默改正）。
+  static bool isMachineCode(String machineCode) =>
+      RegExp(r'^P7391\d{3}(-\d)?$').hasMatch(machineCode.trim().toUpperCase());
+
+  /// 附件相对路径：`attachments/{issueId}/{storedName}`。
+  /// 数据库只存这个相对路径，换机/迁移目录时不失效；安卓与桌面端统一用 `/`。
+  static String attachmentRelativePath(String issueId, String storedName) =>
+      'attachments/$issueId/$storedName';
+
+  /// 我的阶段任务：当前账号是责任人、阶段未完成/非不适用、问题未闭环。
+  /// 现场首屏只显示这些，避免把 36 条全量台账一股脑推给用户。
+  static List<({Issue issue, IssueStage stage})> myStageTasks(
+      Iterable<Issue> issues, String userName) {
+    final name = userName.trim();
+    if (name.isEmpty) return const [];
+    return [
+      for (final issue in issues)
+        if (!issue.isClosed)
+          for (final stage in issue.stages)
+            if (stage.ownerText.contains(name) &&
+                stage.state != StageState.done &&
+                stage.state != StageState.na)
+              (issue: issue, stage: stage),
+    ];
+  }
+
+  /// 风险排序：倒挂优先 → 逾期最久 → 原表行序。
+  /// 台账、待办、总览共用同一套顺序，禁止各页面自己写 comparator。
+  static List<Issue> attentionOrder(Iterable<Issue> issues) {
+    final list = issues.where((i) => !i.isClosed).toList();
+    list.sort((a, b) {
+      final ai = isPlanInverted(a) ? 1 : 0;
+      final bi = isPlanInverted(b) ? 1 : 0;
+      if (ai != bi) return bi.compareTo(ai);
+      final ao = overdueDays(a);
+      final bo = overdueDays(b);
+      if (ao != bo) return bo.compareTo(ao);
+      return (a.sourceRow ?? 9999).compareTo(b.sourceRow ?? 9999);
+    });
+    return list;
   }
 }

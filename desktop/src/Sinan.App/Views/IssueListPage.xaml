@@ -43,9 +43,36 @@
                         <TextBlock Grid.Column="0" Text="⌕" FontSize="15"
                                    Foreground="{DynamicResource Brush.Muted}"
                                    VerticalAlignment="Center" Margin="2,0,6,0"/>
-                        <TextBox Grid.Column="1" Style="{StaticResource Input.Text}" Height="34"
-                                 Text="{Binding Keyword, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="搜索问题 / 机台号 / 序号 / 责任人"/>
+                        <Grid Grid.Column="1">
+                            <TextBox Style="{StaticResource Input.Text}" Height="34"
+                                     Text="{Binding Keyword, UpdateSourceTrigger=PropertyChanged}"
+                                     AutomationProperties.Name="搜索问题、机台号、序号或责任人"
+                                     ToolTip="搜索问题 / 机台号 / 序号 / 责任人"/>
+
+                            <!--
+                              设计稿 p2 的搜索框带灰色提示语「搜索问题 / 机台号 / 责任人…」。
+                              WPF 的 TextBox 没有 placeholder 属性，这里用叠在输入框上方的
+                              TextBlock 模拟：仅在关键字为空时显示，且 IsHitTestVisible=False，
+                              保证点击水印区域照样聚焦输入框、不影响输入。
+                            -->
+                            <TextBlock Text="搜索问题 / 机台号 / 责任人…"
+                                       Margin="12,0,12,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="11.5"
+                                       IsHitTestVisible="False"
+                                       Foreground="{DynamicResource Brush.Faint}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Keyword}" Value="">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
                     </Grid>
 
                     <ComboBox Grid.Column="1" Style="{StaticResource Input.Combo}" Width="150" Height="34"
@@ -114,12 +141,14 @@
                     </StackPanel>
                     <Button Content="打开选中问题 →" Style="{StaticResource Btn.Secondary}" Height="30"
                             FontSize="11.5" HorizontalAlignment="Right"
+                            AutomationProperties.AutomationId="OpenSelectedIssueButton"
                             IsEnabled="{Binding HasSelection}"
                             Command="{Binding OpenIssueCommand}"
                             CommandParameter="{Binding SelectedIssue.Id}"/>
                 </Grid>
 
                 <ListView Grid.Row="1" Style="{StaticResource Grid.Table}" Margin="8,0,8,0"
+                          AutomationProperties.AutomationId="IssueTable"
                           ItemsSource="{Binding Items}"
                           SelectedItem="{Binding SelectedIssue, Mode=TwoWay}"
                           MouseDoubleClick="OnRowDoubleClick">

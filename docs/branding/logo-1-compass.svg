@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<!-- 罗盘指针：整环 + 贯穿中心的指北菱形针，最直白的「方向 / 定位」语义，对应司南本义；琥珀主色渐变与顶栏品牌印章同源。 -->
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#D97706"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="url(#g1)"/>
+  <circle cx="64" cy="64" r="38" fill="none" stroke="#FFFFFF" stroke-width="6.5"/>
+  <g transform="rotate(34 64 64)">
+    <path d="M64 35 L75 64 L53 64 Z" fill="#FFFFFF"/>
+    <path d="M64 93 L75 64 L53 64 Z" fill="#FFFFFF" opacity="0.55"/>
+  </g>
+</svg>

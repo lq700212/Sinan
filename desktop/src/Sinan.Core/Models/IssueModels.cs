@@ -284,7 +284,7 @@ public sealed class StageDraft
     public int Version { get; set; } = 1;
 
     /// <summary>
-    /// 变更原因：只有改了计划原文时界面才强制填写（AGENTS 第 6 节第 9 条字段级审计）。
+    /// 变更原因：只有改了计划原文时界面才强制填写（根 AGENTS.md 第 5 节第 9 条字段级审计）。
     /// 仓储把它拼进"计划"那条审计的 new 值，便于留痕里直接读出"为什么改"。
     /// </summary>
     public string ChangeReason { get; set; } = "";

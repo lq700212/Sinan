@@ -1,11 +1,14 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../data/issue_repository.dart';
+import '../models/attachment.dart';
 import '../models/issue.dart';
 import '../models/rules.dart';
 import '../state/app_state.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
+import '../widgets/photo_tile.dart';
+import 'photo_viewer_screen.dart';
 
 class IssueDetailScreen extends StatefulWidget {
   const IssueDetailScreen({
@@ -24,6 +27,7 @@ class IssueDetailScreen extends StatefulWidget {
 class _IssueDetailScreenState extends State<IssueDetailScreen> {
   Issue? _issue;
   List<IssueComment> _comments = const [];
+  List<({IssueAttachment attachment, String? path})> _photos = const [];
   final _comment = TextEditingController();
   bool _sending = false;
 
@@ -42,11 +46,65 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
   Future<void> _load() async {
     final issue = await widget.state.repository.byId(widget.issueId);
     final comments = await widget.state.repository.comments(widget.issueId);
+    final attachments =
+        await widget.state.repository.attachments(widget.issueId);
+    final photos = <({IssueAttachment attachment, String? path})>[];
+    for (final a in attachments) {
+      photos.add((
+        attachment: a,
+        path: await widget.state.attachments.absolutePath(a.storedPath),
+      ));
+    }
     if (!mounted) return;
     setState(() {
       _issue = issue;
       _comments = comments;
+      _photos = photos;
     });
+  }
+
+  /// 拍照 / 相册选图后立即挂到当前问题，并刷新总数与网格。
+  Future<void> _addPhoto({required bool fromCamera}) async {
+    final saved =
+        await widget.state.addPhoto(widget.issueId, fromCamera: fromCamera);
+    if (saved == null || !mounted) return;
+    await _load();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('照片已存本机，联网后补传。')),
+    );
+  }
+
+  Future<void> _showPhotoSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('拍照'),
+              subtitle: const Text('压缩到长边 1600px'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                _addPhoto(fromCamera: true);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('从相册选择'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                _addPhoto(fromCamera: false);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _sendComment() async {
@@ -244,7 +302,15 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
               _miniMetric('${issue.stages.where((s) => s.isDone).length}/4',
                   '阶段已完成', p.ok),
               _miniMetric('${issue.stages.where((s) => s.isNa).length}', '不适用', p.faint),
-              _miniMetric('${issue.photoCount}', '张照片（演示）', p.accent),
+              // 真实附件优先：本机拍过的照片是硬数据；没有真实附件时才退回种子的
+              // 演示张数（历史 Excel 无附件），并明确标注“演示”，不把占位值当真。
+              _miniMetric(
+                '${_photos.isEmpty ? issue.photoCount : _photos.length}',
+                _photos.isEmpty && issue.photoCount > 0
+                    ? '张照片（演示）'
+                    : '张本机照片',
+                p.accent,
+              ),
             ],
           ),
         ],
@@ -354,6 +420,15 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
   }
 
   Widget _photoCard(Issue issue, SinanPalette p) {
+    final realCount = _photos.length;
+    final placeholders = (issue.photoCount - realCount).clamp(0, 6);
+    final tileWidth =
+        (MediaQuery.sizeOf(context).width - 32 - 28 - 16) / 3;
+    final paths = [
+      for (final x in _photos)
+        if (x.path != null) x.path!,
+    ];
+
     return GlassCard(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       child: Column(
@@ -361,42 +436,63 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
         children: [
           SectionTitle(
             title: '现场照片',
-            subtitle: '${issue.photoCount} 张 · 演示占位',
-            trailing: const DemoBadge(),
+            subtitle: realCount == 0
+                ? '本机暂无真实照片'
+                : '$realCount 张 · 已存本机',
+            trailing: placeholders > 0
+                ? const DemoBadge(text: '含演示')
+                : IconButton(
+                    onPressed: _showPhotoSheet,
+                    icon: Icon(Icons.add_a_photo_outlined,
+                        size: 17, color: p.primary),
+                    tooltip: '添加照片',
+                  ),
           ),
           const SizedBox(height: 8),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              for (var i = 0; i < 3; i++)
-                Expanded(
-                  child: AspectRatio(
-                    aspectRatio: 1.25,
-                    child: Container(
-                      margin: EdgeInsets.only(right: i == 2 ? 0 : 8),
-                      decoration: BoxDecoration(
-                        color: p.well,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: p.cardBorder),
+              for (var i = 0; i < _photos.length; i++)
+                PhotoTile(
+                  filePath: _photos[i].path,
+                  width: tileWidth,
+                  height: tileWidth * 0.82,
+                  caption: _photos[i].attachment.timeLabel,
+                  onTap: () {
+                    final index = paths.indexOf(_photos[i].path ?? '');
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => PhotoViewerScreen(
+                          paths: paths,
+                          initialIndex: index < 0 ? 0 : index,
+                          title: '现场照片',
+                        ),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.image_outlined,
-                              size: 22, color: p.faint),
-                          const SizedBox(height: 3),
-                          Text('演示占位',
-                              style:
-                                  TextStyle(fontSize: 9, color: p.faint)),
-                        ],
-                      ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
+              for (var i = 0; i < placeholders; i++)
+                PhotoTile(
+                  width: tileWidth,
+                  height: tileWidth * 0.82,
+                  demo: true,
+                ),
+              PhotoTile(
+                add: true,
+                width: tileWidth,
+                height: tileWidth * 0.82,
+                onTap: _showPhotoSheet,
+              ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text('照片先存本机，联网后按队列补传；导出 ZIP 由桌面端负责。',
-              style: TextStyle(fontSize: 10, color: p.faint)),
+          const SizedBox(height: 7),
+          Text(
+            realCount == 0
+                ? '照片先存本机，联网后按队列补传；历史 Excel 无附件，统计中的张数为演示值。'
+                : '照片已压缩到长边 1600px 并存在本机；原图随后台补传，导出 ZIP 由桌面端负责。',
+            style: TextStyle(fontSize: 10, height: 1.45, color: p.faint),
+          ),
         ],
       ),
     );

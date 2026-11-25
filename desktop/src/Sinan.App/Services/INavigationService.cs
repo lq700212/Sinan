@@ -1,7 +1,7 @@
 namespace Sinan.App.Services;
 
 /// <summary>
-/// 页面导航契约。ViewModel 只能通过它切页，禁止自己 new Window（AGENTS.md 第 7 节）。
+/// 页面导航契约。ViewModel 只能通过它切页，禁止自己 new Window（desktop/AGENTS.md 第 2 节）。
 /// 实现方是 <c>ShellViewModel</c>；详情页返回也走 <see cref="Back"/>，
 /// 由实现方维护简单导航栈（MVP 只需要"台账 → 详情 → 返回"一层）。
 /// </summary>

@@ -5,7 +5,7 @@ using Sinan.App.Views;
 namespace Sinan.App.Services;
 
 /// <summary>
-/// 弹窗服务：ViewModel 不 new Window，也不直接 MessageBox（AGENTS.md 第 7 节）。
+/// 弹窗服务：ViewModel 不 new Window，也不直接 MessageBox（desktop/AGENTS.md 第 2 节）。
 ///
 /// 约定：业务校验错误必须就地显示在页面上，不走这里；
 /// 这里只负责"确认类"与"系统文件选择"两类无法内联的交互。

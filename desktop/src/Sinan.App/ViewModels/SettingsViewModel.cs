@@ -30,7 +30,7 @@ public sealed class SettingsViewModel : ObservableObject
         AttachmentsDir = paths.AttachmentsDir;
         LogsDir = paths.LogsDir;
         ArchiveDir = paths.ArchiveDir;
-        SchemaVersion = $"schema {Database.SchemaVersion} · 程序 v0.0.1";
+        SchemaVersion = $"schema {Database.SchemaVersion} · 程序 {AppInfo.VersionLabel}";
 
         var issues = app.Issues.All();
         IssueCount = issues.Count;

@@ -25,7 +25,18 @@
 
 > **演示数据声明**：仓库内全部项目号、机台号、人员、问题标题、解决措施均为随机生成的虚构数据，**不含任何真实客户信息**。设计稿与截图里的照片是占位图并标注"演示"。
 
+## 两端一览
+
+| 端 | 面向谁 | 技术栈 | 当前状态 |
+| --- | --- | --- | --- |
+| **桌面端** | 办公室：排期、追踪、Excel 导入导出 | WPF · .NET 10 · SQLite 主库 | 可用：9 个业务页面 + 6 个弹窗 |
+| **手机端（现场端）** | 现场：拍照记录、推进阶段、离线待传 | Flutter · Android 7.0+ | Android 可构建可用；iOS 仅设计支持 |
+
+两端共用同一份数据模型与种子数据，桌面端是唯一主库，手机端是离线副本 + 待传队列。
+
 ## 界面速览
+
+### 桌面端
 
 | 项目总览 · 浅色 | 项目总览 · 深色 |
 | --- | --- |
@@ -47,11 +58,49 @@
 | --- | --- |
 | ![](docs/images/12_dialog_new.png) | ![](docs/images/13_dialog_export.png) |
 
-## 核心能力
+| 登录 | 系统设置 |
+| --- | --- |
+| ![](docs/images/01_login.png) | ![](docs/images/11_settings.png) |
 
-**双端一套口径**
+| 问题详情 · 深色 | 分项目 · 深色 |
+| --- | --- |
+| ![](docs/images/14_detail_dark.png) | ![](docs/images/15_subproject_dark.png) |
+
+| 问题台账 · 深色 | |
+| --- | --- |
+| ![](docs/images/09_issues_dark.png) | |
+
+### 手机端
+
+<p align="center">
+  <img src="docs/images/mobile/01_login.png" width="200" alt="现场登录">
+  <img src="docs/images/mobile/02_todo.png" width="200" alt="我的待办">
+  <img src="docs/images/mobile/03_projects.png" width="200" alt="分项目">
+  <img src="docs/images/mobile/04_issues.png" width="200" alt="问题台账">
+</p>
+<p align="center">
+  <img src="docs/images/mobile/06_detail.png" width="200" alt="问题详情">
+  <img src="docs/images/mobile/07_new.png" width="200" alt="新建问题">
+  <img src="docs/images/mobile/05_sync.png" width="200" alt="本机待传">
+</p>
+
+> 手机端截图为 Android 模拟器实机渲染（1080×2400），账号与数据均为演示值；iOS 构建需 macOS，暂无实机截图。
+
+## 系统级能力（两端共用）
+
+**一套数据模型**
 
 桌面端 WPF 是主库，手机端 Flutter 是离线副本。两端共用同一份 SQLite DDL 与同一份 36 条种子数据，字段语义不会各写一套。
+
+**四阶段推进带审计**
+
+方案确定 → 设计下图 → 物料准备 → 装配调试，逐段填责任人与计划。改计划日必须写变更原因，字段级 old/new 全部留痕。状态机自动推导，也允许人工覆盖，覆盖同样留痕。
+
+**统计只认数据库**
+
+逾期、倒挂、阶段填写率、责任人负载全部实时算，页面不写死结果值；手机上同样只读本地库，不展示假数字。
+
+## 桌面端
 
 **Excel 无损往返**
 
@@ -65,13 +114,31 @@
 
 客户原表版式（三行表头、两级列组、列宽冻结，回给客户用）、标准明细（一行一条，四阶段拆独立列）、统计汇总（总览 + 责任人负载 + 阶段填写率 + 倒挂清单）。范围可按全部 / 仅倒挂 / 仅逾期 / 有照片筛选。
 
-**四阶段推进带审计**
+**主库与附件归档**
 
-方案确定 → 设计下图 → 物料准备 → 装配调试，逐段填责任人与计划。改计划日必须写变更原因，字段级 old/new 全部留痕。状态机自动推导，也允许人工覆盖，覆盖同样留痕。
+桌面端是唯一主库，负责建库、迁移、附件归档与导出。照片按 `attachments/{issueId}/` 存放，导出 ZIP 同时生成 `manifest.csv`；删除问题只写 `deleted_at`，不物理删附件。
 
-**界面只认数据库**
+## 手机端
 
-统计数字全部实时查库，XAML 里不写死任何结果值。明暗双主题一键切换，只换语义 Token，页面不出现硬编码色值。
+**离线优先，先记后传**
+
+没有网络也能记录：新建问题、推进阶段、拍照全部先落本机 SQLite，同时写入 outbox 待传队列。同步页只展示真实队列，界面如实标"本机待传"，不伪造"已同步 / 已连接"。
+
+**拍照与看图**
+
+现场拍照压缩到长边 1600px、单张 ≤2MB，按 `attachments/{issueId}/{uuid}.jpg` 落盘；详情页可直接查看，看图器支持左右切换与双指缩放。
+
+**我的待办**
+
+按"我负责的阶段 + 倒挂 + 逾期"排序，打开手机先看今天该做什么，不用在 36 条全量台账里翻。
+
+**机台选择与手输**
+
+当前用"手输机台号 + 最近机台"快速定位；相机扫码待真机接入，界面明确标注，不伪造扫码成功。
+
+**明暗双主题**
+
+与桌面端同一套语义 Token（晨光现场 · 精致玻璃态），现场强光与夜间都能看清。
 
 ## 账号与权限
 
@@ -97,7 +164,7 @@ graph LR
         A3 --> A2
     end
 
-    subgraph 现场端["现场端 · Android"]
+    subgraph 手机端["手机端 · Android"]
         B1[Flutter 界面]
         B2[本地 SQLite 副本]
         B3[outbox 待传队列]
@@ -125,29 +192,33 @@ graph LR
 
 ```text
 Sinan/
-├── AGENTS.md                  ← 项目规范（脱敏红线、数据模型、MVVM、验收清单）
+├── AGENTS.md                  ← 总纲：数据模型、业务口径、跨端铁律、脱敏
 ├── desktop/                   ← ① Windows 桌面端（WPF 解决方案根）
+│   ├── AGENTS.md              ← 桌面端细则：MVVM、界面、Excel、构建
 │   ├── Sinan.sln
 │   ├── src/
 │   │   ├── Sinan.Core/        ← 领域模型、枚举、纯规则（无 UI / 无数据库）
 │   │   ├── Sinan.Data/        ← SQLite 仓储、种子、Excel 通道
 │   │   └── Sinan.App/         ← WPF：Views / ViewModels / Services / Themes
+│   ├── tests/Sinan.Tests/     ← xUnit 回归：仓储、Excel 往返、统计口径、离屏渲染
 │   └── ThirdParty/            ← Windows 专用依赖
 │       └── Kaleidoscope/      ← 公司级 WPF 复用库（git submodule）
-├── mobile/                    ← ② 现场端（Flutter 工程根）
+├── mobile/                    ← ② 手机端（Flutter 工程根）
+│   ├── AGENTS.md              ← 手机端细则：兼容口径、页面、outbox、构建
 │   ├── lib/                   ← 主题 Token / 页面 / 状态 / 数据层
 │   ├── assets/seed/           ← 与桌面端同一份 36 条种子
-│   ├── test/                  ← 日期 / 状态 / 归组规则回归
-│   └── android/               ← Flutter Android 宿主壳
+│   ├── test/                  ← 日期 / 状态 / 归组 / 风险口径回归
+│   └── android/               ← Flutter Android 宿主壳 + 启动器图标
 ├── shared/                    ← 双端共享契约（唯一真源）
-│   ├── db/schema.sql          ← SQLite DDL
+│   ├── db/schema.sql          ← SQLite DDL（15 张表）
 │   └── db/seed/               ← 36 条脱敏演示种子
 ├── docs/                      ← 设计稿、调研方案、截图
 │   ├── ui_design_mockups.html ← 双端设计稿（单文件、离线可开）
 │   ├── 调研与方案.md
-│   └── images/                ← README 实机截图
+│   └── images/                ← README 截图：桌面端平铺 + mobile/ 手机端
 └── tools/
-    └── desensitize_scan.py    ← 脱敏扫描
+    ├── desensitize_scan.py    ← 脱敏扫描
+    └── ui_smoke/              ← 后台静默 UI 冒烟：登录、逐页与弹窗截图、圆角自检
 ```
 
 > `source/`、`data/` 只用于本机真实资料自测，已在 `.gitignore` 中排除，不属于交付物，软件运行时也不读取。
@@ -157,7 +228,8 @@ Sinan/
 | 项 | 选型 |
 | --- | --- |
 | 桌面端 | .NET 10 + WPF（`net10.0-windows`），MVVM，自写最小 `ObservableObject` / `RelayCommand` |
-| 现场端 | Flutter + Dart 3.14，MVVM，`sqflite` + `shared_preferences`（Android 可构建，iOS 仅设计支持） |
+| 手机端 | Flutter + Dart 3.14，MVVM，`sqflite` + `shared_preferences`（Android 可构建，iOS 仅设计支持） |
+| 手机端兼容 | Android 7.0+（`minSdk` 24 / `targetSdk` 36）、iOS 15.0+；手机端版本 v0.0.1 |
 | 数据库 | SQLite（WAL，单文件），`Microsoft.Data.Sqlite` 10.0；15 张表 |
 | Excel | NPOI 2.7.3，同时支持 `.xls`（BIFF8）与 `.xlsx` |
 | 复用库 | `Kaleidoscope.UI`：窗基类、标题栏、胶囊圆角控件、圆角自检 |
@@ -173,17 +245,27 @@ dotnet build desktop/Sinan.sln -c Debug
 
 # 运行
 dotnet run --project desktop/src/Sinan.App/Sinan.App.csproj
+
+# 回归（199 条）
+dotnet test desktop/tests/Sinan.Tests/Sinan.Tests.csproj -c Debug
+
+# 后台静默 UI 冒烟：登录 → 逐页/弹窗截图 → 圆角自检，不抢焦点
+dotnet run --project tools/ui_smoke/UiSmoke.csproj -c Debug -- --launch --restart
+
+# 端到端写入验证（新建 → 详情 → 删除），用独立临时库，不碰主库
+dotnet run --project tools/ui_smoke/UiSmoke.csproj -c Debug -- --launch --restart `
+  --no-pages --write-test --data-dir "$env:TEMP\sinan-e2e"
 ```
 
 > 子模块首次拉取需要一并初始化：
 > `git clone --recurse-submodules <repo-url>`，已克隆过的用 `git submodule update --init --recursive`。
 
-### 现场端（Flutter）
+### 手机端（Flutter）
 
 ```powershell
 cd mobile
 flutter pub get
-flutter test          # 规则回归 14 条
+flutter test          # 规则回归 22 条
 flutter analyze       # 应为 0 issue
 flutter build apk --debug
 ```
@@ -218,10 +300,14 @@ Flutter 资源与 pub 包建议设置 `FLUTTER_STORAGE_BASE_URL=https://storage.
       （设计稿另 2 个桌面弹窗按实际形态落地：手机配对因服务未实现改为如实提示，分项目预览改为独立页面）
 - [x] Excel 无损通道：`.xls` + `.xlsx`，36 条往返 0 新增 0 更新，冲突逐条决策
 - [x] 附件与演示照片：上传 / 查看 / 导出 ZIP + `manifest.csv`
-- [x] Flutter 现场端 6 个页面：登录 / 总览 / 台账 / 详情 / 数据交换 / 设置，离线 SQLite + outbox 记账
+- [x] 手机端全部页面：登录 / 待办 / 项目 / 分项目 / 台账 / 详情 / 新建 / 选机台 / 同步 / 拍照 / 照片查看 / 设置，
+      五槽底栏 + 离线 SQLite + outbox 记账；拍照与相册已接入 `image_picker`
+- [x] 手机端 Android 模拟器实机截图（7 张，`docs/images/mobile/`）：登录 / 待办 / 项目 / 台账 / 详情 / 新建 / 同步
+- [x] 桌面端自动化回归 199 条（`desktop/tests/Sinan.Tests`：仓储 / 统计口径 / 日期解析 /
+      Excel 三种版式往返 / 导入冲突 / 权限 + 6 页 × 明暗双主题离屏渲染）
+- [x] 桌面端后台静默 UI 冒烟（`tools/ui_smoke`）：不抢焦点地登录、逐页截图、弹窗截图、圆角自检
 - [ ] **局域网同步服务**：当前为离线单机版，配对码 / Bearer / 增量同步尚未实现，界面如实提示不伪造连接状态
-- [ ] **桌面端自动化测试**：`desktop/tests/Sinan.Tests` 目录已建，测试用例待补
-- [ ] 现场端拍照与附件上传（移动端当前为占位）
+- [ ] 现场端附件上传（拍照已落本机，按 outbox 补传待同步服务）
 - [ ] iOS 构建（需 macOS）
 
 ## 关键设计
@@ -244,8 +330,9 @@ due_raw   TEXT          -- "11.5" / "已下图" / "/"，用于原样导出
 | 项 | 现状 |
 | --- | --- |
 | 局域网同步 | 未实现。当前为离线单机版，桌面端不监听端口，手机端不发起连接；界面如实提示，不伪造连接状态 |
-| 移动端拍照上传 | 未实现，界面为占位 |
-| 桌面端自动化测试 | `desktop/tests/Sinan.Tests` 目录已建，用例待补 |
+| 相机扫码 | 待真机接入。当前用「手输机台号 + 最近机台」，界面上明写这一点 |
+| 手机端附件上传 | 拍照已存本机 `attachments/{issueId}/`，按 outbox 队列补传；上传通道随同步服务一起做 |
+| 手机端登录态 | 不持久化，冷启动需重新输工号密码（共享现场设备的默认口径） |
 | 传递依赖漏洞 | `SixLabors.ImageSharp` 2.1.10 中危（GHSA-rxmq-m78w-7wmc）。修复需 NPOI 升 2.8.x + OSMF 商业许可；本项目不调用 ImageSharp API，风险路径不走 |
 | iOS | 仅设计支持，构建需 macOS |
 
@@ -262,7 +349,9 @@ due_raw   TEXT          -- "11.5" / "已下图" / "/"，用于原样导出
 | --- | --- |
 | [`docs/ui_design_mockups.html`](docs/ui_design_mockups.html) | 双端设计稿，20 页 + 11 弹窗，浏览器直接打开（单文件、离线可用） |
 | [`docs/调研与方案.md`](docs/调研与方案.md) | 业务规则、Excel 无损口径、架构与风险 |
-| [`AGENTS.md`](AGENTS.md) | 项目规范：脱敏红线、数据模型红线、MVVM 约定、界面规范、验收清单 |
+| [`AGENTS.md`](AGENTS.md) | 总纲：项目定位、数据模型红线、业务口径、跨端铁律、脱敏 |
+| [`desktop/AGENTS.md`](desktop/AGENTS.md) | 桌面端细则：MVVM、WPF 界面规范、Excel、弹窗、构建验证 |
+| [`mobile/AGENTS.md`](mobile/AGENTS.md) | 手机端细则：Android/iOS 兼容口径、页面、outbox、构建验证 |
 | [`CHANGELOG.md`](CHANGELOG.md) | 逐轮变更记录与修复说明 |
 | [`shared/db/schema.sql`](shared/db/schema.sql) | SQLite DDL，双端唯一真源 |
 | [`shared/db/seed/issues.seed.json`](shared/db/seed/issues.seed.json) | 36 条脱敏演示种子 |

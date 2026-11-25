@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../app_info.dart';
 import '../state/app_state.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
@@ -15,7 +16,9 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _account = TextEditingController(text: 'engineer');
-  final _password = TextEditingController(text: '123456');
+
+  /// 密码不预填：debug 包也要真登录，任何人拿到安装包点一下就进系统是不允许的。
+  final _password = TextEditingController();
   String? _error;
   bool _busy = false;
 
@@ -36,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     setState(() {
       _busy = false;
-      if (!ok) _error = '账号或密码不正确。演示账号：engineer / 123456';
+      if (!ok) _error = '账号或密码不正确。演示账号见下方提示。';
     });
   }
 
@@ -145,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 18),
-                    Text('司南 v0.1 · 离线副本',
+                    Text('${AppInfo.productLabel} · 离线副本',
                         style: TextStyle(fontSize: 10.5, color: p.faint)),
                   ],
                 ),

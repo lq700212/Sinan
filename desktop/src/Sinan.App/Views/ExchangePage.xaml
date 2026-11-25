@@ -355,7 +355,7 @@
 
                                 <TextBlock Style="{StaticResource T.Tiny}" FontSize="9.5" TextWrapping="Wrap"
                                            Margin="2,10,0,0"
-                                           Text="映射规则与 Excel 无损口径见 AGENTS.md 第 9 节：日期原文照存（11.5 不会被格式化成年份）、`/` 与空白严格区分、序号不重排。"/>
+                                           Text="映射规则与 Excel 无损口径见 desktop/AGENTS.md 第 6.1 节：日期原文照存（11.5 不会被格式化成年份）、`/` 与空白严格区分、序号不重排。"/>
                             </StackPanel>
                         </ScrollViewer>
 

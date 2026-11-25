@@ -4,6 +4,7 @@
         xmlns:ui="clr-namespace:Kaleidoscope.UI.Views;assembly=Kaleidoscope.UI"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="司南 · 登录"
+        Icon="/Sinan;component/Assets/app.ico"
         Width="1440" Height="900"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanMinimize"
@@ -37,14 +38,27 @@
                              Margin="0,0,-60,-60" IsHitTestVisible="False"/>
 
                     <StackPanel Margin="76,0" VerticalAlignment="Center">
-                        <!-- 品牌行：印章 56 + 名称 30 -->
+                        <!-- 品牌行：印章 56 + 名称 30；印章内是完整版司南磁勺（地盘环 + 磁勺），
+                             几何取自 docs/branding/logo-2-ladle.svg（128 viewBox 同坐标），矢量随主题渐变无损缩放。 -->
                         <StackPanel Orientation="Horizontal">
                             <Border Width="56" Height="56" CornerRadius="16"
                                     Background="{DynamicResource Brush.PrimaryGrad}"
                                     Effect="{DynamicResource Fx.PrimaryGlow}">
-                                <TextBlock Text="司" Foreground="White" FontSize="26"
-                                           FontWeight="Bold" HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"/>
+                                <Viewbox Stretch="Uniform">
+                                    <Canvas Width="128" Height="128">
+                                        <Ellipse Canvas.Left="22" Canvas.Top="22"
+                                                 Width="84" Height="84"
+                                                 Stroke="White" StrokeThickness="4" Opacity="0.5"/>
+                                        <Canvas>
+                                            <Canvas.RenderTransform>
+                                                <RotateTransform Angle="-38" CenterX="64" CenterY="64"/>
+                                            </Canvas.RenderTransform>
+                                            <Ellipse Canvas.Left="50" Canvas.Top="31"
+                                                     Width="28" Height="28" Fill="White"/>
+                                            <Path Fill="White" Data="M58,52 L70,52 L66,92 L64,99 L62,92 Z"/>
+                                        </Canvas>
+                                    </Canvas>
+                                </Viewbox>
                             </Border>
                             <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="司南" FontSize="30" FontWeight="Bold"

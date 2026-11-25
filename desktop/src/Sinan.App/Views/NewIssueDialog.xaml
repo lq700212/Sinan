@@ -174,9 +174,12 @@
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="取消" Style="{StaticResource Btn.Secondary}" Width="88"
+                        AutomationProperties.AutomationId="NewIssueCancelButton"
                         Command="{Binding CancelCommand}" IsCancel="True"/>
                 <Button Content="创建问题" Style="{StaticResource Btn.Primary}" Width="116"
-                        Margin="10,0,0,0" Command="{Binding SaveCommand}" IsDefault="True"/>
+                        Margin="10,0,0,0"
+                        AutomationProperties.AutomationId="NewIssueSaveButton"
+                        Command="{Binding SaveCommand}" IsDefault="True"/>
             </StackPanel>
         </Grid>
     </Grid>

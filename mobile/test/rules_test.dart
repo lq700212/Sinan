@@ -90,6 +90,130 @@ void main() {
     });
   });
 
+  group('机台号与附件路径', () {
+    test('格式校验接受三位序号与后缀', () {
+      expect(Rules.isMachineCode('P7391101'), isTrue);
+      expect(Rules.isMachineCode('p7391101'), isTrue);
+      expect(Rules.isMachineCode(' P7391106-2 '), isTrue);
+    });
+
+    test('笔误与空值不通过格式校验', () {
+      expect(Rules.isMachineCode('P73913118'), isFalse);
+      expect(Rules.isMachineCode('P739110'), isFalse);
+      expect(Rules.isMachineCode(''), isFalse);
+    });
+
+    test('附件相对路径固定用正斜杠', () {
+      expect(
+        Rules.attachmentRelativePath('X1', '1700000000abc.jpg'),
+        'attachments/X1/1700000000abc.jpg',
+      );
+    });
+  });
+
+  group('新建问题的阶段初始状态', () {
+    test('已选责任阶段即进行中，缺责任人/日期不算未开始', () {
+      expect(Rules.initialStageState('', ''), StageState.inProgress);
+      expect(Rules.initialStageState('王工', ''), StageState.inProgress);
+    });
+
+    test('/ 为不适用，已下图为已完成', () {
+      expect(Rules.initialStageState('', '/'), StageState.na);
+      expect(Rules.initialStageState('', '已下图'), StageState.done);
+    });
+  });
+
+  group('我的待办与风险排序', () {
+    Issue makeIssue({
+      required String id,
+      required String status,
+      required int sourceRow,
+      required List<IssueStage> stages,
+    }) {
+      return Issue(
+        id: id,
+        seqNo: id,
+        machineCode: 'P7391101',
+        subprojectCode: 'P7391-01',
+        title: '测试问题 $id',
+        solution: '',
+        status: status,
+        stages: stages,
+        sourceRow: sourceRow,
+      );
+    }
+
+    IssueStage stage(String code, String owner, StageState state,
+            {DateTime? due}) =>
+        IssueStage(
+          code: code,
+          ownerText: owner,
+          dueRaw: '',
+          dueDate: due,
+          state: state,
+        );
+
+    test('只取本人、未完成、未关闭的阶段', () {
+      final issues = [
+        makeIssue(id: 'A', status: IssueStatuses.designing, sourceRow: 1, stages: [
+          stage(StageCodes.plan, '张工', StageState.done),
+          stage(StageCodes.design, '张工', StageState.inProgress),
+          stage(StageCodes.material, '李工', StageState.inProgress),
+        ]),
+        makeIssue(id: 'B', status: IssueStatuses.closed, sourceRow: 2, stages: [
+          stage(StageCodes.design, '张工', StageState.inProgress),
+        ]),
+      ];
+      final mine = Rules.myStageTasks(issues, '张工');
+      expect(mine.length, 1);
+      expect(mine.single.issue.id, 'A');
+      expect(mine.single.stage.code, StageCodes.design);
+    });
+
+    test('空账号不返回任务', () {
+      final issues = [
+        makeIssue(id: 'A', status: IssueStatuses.designing, sourceRow: 1, stages: [
+          stage(StageCodes.design, '张工', StageState.inProgress),
+        ]),
+      ];
+      expect(Rules.myStageTasks(issues, '  '), isEmpty);
+    });
+
+    test('倒挂优先，逾期次之，已关闭不参与', () {
+      final inverted = makeIssue(
+        id: '倒挂',
+        status: IssueStatuses.assembling,
+        sourceRow: 9,
+        stages: [
+          stage(StageCodes.design, '', StageState.inProgress,
+              due: DateTime(2026, 11, 20)),
+          stage(StageCodes.assembly, '', StageState.inProgress,
+              due: DateTime(2026, 11, 10)),
+        ],
+      );
+      final overdue = makeIssue(
+        id: '逾期',
+        status: IssueStatuses.designing,
+        sourceRow: 1,
+        stages: [
+          stage(StageCodes.design, '', StageState.inProgress,
+              due: DateTime(2026, 11, 1)),
+        ],
+      );
+      final closed = makeIssue(
+        id: '关闭',
+        status: IssueStatuses.closed,
+        sourceRow: 0,
+        stages: [
+          stage(StageCodes.design, '', StageState.inProgress,
+              due: DateTime(2026, 1, 1)),
+        ],
+      );
+      final ordered = Rules.attentionOrder([overdue, closed, inverted]);
+      expect(ordered.map((i) => i.id).toList(), ['倒挂', '逾期']);
+    });
+  });
+
   group('风险口径', () {
     Issue issueWith({
       required String status,

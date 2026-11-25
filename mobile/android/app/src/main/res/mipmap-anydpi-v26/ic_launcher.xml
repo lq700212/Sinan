@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 自适应图标（Android 8+）：橙色底 + 磁勺前景，前景内容缩在 66% 安全区内。
+     背景色取图标自身边缘色，避免启动器裁切时出现色差接缝。 -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+</adaptive-icon>

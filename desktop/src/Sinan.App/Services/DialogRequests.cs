@@ -5,7 +5,7 @@ namespace Sinan.App.Services;
 /// <summary>
 /// 自定义弹窗的数据契约。
 ///
-/// 【为什么要 DTO 而不是直接传 ViewModel】AGENTS.md 第 7 节要求 ViewModel 不 new Window，
+/// 【为什么要 DTO 而不是直接传 ViewModel】desktop/AGENTS.md 第 2 节要求 ViewModel 不 new Window，
 /// 且服务层不得反向依赖 ViewModel 类型。这里用纯数据请求/结果穿过 <see cref="IDialogService"/>，
 /// 弹窗自己负责把结果翻译成对象；ViewModel 只认 DTO，换实现（改成内联面板）不影响业务代码。
 /// </summary>
@@ -53,7 +53,7 @@ public sealed class StageDialogResult
     /// <summary>阶段结果（对应 StageState 的库值：not_started / in_progress / done / na）。</summary>
     public string StateDb { get; set; } = "not_started";
 
-    /// <summary>变更原因：只有改了计划原文才必填（AGENTS 第 6 节第 9 条：字段级审计）。</summary>
+    /// <summary>变更原因：只有改了计划原文才必填（根 AGENTS.md 第 5 节第 9 条：字段级审计）。</summary>
     public string ChangeReason { get; set; } = "";
 }
 

@@ -116,7 +116,7 @@ public static class StageRules
 }
 
 /// <summary>
-/// 机台号 → 分项目归属。规则来自真实数据核对（见 AGENTS.md 第 6 节）：
+/// 机台号 → 分项目归属。规则来自真实数据核对（见根 AGENTS.md 第 6 节）：
 /// 1xx→01、2xx→02、3xx→03；格式异常（如 P73913118）返回 null，进"待确认"。
 /// </summary>
 public static class SubprojectRules

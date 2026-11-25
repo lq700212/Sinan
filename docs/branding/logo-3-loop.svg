@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<!-- 闭环对勾：缺口环 + 中心对勾，直译「四阶段问题闭环」；青绿渐变取界面强调青（#0F766E），是六款里唯一的冷色对照款。 -->
+  <defs>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0F766E"/>
+      <stop offset="1" stop-color="#14B8A6"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="url(#g3)"/>
+  <path d="M42.2 95.1 A38 38 0 1 1 98.4 80.1" fill="none" stroke="#FFFFFF"
+        stroke-width="9" stroke-linecap="round"/>
+  <path d="M49 63 L59 73 L80 50" fill="none" stroke="#FFFFFF"
+        stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

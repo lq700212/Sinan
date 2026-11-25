@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 与 app.ico 图标边缘同色，用于自适应图标背景层 -->
+    <color name="ic_launcher_background">#C5540A</color>
+</resources>

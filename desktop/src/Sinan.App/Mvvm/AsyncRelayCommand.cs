@@ -6,7 +6,7 @@ namespace Sinan.App.Mvvm;
 
 /// <summary>
 /// 异步命令：Excel 导入、导出、数据库读写等超过 50ms 的操作必须走它，
-/// 避免 UI 线程假死（AGENTS.md 第 7 节：UI 线程禁做超过 50ms 的 IO）。
+/// 避免 UI 线程假死（desktop/AGENTS.md 第 2 节：UI 线程禁做超过 50ms 的 IO）。
 ///
 /// 执行期间 IsRunning=true，命令自动 CanExecute=false，按钮置灰；
 /// 异常不吞：交给调用方在 execute 内部处理并给出用户可读提示，这里只兜底记录。

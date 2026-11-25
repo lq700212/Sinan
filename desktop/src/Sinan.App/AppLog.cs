@@ -5,7 +5,7 @@ using System.Text;
 namespace Sinan.App;
 
 /// <summary>
-/// 自写滚动文件日志（不引 log4net，AGENTS.md 技术栈约定）。
+/// 自写滚动文件日志（不引 log4net，desktop/AGENTS.md 第 1 节技术栈约定）。
 ///
 /// 目录：%LOCALAPPDATA%\Sinan\logs\；按天一个文件 sinan-yyyyMMdd.log，
 /// 单文件超过 4MB 时改名 .1 继续写，最多保留 5 个历史文件。

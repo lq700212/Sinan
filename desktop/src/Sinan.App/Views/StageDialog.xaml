@@ -89,6 +89,9 @@
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Padding" Value="10,7"/>
                             <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                            <!-- 列表项必须给可访问名：默认名是类型名（Sinan.App.ViewModels.StageStateOption），
+                                 读屏与自动化都分不清四个状态，只能靠子元素文字碰运气。 -->
+                            <Setter Property="AutomationProperties.Name" Value="{Binding Label}"/>
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ListBoxItem">

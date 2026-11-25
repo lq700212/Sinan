@@ -10,7 +10,7 @@ namespace Sinan.App.ViewModels;
 /// <summary>
 /// 主壳：顶栏 + 侧栏 6 项 + 页面容器 + 底部状态条。
 ///
-/// 导航规则（AGENTS.md 第 8 节）：
+/// 导航规则（desktop/AGENTS.md 第 4 节）：
 /// - 侧栏固定 6 项，一屏只保留 1 个主操作（顶栏"＋ 新建问题"）；
 /// - 页面 VM 缓存复用，切走再切回保留筛选/滚动；
 /// - 详情页不进缓存（每次按 issueId 重新读取，避免看到过期数据）。
@@ -65,7 +65,7 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
         ProjectCode = app.Projects.GetMain()?.Code ?? "P7391";
         ProjectSubtitle = $"{ProjectCode} · {_subprojectCount} 个分项目 · {_machineCount} 台机台";
         DataAsOf = $"数据截至 {DateTime.Now:MM-dd HH:mm}";
-        VersionText = $"v0.0.1 · 离线模式 · 库 {_app.Database.Paths.DbPath}";
+        VersionText = $"{AppInfo.VersionLabel} · 离线模式 · 库 {_app.Database.Paths.DbPath}";
 
         NavigateCommand = new RelayCommand(p => Navigate(p as string ?? PageDashboard));
         RefreshCommand = new RelayCommand(RefreshCurrentPage);

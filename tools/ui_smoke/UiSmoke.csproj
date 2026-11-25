@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 司南 UI 后台冒烟工具（开发/验收用，不随产品发布）：
+       一、静默登录：UIA 设置工号，AttachThreadInput 设置窗口焦点后用 PostMessage 输入密码，
+           不把窗口切到前台、不移动鼠标；
+       二、后台截图：PrintWindow(PW_RENDERFULLCONTENT)，窗口被遮挡也能截；
+       三、逐页导航：UIA Invoke/Select 侧栏项，截全部 6 个页面。
+       用法见 Program.cs 顶部说明。 -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>UiSmoke</AssemblyName>
+    <RootNamespace>UiSmoke</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>

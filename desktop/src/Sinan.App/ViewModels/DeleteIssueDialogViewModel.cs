@@ -11,7 +11,7 @@ namespace Sinan.App.ViewModels;
 /// 对现场是不可逆的感知；设计稿把"输入 ID"做成第二道闸，就是为了拦住误触。
 /// 输入框内容与问题号逐字比对（忽略大小写与首尾空白），不匹配则确认按钮不可用。
 ///
-/// 【为什么不提供"同时删除照片文件"】AGENTS 第 10 节第 11 条：删除问题不删附件原文件，
+/// 【为什么不提供"同时删除照片文件"】根 AGENTS.md 第 6 节（照片/附件）：删除问题不删附件原文件，
 /// 等归档策略统一处理。界面给出这句说明，而不是给一个做不到的勾选框。
 /// </summary>
 public sealed class DeleteIssueDialogViewModel : ObservableObject

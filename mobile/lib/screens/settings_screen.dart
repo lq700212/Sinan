@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../app_info.dart';
 import '../state/app_state.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
@@ -154,10 +155,9 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   _InfoRow(
                     icon: Icons.inventory_2_outlined,
-                    label: '演示数据',
+                    label: '本机数据',
                     value:
                         '${state.issues.length} 条问题 / ${state.stats?.machines ?? 0} 台机台',
-                    badge: true,
                   ),
                   const SizedBox(height: 8),
                   _InfoRow(
@@ -167,8 +167,8 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    '演示问题全部为虚构数据（P7391 系列），照片数为演示占位值。'
-                    '真实现场记录只保存在本机，联网后按 outbox 队列补传。',
+                    '内置 36 条虚构种子（P7391 系列，照片数为演示占位值）；'
+                    '本机新建的现场记录只存在这台手机，联网后按 outbox 队列补传。',
                     style:
                         TextStyle(fontSize: 10.5, height: 1.5, color: p.faint),
                   ),
@@ -204,7 +204,7 @@ class SettingsScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('司南 v0.1',
+                            Text(AppInfo.productLabel,
                                 style: TextStyle(
                                     fontSize: 13.5,
                                     fontWeight: FontWeight.w700,
@@ -299,13 +299,11 @@ class _InfoRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
-    this.badge = false,
   });
 
   final IconData icon;
   final String label;
   final String value;
-  final bool badge;
 
   @override
   Widget build(BuildContext context) {
@@ -324,7 +322,6 @@ class _InfoRow extends StatelessWidget {
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
-        if (badge) ...[const SizedBox(width: 6), const DemoBadge()],
       ],
     );
   }

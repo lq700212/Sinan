@@ -14,7 +14,7 @@ public enum ThemeKind
 ///
 /// 机制：App.xaml 的 MergedDictionaries 固定为 [0]=主题键板、[1]=控件样式。
 /// 切主题只整体替换索引 0 的字典，控件样式里的 DynamicResource 自动跟随，
-/// 页面代码不出现任何色值（AGENTS.md 第 8 节：只允许引用主题键）。
+/// 页面代码不出现任何色值（desktop/AGENTS.md 第 4 节：只允许引用主题键）。
 ///
 /// 持久化走 <see cref="UiPrefsStore"/>（与数据库同根 ui.json）；读取失败一律回落浅色。
 /// </summary>
@@ -47,7 +47,13 @@ public static class ThemeManager
         if (app == null) return;
 
         var dictionaries = app.Resources.MergedDictionaries;
-        var source = new Uri($"Themes/Sinan.{kind}.xaml", UriKind.Relative);
+        // 必须用"程序集限定"的绝对 pack URI：相对 URI 的解析基准是入口程序集，
+        // 产品进程里恰好是 Sinan，但被测试宿主/其它壳加载时会去错误的程序集找资源
+        // （实测单元测试里直接报"找不到资源 themes/sinan.light.xaml"）。
+        var assemblyName = typeof(ThemeManager).Assembly.GetName().Name;
+        var source = new Uri(
+            $"pack://application:,,,/{assemblyName};component/Themes/Sinan.{kind}.xaml",
+            UriKind.Absolute);
         var dictionary = new ResourceDictionary { Source = source };
 
         // 先构造新字典再整体替换：直接改 Source 会让控件短暂取不到键，出现白底闪烁。

@@ -37,7 +37,7 @@ public sealed class LoginViewModel : ObservableObject
 
         DataPathDisplay = app.Database.Paths.DbPath;
         DataRootDisplay = app.Database.Paths.Root;
-        VersionDisplay = $"v0.0.1 · SQLite · schema {Database.SchemaVersion}";
+        VersionDisplay = $"{AppInfo.VersionLabel} · SQLite · schema {Database.SchemaVersion}";
 
         var issues = app.Issues.All();
         IssueCount = issues.Count;
@@ -128,7 +128,7 @@ public sealed class LoginViewModel : ObservableObject
 
     /// <summary>
     /// 手机配对入口。当前 MVP 单机批尚未启用内嵌同步服务，
-    /// 这里如实告知，不展示不存在的配对码（AGENTS.md 第 10 节不伪造）。
+    /// 这里如实告知，不展示不存在的配对码（根 AGENTS.md 第 7 节第 9 条：不伪造）。
     /// </summary>
     private void ShowPairing()
     {

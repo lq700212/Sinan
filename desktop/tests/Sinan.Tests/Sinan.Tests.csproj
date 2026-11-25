@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 司南桌面端测试（与 mobile/test 的 Flutter 测试各自独立）：
+       ① 逻辑层（Core / Data / Excel / 同步）——纯进程内，不弹窗、不抢焦点；
+       ② UI 渲染层——在 STA 测试线程里构造控件树 + RenderTargetBitmap 出图，
+          不创建可见窗口，不影响正在办公的桌面。
+       App 只在 UI 渲染测试里引用；逻辑测试直接引用 Core / Data。 -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Sinan.Tests</AssemblyName>
+    <RootNamespace>Sinan.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Sinan.Core\Sinan.Core.csproj" />
+    <ProjectReference Include="..\..\src\Sinan.Data\Sinan.Data.csproj" />
+    <ProjectReference Include="..\..\src\Sinan.App\Sinan.App.csproj" />
+  </ItemGroup>
+</Project>

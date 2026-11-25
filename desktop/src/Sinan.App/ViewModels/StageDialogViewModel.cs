@@ -16,7 +16,7 @@ namespace Sinan.App.ViewModels;
 /// 【与详情页四阶段卡的关系】两者写的是同一批 StageDraft、同一套仓储与乐观锁；
 /// 弹窗只是把"当前这一段"放大，保存后详情页整条重读（见 IssueDetailViewModel.Reload）。
 ///
-/// 【三条业务纪律，全部来自 AGENTS 第 6 节与设计稿 dlg-stage】
+/// 【三条业务纪律，全部来自根 AGENTS.md 第 5 节与设计稿 dlg-stage】
 /// 1. 改计划日必须填变更原因（字段级审计要能回答"为什么改"），只推进阶段可留空；
 /// 2. 倒挂只告警不阻断：装配计划日早于设计计划日时给出红条，但仍允许保存；
 /// 3. 阶段结果与计划原文是两个字段：`/` 表示不适用，空白表示未填，不能混。
@@ -96,7 +96,7 @@ public sealed class StageDialogViewModel : ObservableObject
         {
             if (!SetProperty(ref _state, value)) return;
 
-            // 选"不适用"时计划日应显式写 `/`（AGENTS 第 6 节第 2 条），
+            // 选"不适用"时计划日应显式写 `/`（根 AGENTS.md 第 5 节第 2 条），
             // 否则导出时"跳过"与"没填"分不清。
             if (value == StageState.NotApplicable && string.IsNullOrWhiteSpace(_dueRaw)) _dueRaw = "/";
 
@@ -285,7 +285,7 @@ public sealed class StageDialogViewModel : ObservableObject
 
     /// <summary>
     /// 计算"保存后"的设计/装配计划日：当前阶段用输入框里的值，其他阶段用快照。
-    /// 只解析语义日期，`已下图`、`/`、空白都不参与倒挂判断（AGENTS 第 10 节第 10 条）。
+    /// 只解析语义日期，`已下图`、`/`、空白都不参与倒挂判断（根 AGENTS.md 第 6 节统计口径）。
     /// </summary>
     private (DateOnly? Design, DateOnly? Assembly) ResolvePlanAfterEdit()
     {

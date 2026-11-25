@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<!-- 齿轮指针：8 齿工业齿轮 + 中心方位菱形，「设备安装调试 + 有方向」双重语义；深棕渐变压住工业感。 -->
+  <defs>
+    <linearGradient id="g5" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#78350F"/>
+      <stop offset="0.6" stop-color="#B45309"/>
+      <stop offset="1" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="url(#g5)"/>
+  <circle cx="64" cy="64" r="31" fill="none" stroke="#FFFFFF" stroke-width="11"/>
+  <g fill="#FFFFFF">
+    <rect x="57.5" y="16" width="13" height="19" rx="3.5"/>
+    <rect x="57.5" y="16" width="13" height="19" rx="3.5" transform="rotate(45 64 64)"/>
+    <rect x="57.5" y="16" width="13" height="19" rx="3.5" transform="rotate(90 64 64)"/>
+    <rect x="57.5" y="16" width="13" height="19" rx="3.5" transform="rotate(135 64 64)"/>
+    <rect x="57.5" y="16" width="13" height="19" rx="3.5" transform="rotate(180 64 64)"/>
+    <rect x="57.5" y="16" width="13" height="19" rx="3.5" transform="rotate(225 64 64)"/>
+    <rect x="57.5" y="16" width="13" height="19" rx="3.5" transform="rotate(270 64 64)"/>
+    <rect x="57.5" y="16" width="13" height="19" rx="3.5" transform="rotate(315 64 64)"/>
+  </g>
+  <path d="M64 44 L72 64 L64 84 L56 64 Z" fill="#FFFFFF"/>
+</svg>

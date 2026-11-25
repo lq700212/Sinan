@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<!-- 定位针：水滴定位标 + evenodd 中心孔，语义「把现场问题钉在机台上」；形状最简洁，20px 辨识度最高。 -->
+  <defs>
+    <linearGradient id="g4" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="url(#g4)"/>
+  <path fill="#FFFFFF" fill-rule="evenodd"
+        d="M64 20 C43 20 29 35 29 54 C29 77 64 108 64 108 C64 108 99 77 99 54 C99 35 85 20 64 20 Z
+           M64 41 A13 13 0 1 0 64 67 A13 13 0 1 0 64 41 Z"/>
+</svg>

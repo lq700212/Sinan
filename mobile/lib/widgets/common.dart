@@ -104,16 +104,28 @@ class GlassCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(radius - 1),
         child: Stack(
           children: [
-            if (!inset)
-              Positioned(
-                left: 14,
-                right: 14,
-                top: 0,
-                child: Container(
-                  height: 1,
-                  color: p.glassHi.withValues(alpha: p.isDark ? 0.5 : 0.9),
-                ),
-              ),
+             // 顶缘内高光：设计稿是玻璃反光，不是一条实心白线。
+             // 用中间亮、两端透明的水平渐变，并在暗色下压到 0.22——
+             // 暗色底上 0.5 白会变成刺眼的横杠，和"玻璃"完全相反。
+             if (!inset)
+               Positioned(
+                 left: 12,
+                 right: 12,
+                 top: 0,
+                 child: Container(
+                   height: 1,
+                   decoration: BoxDecoration(
+                     gradient: LinearGradient(
+                       colors: [
+                         Colors.transparent,
+                         p.glassHi
+                             .withValues(alpha: p.isDark ? 0.22 : 0.9),
+                         Colors.transparent,
+                       ],
+                     ),
+                   ),
+                 ),
+               ),
             Padding(padding: padding, child: child),
           ],
         ),

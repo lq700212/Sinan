@@ -1,15 +1,19 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/attachment_store.dart';
 import '../data/issue_repository.dart';
+import '../models/attachment.dart';
 import '../models/issue.dart';
 
 /// 应用级状态：会话、主题、问题列表与统计。
 /// 只做编排，业务规则在 `models/rules.dart`，数据访问在 `IssueRepository`。
 class AppState extends ChangeNotifier {
-  AppState(this.repository);
+  AppState(this.repository, {AttachmentStore? attachments})
+      : attachments = attachments ?? AttachmentStore();
 
   final IssueRepository repository;
+  final AttachmentStore attachments;
 
   ThemeMode _themeMode = ThemeMode.light;
   bool _loading = true;
@@ -127,5 +131,50 @@ class AppState extends ChangeNotifier {
   Future<void> addComment(String issueId, String body) async {
     await repository.addComment(issueId, _userName, body);
     notifyListeners();
+  }
+
+  /// 现场新建问题（不拍照也可先存），返回带四个阶段的新问题。
+  Future<Issue> createIssue({
+    required String machineCode,
+    required String title,
+    String solution = '',
+    String stageCode = StageCodes.assembly,
+    String ownerText = '',
+    String dueRaw = '',
+    String? status,
+  }) async {
+    final issue = await repository.createIssue(
+      machineCode: machineCode,
+      title: title,
+      solution: solution,
+      stageCode: stageCode,
+      ownerText: ownerText,
+      dueRaw: dueRaw,
+      status: status,
+    );
+    await refresh();
+    return issue;
+  }
+
+  /// 拍照 / 从相册选一张并挂到问题；用户取消返回 null。
+  /// 先落文件再入库：入库失败时文件成为孤儿，但绝不出现"库里有一条指向不存在文件"的记录。
+  Future<IssueAttachment?> addPhoto(String issueId,
+      {bool fromCamera = true}) async {
+    final picked =
+        await attachments.pick(issueId: issueId, fromCamera: fromCamera);
+    if (picked == null) return null;
+    final saved = await repository.addAttachment(issueId: issueId, picked: picked);
+    await refresh();
+    return saved;
+  }
+
+  /// 新建页先拍照、后保存：保存问题时才把系统缓存图复制进应用目录。
+  Future<IssueAttachment> addPhotoFromPath(
+      String issueId, String sourcePath) async {
+    final picked =
+        await attachments.persist(sourcePath, issueId: issueId);
+    final saved = await repository.addAttachment(issueId: issueId, picked: picked);
+    await refresh();
+    return saved;
   }
 }

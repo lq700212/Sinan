@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Sinan Mobile</string>
+	<string>司南</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -66,5 +66,20 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- 现场拍照/选图：iOS 必须声明用途，否则调用相机或相册时 App 直接被系统杀掉。 -->
+	<key>NSCameraUsageDescription</key>
+	<string>用于拍摄安装调试现场的问题照片，照片先保存在本机，联网后同步到桌面端主库。</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>用于从相册选择已有的现场问题照片。</string>
+	<!-- 局域网同步：桌面端主库的同步服务是 http://<IP>:5180（无 TLS）。
+	     NSAllowsLocalNetworking 只放行本地网络，不放开公网明文；
+	     NSLocalNetworkUsageDescription 是 iOS 14+ 本地网络权限弹窗的说明文案。 -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>用于连接同一局域网内的桌面端司南主库（默认端口 5180），同步问题记录与照片。</string>
 </dict>
 </plist>

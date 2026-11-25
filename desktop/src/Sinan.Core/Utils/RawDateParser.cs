@@ -13,7 +13,7 @@ namespace Sinan.Core.Utils;
 /// </summary>
 public static partial class RawDateParser
 {
-    [GeneratedRegex(@"^\s*(\d{1,4})\s*[.\-/年]\s*(\d{1,2})(?:\s*[.\-/月]\s*(\d{1,2}))?\s*日?\s*$")]
+    [GeneratedRegex(@"^\s*(\d{1,4})\s*[.\-/年月]\s*(\d{1,2})(?:\s*[.\-/月]\s*(\d{1,2}))?\s*日?\s*$")]
     private static partial Regex DatePattern();
 
     public static DateOnly? Parse(string? raw, int baseYear)
