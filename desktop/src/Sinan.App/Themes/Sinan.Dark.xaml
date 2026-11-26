@@ -38,7 +38,7 @@
     <SolidColorBrush x:Key="Brush.RowSelect" Color="#26F59E0B"/>
     <SolidColorBrush x:Key="Brush.TheadBg" Color="#0DFFFFFF"/>
     <SolidColorBrush x:Key="Brush.TheadFg" Color="#C6AF95"/>
-    <SolidColorBrush x:Key="Brush.CardWell" Color="#0AFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.CardWell" Color="#2E2218"/>
 
     <LinearGradientBrush x:Key="Brush.BrandPanel" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#3A2A1B" Offset="0"/>
@@ -60,6 +60,11 @@
     <LinearGradientBrush x:Key="Brush.PrimaryGrad" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#D97706" Offset="0"/>
         <GradientStop Color="#FBBF24" Offset="1"/>
+    </LinearGradientBrush>
+    <!-- 主按钮 hover 提亮档（2026-11-25 文本清晰度整改：替代原 Fx.PrimaryGlow 的 Effect 反馈） -->
+    <LinearGradientBrush x:Key="Brush.PrimaryGradHover" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#E8890C" Offset="0"/>
+        <GradientStop Color="#FCD34D" Offset="1"/>
     </LinearGradientBrush>
     <LinearGradientBrush x:Key="Brush.TitleGrad" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#F59E0B" Offset="0"/>

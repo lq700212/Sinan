@@ -11,6 +11,9 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize"
         CornerRadius="18" CaptionHeight="46"
+        Background="{DynamicResource Brush.Bg}"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
         FontFamily="{DynamicResource Font.Ui}"
         FontSize="{DynamicResource Text.Size.Body}"
         Foreground="{DynamicResource Brush.Fg}">
@@ -212,8 +215,7 @@
                     <ui:KxCapsuleBorder Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Bottom"
                             Margin="0,2,0,9" Padding="9,7"
                             Background="{DynamicResource Brush.GlassBgStrong}"
-                            BorderBrush="{DynamicResource Brush.GlassLine}" BorderThickness="1"
-                            Effect="{DynamicResource Fx.CardShadowSoft}">
+                            BorderBrush="{DynamicResource Brush.GlassLine}" BorderThickness="1">
                         <ItemsControl ItemsSource="{Binding NavItems}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>

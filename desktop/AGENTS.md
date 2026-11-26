@@ -33,10 +33,10 @@ desktop/
 
 ### 1.1 版本号（桌面端）
 
-- 唯一来源：`desktop/src/Directory.Build.props` 的 `<Version>0.0.2</Version>`。
-  改版本只改这一处；`Sinan.App` 通过程序集版本读取，界面由 `AppInfo` 显示 `v0.0.2`，
+- 唯一来源：`desktop/src/Directory.Build.props` 的 `<Version>0.0.4</Version>`。
+  改版本只改这一处；`Sinan.App` 通过程序集版本读取，界面由 `AppInfo` 显示 `v0.0.4`，
   不要在 XAML/代码里另写版本字符串。
-- 升级节奏遵循根总纲：**默认只升 patch**（`0.0.1 → 0.0.2 → 0.0.3`），
+- 升级节奏遵循根总纲：**默认只升 patch**（`0.0.1 → 0.0.2 → 0.0.3 → 0.0.4`），
   `0.0.9` 之后是 `0.0.10`，不自动进位；只有用户明确要求才动 minor/major。
 - 只改桌面端时只升桌面版本，手机端版本保持不动；两端不要求同号。
 - 改完 `dotnet build` 后，用程序集版本或界面 `AppInfo.VersionLabel` 核对三段版本。
@@ -129,6 +129,61 @@ desktop/
   页面里没人显式引用，全部退回 Aero 模板：白底轨道 + 直角上下箭头，深色下整条发亮。
   自绘滚动条模板时记得补 `Track.DecreaseRepeatButton/IncreaseRepeatButton`（透明 `RepeatButton`
   绑定 `ScrollBar.PageUpCommand/PageDownCommand`），否则点轨道翻页失效。
+
+### 4.3 文本清晰度（ClearType / 分层窗口 / 小字号，2026-11-25 实机整改）
+
+**根因**：WPF `AllowsTransparency=True`（分层窗口 `WS_EX_LAYERED`）的最终呈现面是
+32bpp ARGB 位图，系统会**强制关闭 ClearType**，整窗文字退化为灰度抗锯齿。100% DPI 下
+9~11.5px 中文会明显发虚（登录页数据文件路径 / 演示账号 / 数据目录是典型；换页面也一样）。
+
+**落地口径**：司南主窗 `MainWindow`、登录窗 `LoginWindow`、全部 `ChromeDialogWindow`
+弹窗一律 override `UseLayeredWindow => false`，关掉分层窗口，改走 `SetWindowRgn`
+物理圆角裁剪（半径取 `Fn.ShellRadius=18`），恢复 ClearType。
+
+- 代价一：圆角边缘是 1bit 硬裁剪（无抗锯齿），1x 下每级约 1px 阶梯；放大 3x 以上可见，
+  正常观看距离可接受。
+- 代价二：窗口外柔影被裁掉（弹窗 `Fx.WinShadow` 不再显示）。这是"文字清晰优先"的明确取舍，
+  不要为了阴影再改回分层。
+- 非分层窗口 `Background` 必须设主题底色（登录/主窗 `Brush.Bg`，弹窗基类
+  `Brush.Fresh.WinBg`），否则四角/首帧会露系统白底。
+- 最大化时 `ApplyRoundWindowRegion` 清除 Region（`SetWindowRgn(hwnd, IntPtr.Zero)`），
+  还原时重挂；跨屏 DPI 变化走 `DpiChanged` 重算。**新窗口**沿用这套即可，不要自己写 Region 代码。
+
+**配套文字规则**：
+
+1. 窗口根统一 `UseLayoutRounding="True"`（布局取整，避免半像素定位）+
+   `TextOptions.TextFormattingMode="Display"`（小字号按整数像素出字形）；大标题（`T.H1`）
+   保留 `Ideal`，避免 19px 以上标题边缘发硬。
+2. 明主题 `Brush.Muted` 已加深到 `#6B5C4B`（原 `#7D6E5E`），`Brush.Faint` 为 `#8F806C`；
+   小字不要再往更浅调。暗主题 `Brush.Muted` 已有 7:1 对比度，不动。
+3. **含文字的容器一律不挂 `Effect`**（2026-11-25 实测落地）：`DropShadowEffect` 会把
+   "元素 + 整棵子树"先渲染到离屏位图再合成，位图面不支持 ClearType——同一个登录卡片，
+   有 Effect 时文字亚像素色偏指标 1.32（灰度抗锯齿），摘掉后 5.84（与卡片外持平）。
+   本项目已全部摘除：`Card` 样式、`Btn.Primary`（hover 改用 `Brush.PrimaryGradHover` 提亮）、
+   `Nav.Item` 选中态、ComboBox 下拉 Popup、底部导航胶囊。登录页品牌印章（纯图形、无文字）
+   保留 `Fx.PrimaryGlow`。**新增卡片/容器不要再挂 Effect**，柔影由页面底层柔光斑
+   （`Brush.MeshA/B/C`）承担。
+4. 可读正文 ≥ 10.5px，说明性文字 ≥ 10px；9 / 9.5px 只留给装饰性角标、缩略图序号等
+   非阅读内容。登录页的路径、演示账号、数据目录已按此上调。
+5. 阅读密集型内容（表格、表单、列表）放在 `Card.Inset` 上：`Brush.CardWell` 已改为
+   **完全不透明**（明 `#FCF7EF` / 暗 `#2E2218`），保证表格文字走 ClearType。
+   玻璃卡片（`Brush.GlassBg` 半透明）只承载标题、KPI 数字等大字号内容——实测半透明背景
+   本身不阻止 ClearType（合成后背景不透明即可），但别把长段小字放进玻璃层。
+
+### 4.4 页面高度与底部 Dock（2026-11-26 详情页整改）
+
+主窗内容区是「页面 `*` + 底部悬浮 Dock `Auto`」两行，Dock 本身不覆盖页面。但页面若把
+整块内容塞进一个整页 `ScrollViewer`，内容高度超过一屏时，首屏底部的操作行会停在 Dock
+正上方并只露半截——视觉上就是"被导航条遮住"（详情页卡底「填写阶段」踩过）。
+
+**落地口径**：主操作不放进整页滚动区。
+
+- 详情页按设计稿 p2 固定一屏：根 `Grid` 行 = 摘要卡 Auto / 编辑区 Auto / 提示 Auto /
+  主体 `*`；左卡 = 卡头 Auto / 内容区 `*`（内部 `ScrollViewer`）/ 卡底操作 Auto；
+  右栏三张卡各自 `Auto` 并可整列滚动。1440×900 与 1280×800、编辑态展开下卡底按钮
+  均常驻可见。
+- 新增页面同理：先问"这一屏的主操作是什么"，把它固定在不滚动的行里，
+  只让明细/列表滚；不要指望用户先滚到底才能点保存/推进。
 
 ## 5. 弹窗规范
 

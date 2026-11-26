@@ -18,6 +18,13 @@ public partial class MainWindow : ChromeBorderlessWindow
     private readonly ShellViewModel _shell;
     private bool _switchingWindow;
 
+    /// <summary>
+    /// 关掉分层窗口：WPF 分层窗（AllowsTransparency=True）会全局禁用 ClearType，
+    /// 主界面大量 9.5~11.5px 中文会糊成灰度块。改走非分层 + SetWindowRgn 物理圆角，
+    /// 文字恢复 ClearType（圆角边缘为 1bit 硬裁剪，18px 下观感可接受）。
+    /// </summary>
+    protected override bool UseLayeredWindow => false;
+
     public MainWindow()
     {
         InitializeComponent();

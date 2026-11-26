@@ -9,6 +9,8 @@
         Resizeable="False"
         CaptionHeight="40"
         WindowStartupLocation="CenterOwner"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
         FontFamily="{DynamicResource Font.Ui}"
         FontSize="{DynamicResource Text.Size.Body}"
         Foreground="{DynamicResource Brush.Fg}">

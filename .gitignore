@@ -22,3 +22,6 @@ data/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# CodeGraph 本机索引（每台机器自建，22MB 数据库不入库）
+.codegraph/

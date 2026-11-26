@@ -20,11 +20,21 @@
       ============================================================================
     -->
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Margin="0,0,12,0">
+    <!--
+      整页固定一屏（设计稿 p2 的布局意图）：摘要卡 / 编辑区 / 提示条按内容高度排，
+      主体（左四阶段 + 右风险·档案·留痕）吃满剩余高度。左卡内容区与右栏各自内部滚动，
+      卡底「填写阶段」等操作常驻可见——不再整页滚动，避免打开详情时按钮被底部 Dock 压住。
+    -->
+    <Grid Margin="0,0,12,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
             <!-- ==================== 摘要卡 ==================== -->
-            <Border Style="{StaticResource Card}" Padding="18,16">
+            <Border Grid.Row="0" Style="{StaticResource Card}" Padding="18,16">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -139,7 +149,7 @@
             </Border>
 
             <!-- ==================== 主信息编辑（折叠，默认收起） ==================== -->
-            <Border Style="{StaticResource Card}" Padding="18,16" Margin="0,12,0,0"
+            <Border Grid.Row="1" Style="{StaticResource Card}" Padding="18,16" Margin="0,12,0,0"
                     Visibility="{Binding IsEditingDetails, Converter={StaticResource TrueToVisibility}}">
                 <StackPanel>
                     <Grid Margin="0,0,0,10">
@@ -213,7 +223,8 @@
                 </StackPanel>
             </Border>
 
-            <!-- 就地提示：错误 / 成功 -->
+            <!-- 就地提示：错误 / 成功（同一行内按可见性堆叠） -->
+            <StackPanel Grid.Row="2">
             <Border Padding="12,9" CornerRadius="10" Margin="0,12,0,0"
                     Background="{DynamicResource Brush.NgSoft}"
                     BorderBrush="{DynamicResource Brush.NgLine}" BorderThickness="1"
@@ -230,9 +241,10 @@
                            FontSize="{DynamicResource Text.Size.Small}"
                            Foreground="{DynamicResource Brush.Ok}"/>
             </Border>
+            </StackPanel>
 
             <!-- ==================== 主体：左四阶段 / 右风险·档案·留痕 ==================== -->
-            <Grid Margin="0,12,0,0">
+            <Grid Grid.Row="3" Margin="0,12,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="300"/>
@@ -265,8 +277,11 @@
                                        HorizontalAlignment="Right" VerticalAlignment="Center"/>
                         </Grid>
 
-                        <!-- 阶段行 + 备注 + 规则 -->
-                        <StackPanel Grid.Row="1" Margin="16,0,16,0">
+                        <!-- 阶段行 + 备注 + 规则：卡内独立滚动，卡底操作固定可见（设计稿 card-b overflow:auto） -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      Focusable="False" PanningMode="VerticalOnly">
+                        <StackPanel Margin="16,0,10,2">
                             <ItemsControl ItemsSource="{Binding StageEditors}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -599,8 +614,9 @@
                                 </Grid>
                             </StackPanel>
                         </StackPanel>
+                        </ScrollViewer>
 
-                        <!-- 卡底：最近更新 + 操作 -->
+                        <!-- 卡底：最近更新 + 操作（固定，不随卡内内容滚动） -->
                         <Border Grid.Row="2" BorderBrush="{DynamicResource Brush.SepLine}"
                                 BorderThickness="0,1,0,0" Padding="16,10">
                             <Grid>
@@ -626,12 +642,14 @@
                     </Grid>
                 </Border>
 
-                <!-- 右栏：倒挂 / 机台档案 / 修改留痕 -->
-                <Grid Grid.Column="1" Margin="12,0,0,0">
+                <!-- 右栏：倒挂 / 机台档案 / 修改留痕（内容超出一屏时整列滚动） -->
+                <ScrollViewer Grid.Column="1" Margin="12,0,0,0"
+                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                              Focusable="False" PanningMode="VerticalOnly">
+                <Grid Margin="0,0,4,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
@@ -912,19 +930,8 @@
                             </Border>
                         </StackPanel>
                     </Border>
-
-                    <!-- 数据来源 -->
-                    <Border Grid.Row="3" Style="{StaticResource Card.Inset}" Padding="12,10" Margin="0,12,0,0">
-                        <StackPanel>
-                            <TextBlock Text="数据来源" FontSize="9.5"
-                                       Foreground="{DynamicResource Brush.Muted}"/>
-                            <TextBlock Text="{Binding SourceTrace}" FontSize="10"
-                                       Foreground="{DynamicResource Brush.Fg}"
-                                       TextWrapping="Wrap" Margin="0,3,0,0"/>
-                        </StackPanel>
-                    </Border>
                 </Grid>
+                </ScrollViewer>
             </Grid>
-        </StackPanel>
-    </ScrollViewer>
+        </Grid>
 </UserControl>

@@ -88,14 +88,19 @@
 
     <!-- ==================== 卡片（玻璃态三层之二：半透明渐变 + 亮边 + 柔影） ====================
          圆角 20 / 内卡 16 与设计稿 radius、card-r-sm 完全一致，不需要在页面里再写。
-         为什么卡片不挂 views:KxRoundedClip（与 AIris 的做法不同）：
-           本项目的卡片带 DropShadowEffect（Fx.CardShadow，柔影是玻璃态第三层），而
-           KxRoundedClip 的落地方式是 Clip —— Clip 在 Effect 之后生效，会把外扩的暖色柔影
-           直接裁掉，卡片立刻变"贴纸"。AIris 的卡片本身无阴影所以可以直接挂。
-         贴边子元素破角的正确解法（本项目专用口径）：
-           给"贴到卡片边缘、自带方角背景"的子元素自己挂裁剪，半径 = 卡片圆角 − 该子元素
-           到卡片边缘的距离；距离为 0（卡片 Padding=0 的表格卡/图片卡）时取同值 20。
-           例：<ListView views:KxRoundedClip.Radius="20" .../>。
+         【2026-11-25 文本清晰度整改：Card 不再挂 DropShadowEffect】
+            WPF 的 Effect 会把"元素 + 整棵子树"先渲染到离屏位图再合成，位图面不支持
+            ClearType —— 卡片内所有文字退化为灰度抗锯齿（实测登录页卡片：有 Effect 时
+            亚像素色偏指标 1.32，摘掉后 5.84，与卡片外持平）。非分层窗口已经把 ClearType
+            恢复，卡片再挂 Effect 等于又糊回去。柔影改由页面底层柔光斑（Brush.MeshA/B/C）
+            承担氛围，卡片本身保留半透明渐变 + 1px 亮边 + 顶缘内高光三层。
+         【注意】半透明背景（Brush.GlassBg）本身也会让 WPF 关闭 ClearType；所以阅读密集
+            的内容（表格、表单、列表）一律放进 Card.Inset（Brush.CardWell 不透明），
+            玻璃态卡片只承载标题、KPI 数字等大字号内容。
+         为什么卡片不挂 views:KxRoundedClip：
+            贴边子元素破角的正确解法是给"贴到卡片边缘、自带方角背景"的子元素自己挂裁剪，
+            半径 = 卡片圆角 − 该子元素到卡片边缘的距离；距离为 0（卡片 Padding=0 的
+            表格卡/图片卡）时取同值 20。例：<ListView views:KxRoundedClip.Radius="20" .../>。
          禁止用 ClipToBounds="True" 代替——矩形裁剪照样是方角，只是换了个地方破。
          ==================================================================== -->
     <Style x:Key="Card" TargetType="Border">
@@ -105,7 +110,6 @@
         <Setter Property="CornerRadius" Value="{DynamicResource Radius.Card}"/>
         <Setter Property="Padding" Value="{DynamicResource Pad.Card}"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
-        <Setter Property="Effect" Value="{DynamicResource Fx.CardShadow}"/>
     </Style>
 
     <!-- 卡套卡/表格容器：不透明，保证文字与网格可读（desktop/AGENTS.md 第 4 节） -->
@@ -161,10 +165,11 @@
         <Setter Property="Background" Value="{DynamicResource Brush.PrimaryGrad}"/>
         <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Effect" Value="{DynamicResource Fx.PrimaryGlow}"/>
+        <!-- 2026-11-25：不挂 Fx.PrimaryGlow —— Effect 会把按钮文字位图化、丢 ClearType；
+             hover 反馈改为背景渐变提亮（Brush.PrimaryGradHover），不经过离屏位图。 -->
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Effect" Value="{DynamicResource Fx.CardShadowSoft}"/>
+                <Setter Property="Background" Value="{DynamicResource Brush.PrimaryGradHover}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -383,8 +388,7 @@
                                     MaxHeight="260" CornerRadius="12"
                                     Background="{DynamicResource Brush.Panel}"
                                     BorderBrush="{DynamicResource Brush.Border}"
-                                    BorderThickness="1"
-                                    Effect="{DynamicResource Fx.CardShadowSoft}">
+                                    BorderThickness="1">
                                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="4">
                                     <ItemsPresenter/>
                                 </ScrollViewer>
@@ -512,7 +516,6 @@
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Brush.PrimaryGrad}"/>
                             <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}"/>
                             <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="Effect" Value="{DynamicResource Fx.PrimaryGlow}"/>
                         </DataTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

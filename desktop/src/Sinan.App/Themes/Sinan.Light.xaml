@@ -18,7 +18,7 @@
     <Color x:Key="Color.Bg">#FBF6EE</Color>
     <Color x:Key="Color.Panel">#FFFFFF</Color>
     <Color x:Key="Color.Fg">#2A2118</Color>
-    <Color x:Key="Color.Muted">#7D6E5E</Color>
+    <Color x:Key="Color.Muted">#6B5C4B</Color>
     <Color x:Key="Color.Border">#EDDFCC</Color>
     <Color x:Key="Color.Primary">#D97706</Color>
     <Color x:Key="Color.Primary2">#F59E0B</Color>
@@ -42,7 +42,7 @@
     <SolidColorBrush x:Key="Brush.RowSelect" Color="#33D97706"/>
     <SolidColorBrush x:Key="Brush.TheadBg" Color="#6BF7EFE2"/>
     <SolidColorBrush x:Key="Brush.TheadFg" Color="#7B6A56"/>
-    <SolidColorBrush x:Key="Brush.CardWell" Color="#80FCF7EF"/>
+    <SolidColorBrush x:Key="Brush.CardWell" Color="#FCF7EF"/>
 
     <!-- 登录页左侧品牌区：比页面底色更暖的渐变，不能写死在页面里 -->
     <LinearGradientBrush x:Key="Brush.BrandPanel" StartPoint="0,0" EndPoint="1,1">
@@ -53,8 +53,8 @@
 
     <!-- ==================== 前景 ==================== -->
     <SolidColorBrush x:Key="Brush.Fg" Color="#2A2118"/>
-    <SolidColorBrush x:Key="Brush.Muted" Color="#7D6E5E"/>
-    <SolidColorBrush x:Key="Brush.Faint" Color="#A89A88"/>
+    <SolidColorBrush x:Key="Brush.Muted" Color="#6B5C4B"/>
+    <SolidColorBrush x:Key="Brush.Faint" Color="#8F806C"/>
     <SolidColorBrush x:Key="Brush.OnPrimary" Color="#FFFFFF"/>
 
     <!-- ==================== 主色 / 强调 ==================== -->
@@ -65,6 +65,11 @@
     <LinearGradientBrush x:Key="Brush.PrimaryGrad" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#D97706" Offset="0"/>
         <GradientStop Color="#F59E0B" Offset="1"/>
+    </LinearGradientBrush>
+    <!-- 主按钮 hover 提亮档（2026-11-25 文本清晰度整改：替代原 Fx.PrimaryGlow 的 Effect 反馈） -->
+    <LinearGradientBrush x:Key="Brush.PrimaryGradHover" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#EA7C00" Offset="0"/>
+        <GradientStop Color="#FBB01A" Offset="1"/>
     </LinearGradientBrush>
     <LinearGradientBrush x:Key="Brush.TitleGrad" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#B45309" Offset="0"/>

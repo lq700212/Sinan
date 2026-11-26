@@ -9,7 +9,7 @@
 ![Flutter](https://img.shields.io/badge/Flutter-Dart%203.14-02569B?logo=flutter&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?logo=sqlite&logoColor=white)
 ![Excel](https://img.shields.io/badge/Excel-.xls%20%2B%20.xlsx-217346?logo=microsoftexcel&logoColor=white)
-![Version](https://img.shields.io/badge/version-v0.0.2-D97706)
+![Version](https://img.shields.io/badge/version-v0.0.4-D97706)
 
 </div>
 

@@ -11,6 +11,12 @@ namespace Sinan.App.Views;
 /// </summary>
 public partial class DeleteIssueDialog : ChromeDialogWindow
 {
+    /// <summary>
+    /// 关掉分层窗口：WPF 分层窗会全局禁用 ClearType，弹窗里 9.5~11.5px 的中文
+    /// （字段说明、错误提示、冲突明细）会糊。改走非分层 + SetWindowRgn 物理圆角。
+    /// </summary>
+    protected override bool UseLayeredWindow => false;
+
     private DeleteIssueDialogViewModel? _viewModel;
 
     public DeleteIssueDialog()

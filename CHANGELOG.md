@@ -1,5 +1,69 @@
 # 变更记录
 
+## 开发期（2026-11-26）详情页卡底操作被底部 Dock 遮挡修复（桌面 v0.0.4 / 手机 v0.0.2）
+
+### 问题
+- 问题详情页把整页（摘要卡 + 主体）放在一个 `ScrollViewer` 里，1440×900 下内容比可视区
+  高约 50px；卡底「编辑主信息 / 填写阶段 / 删除」只露出一半、紧贴底部悬浮 Dock，
+  看起来像被导航条压住。1280×800 与编辑态展开时更明显。
+
+### 改动（`IssueDetailPage.xaml`，对齐设计稿 p2 的固定一屏结构）
+- 根 `ScrollViewer + StackPanel` 改为 `Grid` 固定行：摘要卡 Auto、编辑区 Auto、
+  就地提示 Auto、主体 `*`。
+- 左卡按设计稿改为「卡头 Auto / 内容区 `*`（内部 `ScrollViewer`）/ 卡底操作 Auto」，
+  「填写阶段」等操作常驻可见，阶段行 / 备注 / 规则在卡内滚动。
+- 右栏倒挂 / 机台 / 留痕改为内部滚动（三行 Auto），小窗口与编辑态展开时不溢出。
+- 删除右栏底部冗余的「数据来源」卡：源行/批次已在「修改留痕」的创建记录与摘要卡
+  副标题中显示，重复展示会把右栏撑出滚动条。
+
+### 验证
+- `dotnet build` 0 error / 0 warning；`dotnet test` 199 条全过；脱敏扫描 PASS；
+- ui_smoke 明/暗全页截图无回归；详情页在 1440×900、1280×800、明/暗主题、编辑态展开下
+  逐张目检：卡底三个操作始终完整可见，左卡与右栏各自内滚，底部 Dock 不再遮挡；
+- 圆角自检通过（历史遗留的「3px 进度条圆角」WARN 与本轮无关）。
+
+### 版本
+- 桌面端 `0.0.3 → 0.0.4`（`desktop/src/Directory.Build.props`）；手机端保持 `0.0.2`。
+
+## 开发期（2026-11-25）桌面端文本清晰度整改（桌面 v0.0.3 / 手机 v0.0.2）
+
+### 根因
+- WPF 分层窗口（`AllowsTransparency=True`，`WS_EX_LAYERED`）会强制关闭 ClearType，
+  整个窗口的文字退化为灰度抗锯齿；100% DPI 下 9~11.5px 中文明显发虚
+  （登录页数据文件路径、演示账号、数据目录最典型，其他页面同样受影响）。
+- 第二层根因：`DropShadowEffect` 会把"元素 + 整棵子树"先渲染到离屏位图再合成，
+  位图面同样不支持 ClearType。实测同一登录卡片：有 Effect 时文字亚像素色偏指标 1.32，
+  摘掉后 5.84（与卡片外持平）。两层叠加导致卡片内文字比卡片外更糊。
+
+### 改动
+- 主窗 / 登录窗 / 6 个业务弹窗：override `UseLayeredWindow => false`，关掉分层窗口，
+  改走 `SetWindowRgn` 物理圆角（半径取 `Fn.ShellRadius=18`）恢复 ClearType；
+  非分层窗口设主题底色，最大化时清除 Region、还原重挂、跨屏 DPI 变化重算。
+- `Kaleidoscope.UI`：`ChromeBorderlessWindow` 新增 `UseLayeredWindow` 虚属性与非分层分支；
+  `ChromeDialogWindow` 非分层分支补 `DpiChanged` 重算 Region、非分层时不再给骨架卡片挂
+  `Fx.WinShadow`（投影本就被 Region 裁掉，挂 Effect 只会把弹窗文字位图化）。
+- **全局摘除含文字容器的 Effect**：`Card` 样式、`Btn.Primary`（hover 改为
+  `Brush.PrimaryGradHover` 提亮）、`Nav.Item` 选中态、ComboBox 下拉 Popup、底部导航胶囊；
+  登录页品牌印章（纯图形、无文字）保留 `Fx.PrimaryGlow`。柔影由页面底层柔光斑承担。
+- 明/暗主题补 `Brush.PrimaryGradHover`；`Brush.CardWell` 改完全不透明
+  （明 #80FCF7EF→#FCF7EF，暗 #0AFFFFFF→#2E2218），表格/表单文字恢复 ClearType。
+- 全局：窗口根加 `UseLayoutRounding=True` + `TextOptions.TextFormattingMode=Display`；
+  明主题 `Brush.Muted` #7D6E5E→#6B5C4B、`Brush.Faint` #A89A88→#8F806C。
+- 登录页：数据文件路径 10→10.5、演示账号 9.5→10.5、数据目录/首次登录提示 10→10.5、
+  底部说明 10.5→11、品牌副标题/说明 11→11.5，数字标签 10.5→11。
+
+### 验证
+- `dotnet build desktop/Sinan.sln -c Debug` 0 error；
+- `dotnet test desktop/tests/Sinan.Tests/Sinan.Tests.csproj -c Debug` 199 条全过；
+- `tools/ui_smoke` 明/暗 20+ 张截图逐页目检：登录、总览、工作台、台账、数据交换、
+  报表、设置、详情、分项目、新建/导出弹窗；四角 3x 放大目检，圆角自检通过；
+- 像素级抽检：登录卡文字亚像素色偏 1.32→5.84、台账表格 0.62→5.40、暗色表格 5.54，
+  与顶栏无 Effect 区域（11.51）同一量级，确认 ClearType 已恢复；
+- 实机验证最大化/还原、1280×800 最小尺寸、弹窗开合，Region 圆角与布局均正常。
+
+### 版本
+- 桌面端 `0.0.2 → 0.0.3`（`desktop/src/Directory.Build.props`）；手机端保持 `0.0.2`。
+
 ## 开发期（2026-11-25）双端界面按设计稿逐页对齐（桌面 v0.0.2 / 手机 v0.0.2）
 
 对照 `docs/ui_design_mockups.html`（单方案 C 晨光现场 · 精致玻璃态）逐页核对并重构，

@@ -16,6 +16,13 @@ public partial class LoginWindow : Kaleidoscope.UI.Views.ChromeBorderlessWindow
 {
     private readonly LoginViewModel _viewModel;
 
+    /// <summary>
+    /// 关掉分层窗口：WPF 分层窗（AllowsTransparency=True）会全局禁用 ClearType，
+    /// 登录页大量 9.5~11px 中文会糊成灰度块。改走非分层 + SetWindowRgn 物理圆角，
+    /// 文字恢复 ClearType（圆角边缘为 1bit 硬裁剪，18px 下观感可接受）。
+    /// </summary>
+    protected override bool UseLayeredWindow => false;
+
     public LoginWindow()
     {
         InitializeComponent();
