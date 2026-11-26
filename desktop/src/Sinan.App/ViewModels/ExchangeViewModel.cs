@@ -59,7 +59,7 @@ public sealed class ExchangeViewModel : ObservableObject
         Layouts = new[]
         {
             new LayoutOption("original", "客户原表版式",
-                "保留合并表头、四阶段分组、列序与列宽；给客户回表用这个"),
+                "保留合并表头、四阶段分组、列序与列宽；给客户回表用这个", "推荐"),
             new LayoutOption("standard", "标准明细表",
                 "一行一条问题，阶段拆成独立列，便于二次分析"),
             new LayoutOption("summary", "统计汇总",
@@ -72,7 +72,7 @@ public sealed class ExchangeViewModel : ObservableObject
             new ScopeOption("all", "全部问题", "忽略筛选，导出库内全部在册问题"),
             new ScopeOption("inverted", "仅计划倒挂", "只导设计计划晚于装配计划的行"),
             new ScopeOption("overdue", "仅逾期", "只导已过计划日且未完成的行"),
-            new ScopeOption("photos", "有现场照片的问题", "只导带附件的行，附照片清单")
+            new ScopeOption("photos", "有现场照片的问题", "只导带附件的行，附照片清单", "演示")
         };
         _scope = Scopes[0];
 
@@ -774,16 +774,22 @@ public sealed class StrategyOption
 /// <summary>导出格式（设计稿 export 页「输出格式」三选一）。</summary>
 public sealed class LayoutOption
 {
-    public LayoutOption(string value, string label, string hint)
+    public LayoutOption(string value, string label, string hint, string badge = "")
     {
         Value = value;
         Label = label;
         Hint = hint;
+        Badge = badge;
     }
 
     public string Value { get; }
     public string Label { get; }
     public string Hint { get; }
+
+    /// <summary>行内小徽标（设计稿「推荐」），空串表示不显示。</summary>
+    public string Badge { get; }
+
+    public bool HasBadge => Badge.Length > 0;
 
     /// <summary>
     /// 无障碍名：列表项默认名是类型名，三项全叫 "LayoutOption"，
@@ -835,16 +841,22 @@ public sealed class ExportPreviewRow
 /// <summary>导出范围（设计稿 export 页「导出范围」）。</summary>
 public sealed class ScopeOption
 {
-    public ScopeOption(string value, string label, string hint)
+    public ScopeOption(string value, string label, string hint, string badge = "")
     {
         Value = value;
         Label = label;
         Hint = hint;
+        Badge = badge;
     }
 
     public string Value { get; }
     public string Label { get; }
     public string Hint { get; }
+
+    /// <summary>行内小徽标（设计稿「演示」），空串表示不显示。</summary>
+    public string Badge { get; }
+
+    public bool HasBadge => Badge.Length > 0;
 
     /// <summary>实时条数（如"36 条"），构造时按库内实况算一次，不写死设计稿演示值。</summary>
     public string CountText { get; set; } = "";

@@ -18,6 +18,24 @@
 
             <converters:PaletteBrushConverter x:Key="PaletteBrush"/>
 
+            <!--
+              全局焦点视觉：WPF 默认是 1px 黑色虚线框，按 Alt 激活键盘导航提示后会一直挂在
+              当前焦点元素上（设置页的 ScrollViewer 最明显，整块内容区套一圈虚线，截图反馈
+              要求去掉）。这里用空模板替换系统 FocusVisualStyle：
+              · 不是隐式样式，不会漏进第三方控件的内容模板；
+              · 按钮/列表项/导航项本身已有 hover / selected / 主色描边作为状态反馈，
+                去掉系统虚线不会让页面"没有焦点提示"；
+              · 页面若确需键盘焦点描边，可在自己的模板里用 IsKeyboardFocused 触发器画，
+                不要再把系统虚线放回来。
+            -->
+            <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}">
+                <Setter Property="Control.Template">
+                    <Setter.Value>
+                        <ControlTemplate/>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
             <Style TargetType="ToolTip">
                 <Setter Property="Background" Value="{DynamicResource Brush.Panel}"/>
                 <Setter Property="Foreground" Value="{DynamicResource Brush.Fg}"/>

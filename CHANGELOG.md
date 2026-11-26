@@ -1,5 +1,91 @@
 # 变更记录
 
+## 开发期（2026-11-26）数据交换页复刻 + 系统设置页修复（桌面 v0.0.6 / 手机 v0.0.2）
+
+### 问题
+- 用户并排目检后指出：登录页关闭按钮停在左右分栏中缝（根 `Grid` 分 52*/48* 两列，
+  按钮未设列，默认落进第 0 列的品牌区右缘），未贴整窗右上角。
+- 数据交换页（导入 / 导出）与设计稿 p3、p4 差距明显：卡头全部用了「底色 + 下边线」的
+  band 风格（设计稿 `.card-h` 是透明底、无分隔线）；步骤条圆点 22px、连接线固定 26px、
+  当前步无 3px 光晕；导出范围 / 输出格式的选项没有 `.rd` radio 圆点；导出页左列三张卡
+  过高，选项卡被裁；右侧迷你表列宽固定，宽卡右侧留大片空白。
+
+### 改动（`Views/LoginWindow.xaml`、`Views/ExchangePage.xaml`、`Themes/Sinan.Controls.xaml`、
+`ViewModels/ExchangeViewModel.cs`）
+- 登录页：关闭按钮补 `Grid.ColumnSpan="2"`，保持右上角 `Margin="0,8,10,0"`，不再压在中缝。
+- 数据交换顶部：去掉「模式切换 + 最近导入 + 打开数据目录」整张卡片外壳，改为无卡横条——
+  设计稿 app-main 的第一块内容就是步骤条，这里保持同样的视觉层级。
+- 卡头统一改回设计稿 `.card-h`：透明底、无分隔线、图标 20×20 + 标题 12.5px 700；
+  卡底条（`.card-f`）保留 CardWell 通栏，圆角按同心半径 13 → 19（外层 20 − 边框 1）。
+- 步骤条按 `.steps` 重写：圆点 20px、当前步外套 26px `PrimaryDim` 光晕、当前步文字加粗变
+  `Brush.Fg`、连接线用 `*` 列真正铺满（`margin 0 10px`），外层卡片 `padding 12px 16px`。
+- 校验结果空状态重做：42×42 圆角图标框 + 「还没有校验结果」+ 一句说明，替换原来的一行小字；
+  有预览时的「N 条提示 / N 条阻断」改绑 `Preview.WarningCount / ErrorCount`，不再写死「0 条」。
+- 源文件卡：未选文件时只在卡内保留一个主按钮（原来卡头与空状态各一个，重复且违反
+  「一屏一个主操作」）；已选文件后卡头显示「更换文件」。
+- 导出范围 / 输出格式：ListBox 项模板补 `.rd` radio 圆环（14px，选中内点 6px 主色）；
+  范围「有现场照片的问题」加「演示」徽标、版式「客户原表版式」加「推荐」徽标
+  （`ScopeOption.Badge` / `LayoutOption.Badge`，空串不显示）。
+- `Sinan.Controls.xaml` 新增 `Switch` 开关样式（设计稿 `.sw`：32×18 轨道 + 13px 圆点，
+  选中 `PrimaryDim` 底 + `Primary` 边、圆点右移；禁用但保持开启时只压 0.8 透明度），
+  替换选项区原来的「固定」chip；「覆盖原始 xls 文件」仍是禁用开关 + 「不支持」，
+  不伪造未实现的能力。
+- 导出页左列紧凑化（选项 padding 7,5、行距 4/8、卡头 margin 14,10,14,6），
+  1440×900 下选项卡 5 行与说明文字完整可见；仍保留整列滚动（设计稿同样是 `overflow:auto`）。
+- 右侧迷你表「存在问题 / 解决措施」改 `1.1* / 1*` + `MinWidth 150/140`，多余宽度由这两列
+  吃掉，表格铺满预览卡；规则说明（回写 / 照片）移出滚动区、常驻卡底上方。
+- 导入页两列比例按设计稿 `grid-import` 调为 1 : 1.25。
+
+### 验证
+- `dotnet build desktop/Sinan.sln -c Debug` 0 error / 0 warning；`dotnet test` 199 条全过。
+- ui_smoke 全页截图（明/暗 19 张）：导入 / 导出页逐张目检，1440×900 下步骤条、卡头、
+  选项圆点、迷你表对齐正常；四角 6× 放大复查步骤条卡角、列映射卡底条、预览卡底条，
+  无破角/露白。
+- 圆角自检 `[圆角自检·页面切换]` 全部「通过」，无新增 WARN。
+- 功能缺口如实保留：导出范围 4 项（设计稿 5 项）、输出格式 3 项（设计稿 4 项）、
+  选项 5 行（设计稿 6 行）、列映射「手动调整」/ 校验「导出校验报告」未实现，
+  均未用假控件补齐。
+
+### 系统设置页修复（同日追补，`Views/SettingsPage.xaml`、`Views/SettingsPage.xaml.cs`、
+`App.xaml`、`Themes/Sinan.Light.xaml`）
+- 问题：①卡片头是透明底 + 无分隔线，与设计稿 `.card.fold .f-h` 的浅底 + 1px 底线不符；
+  ②表单标签左对齐、与值之间空一大截；③数据源路径是一行裸文本，设计稿是胶囊只读框；
+  ④左侧目录选中项没有 `.setnav a.on` 的 2px 主色左竖条、字号偏大 0.5px；
+  ⑤「危险操作」3px 红条写 `CornerRadius="19,0,0,19"` 被 WPF 钳成椭圆（KxRadiusAudit WARN）；
+  ⑥左侧目录不随内容滚动联动，用户滚到「提醒与逾期」时目录还亮着「数据与备份」；
+  ⑦按 Alt 出现 WPF 系统焦点虚线框，整块右侧内容区被套一圈（ScrollViewer 获得键盘焦点）。
+- 改动：
+  - 卡头统一 `Set.CardHead`（`Brush.PanelSoft` 底 + `Brush.SepLine` 1px 底线 + 19px 上圆角），
+    图标 20×20 `PrimaryDim` 底、标题 12.5px 700，与设计稿 `.f-h` 同档；
+  - 行标签 `Set.Label` 统一 86px、右对齐、11px muted；数据源 5 行路径改为
+    `views:KxCapsuleBorder` 胶囊（26 高、`Brush.Input` 底、1px 边、`Padding 9,0`），
+    路径单行省略 + ToolTip 全路径；行距压到 6，5 行路径在 1440×900 内不撑高卡片；
+  - 左目录项字号 11，条目模板 `BorderThickness` 常驻 `2,0,0,0`（默认透明、选中换
+    `Brush.Primary`），只换画刷不改布局，等价设计稿 `inset 2px 0 0 var(--primary)`；
+    补 `AutomationProperties.Name="{Binding Label}"`，6 项不再同名；
+  - 「当前账号」与「在册人员」合并为「人员与角色」一张卡，「外观」并入「关于与许可」卡底，
+    目录 6 项与右侧卡片一一对应，不再出现设计稿没有的独立「外观」卡；
+  - 「危险操作」红条改 3px 直角 `Border` + 外层 `views:KxRoundedClip.Radius="19"` 裁剪：
+    红条跟着卡片圆角收口，不再被 WPF 分别钳成椭圆，KxRadiusAudit 设置页 WARN 清零；
+  - 目录 ↔ 滚动双向联动：点击定位改用 `StackPanel`（滚动内容）坐标系
+    （`TransformToAncestor(ContentScroll)` 拿到的是内容坐标，加当前 offset 会滚过头），
+    并设 300ms 抑制窗口，避免点到「关于与许可」滚到底后目录立刻跳回「危险操作」；
+    手动滚动时反查最后一张卡顶 ≤ offset+16 的卡片回写高亮，滚到顶/底直接给首尾项；
+  - `App.xaml` 用 `Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}"` +
+    空 `ControlTemplate` 覆盖全局系统焦点视觉，按 Alt 不再出现虚线框；按钮/列表项原有
+    `FocusVisualStyle="{x:Null}"` 保持不动，键盘焦点仍由 hover / selected / 主色描边反馈。
+  - `Sinan.Light.xaml`：`Brush.PanelSoft` 由 `#94FFFAAF`（偏黄绿，色值笔误）按设计稿
+    `rgba(255,250,242,.58)` 改为 `#94FFFAF2`，卡头浅底恢复暖白。
+- 验证：`dotnet build` 0 error / 0 warning；`dotnet test` 199 条全过；ui_smoke 明/暗
+  各一轮截图逐张目检，设置页卡头、右对齐标签、路径胶囊、目录竖条与设计稿一致；
+  圆角自检 `[圆角自检·首屏渲染/页面切换]` 全部「通过」，无 WARN；路径胶囊两端、
+  目录竖条、危险操作红条按 5× 放大目检无破角/露白。
+- 说明：设置页比一屏长，点击靠下的「移动端配对 / 关于与许可」时页面只能滚到底
+  （实测最大 offset 677 < 卡片内容坐标 872），这是页面长度决定的正常行为，不额外留白。
+
+### 版本
+- 桌面端：`0.0.5 → 0.0.6`（`desktop/src/Directory.Build.props`）；手机端保持 `0.0.2`。
+
 ## 开发期（2026-11-26）全站字号与模块比例对齐设计稿 + 四层柔光背景（桌面 v0.0.5 / 手机 v0.0.2）
 
 ### 问题

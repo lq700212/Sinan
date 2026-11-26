@@ -637,6 +637,47 @@
         </Setter>
     </Style>
 
+    <!-- ==================== 开关（设计稿 .sw：32×18 轨道 + 13px 圆点） ====================
+         设计稿轨道底色是 rowalt 变量（半透明），铺在玻璃卡上几乎看不出边界，
+         这里改用不透明的 Brush.CardWell 打底，选中态仍按 .sw.on 走 primarydim + primary 描边。
+         轨道高度固定 18，CornerRadius 9 就是精确半高（不是 99 那种会被 WPF 钳成椭圆的写法）。 -->
+    <Style x:Key="Switch" TargetType="ToggleButton">
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="18"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid Background="Transparent">
+                        <Border x:Name="Track" CornerRadius="9" BorderThickness="1"
+                                Background="{DynamicResource Brush.CardWell}"
+                                BorderBrush="{DynamicResource Brush.Border}"/>
+                        <Border x:Name="Thumb" Width="13" Height="13" CornerRadius="6.5"
+                                HorizontalAlignment="Left" Margin="2,0,0,0"
+                                Background="{DynamicResource Brush.Muted}"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Track" Property="Background"
+                                    Value="{DynamicResource Brush.PrimaryDim}"/>
+                            <Setter TargetName="Track" Property="BorderBrush"
+                                    Value="{DynamicResource Brush.Primary}"/>
+                            <Setter TargetName="Thumb" Property="Background"
+                                    Value="{DynamicResource Brush.Primary}"/>
+                            <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
+                            <Setter TargetName="Thumb" Property="Margin" Value="0,0,2,0"/>
+                        </Trigger>
+                        <!-- 禁用但保持开启（“固定行为”行）：只压一点透明度，仍能看出是开着的 -->
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.8"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ==================== 数据表格（ListView + GridView） ==================== -->
     <Style x:Key="Grid.Header" TargetType="GridViewColumnHeader">
         <Setter Property="FontFamily" Value="{DynamicResource Font.Ui}"/>

@@ -30,7 +30,9 @@
     <!-- ==================== 表面 ==================== -->
     <SolidColorBrush x:Key="Brush.Bg" Color="#FBF6EE"/>
     <SolidColorBrush x:Key="Brush.Panel" Color="#FFFFFF"/>
-    <SolidColorBrush x:Key="Brush.PanelSoft" Color="#94FFFAAF"/>
+    <!-- 设计稿 panel2: rgba(255,250,242,.58)；原值 #94FFFAAF 是色值笔误（偏黄绿），
+         设置页卡头、详情页浅底都靠它，按设计稿修正为暖白。 -->
+    <SolidColorBrush x:Key="Brush.PanelSoft" Color="#94FFFAF2"/>
     <SolidColorBrush x:Key="Brush.Bar" Color="#A3FFFFFF"/>
     <SolidColorBrush x:Key="Brush.Side" Color="#8CFFFDF8"/>
     <SolidColorBrush x:Key="Brush.Footer" Color="#8CFFFAF2"/>

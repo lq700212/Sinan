@@ -269,8 +269,10 @@
                 </StackPanel>
             </Grid>
 
-            <!-- 关闭按钮：WindowChrome 标题区内的按钮必须显式放行点击 -->
-            <Button x:Name="CloseButton" Style="{StaticResource Btn.Icon}" Content="✕"
+            <!-- 关闭按钮：WindowChrome 标题区内的按钮必须显式放行点击。
+                 根 Grid 分左右两列（52*/48*），必须显式跨两列，否则默认落进第 0 列，
+                 视觉上会停在中缝而不是整窗右上角。 -->
+            <Button x:Name="CloseButton" Grid.ColumnSpan="2" Style="{StaticResource Btn.Icon}" Content="✕"
                     HorizontalAlignment="Right" VerticalAlignment="Top"
                     Margin="0,8,10,0" FontSize="14"
                     ToolTip="关闭"
