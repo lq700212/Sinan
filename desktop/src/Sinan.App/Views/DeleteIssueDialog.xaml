@@ -36,9 +36,9 @@
                 Background="{DynamicResource Brush.NgSoft}"
                 BorderBrush="{DynamicResource Brush.NgLine}" BorderThickness="1">
             <StackPanel>
-                <TextBlock Text="{Binding WarningText}" TextWrapping="Wrap" FontSize="12.5"
+                <TextBlock Text="{Binding WarningText}" TextWrapping="Wrap" FontSize="13.5"
                            Foreground="{DynamicResource Brush.Fg}"/>
-                <TextBlock Text="{Binding ImpactText}" TextWrapping="Wrap" FontSize="11"
+                <TextBlock Text="{Binding ImpactText}" TextWrapping="Wrap" FontSize="12"
                            Margin="0,6,0,0" Foreground="{DynamicResource Brush.Muted}"/>
             </StackPanel>
         </Border>
@@ -74,15 +74,15 @@
                             </Style.Triggers>
                         </Style>
                     </Border.Style>
-                    <TextBlock Text="{Binding MatchTag}" FontSize="9.5"
+                    <TextBlock Text="{Binding MatchTag}" FontSize="10.5"
                                Foreground="{DynamicResource Brush.Muted}"/>
                 </Border>
             </Grid>
-            <TextBlock Text="{Binding MatchText}" Style="{StaticResource T.Tiny}" FontSize="10"
+            <TextBlock Text="{Binding MatchText}" Style="{StaticResource T.Tiny}" FontSize="11"
                        Margin="2,6,0,0"/>
 
             <Border Style="{StaticResource Card.Inset}" Padding="11,9" Margin="0,16,0,0">
-                <TextBlock TextWrapping="Wrap" FontSize="10.5"
+                <TextBlock TextWrapping="Wrap" FontSize="11.5"
                            Foreground="{DynamicResource Brush.Muted}"
                            Text="删除只标记问题为作废（写 deleted_at），不物理删除记录；附件原文件保留，等归档策略统一处理。如需保留追溯，建议改用「已取消」状态。"/>
             </Border>
@@ -91,7 +91,7 @@
         <!-- 底部 -->
         <Grid Grid.Row="2" Margin="0,16,0,0">
             <TextBlock Text="建议改用「已取消」保留追溯" Style="{StaticResource T.Tiny}"
-                       FontSize="9.5" VerticalAlignment="Center"/>
+                       FontSize="10.5" VerticalAlignment="Center"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="取消" Style="{StaticResource Btn.Ghost}" Height="34" Width="82"
                         AutomationProperties.AutomationId="DeleteCancelButton"

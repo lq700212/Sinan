@@ -55,6 +55,17 @@
                 <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
 
+            <!-- ==================== 画布柔光（设计稿 .page .app 四层，跨满整窗） ====================
+                 顺序与 CSS 一致：线性薄染在最上，三团径向光斑依次叠在底色上。
+                 顶栏/底栏是半透明玻璃，光斑会从它们后面透出来（设计稿同样如此）。
+                 必须放在所有内容之前，否则会盖住页面。 -->
+            <Grid Grid.RowSpan="3" IsHitTestVisible="False">
+                <Rectangle Fill="{DynamicResource Brush.MeshTint}"/>
+                <Rectangle Fill="{DynamicResource Brush.MeshA}"/>
+                <Rectangle Fill="{DynamicResource Brush.MeshB}"/>
+                <Rectangle Fill="{DynamicResource Brush.MeshC}"/>
+            </Grid>
+
             <!-- ==================== 顶栏（设计稿 .app-bar：46px / padding 0 14 / gap 10） ==================== -->
             <Border Grid.Row="0" Background="{DynamicResource Brush.Bar}"
                     BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="0,0,0,1">
@@ -190,19 +201,9 @@
                 </Grid>
             </Border>
 
-            <!-- ==================== 主体：玻璃柔光斑 + 页面 + 底部悬浮 Dock ==================== -->
+            <!-- ==================== 主体：页面 + 底部悬浮 Dock（柔光已提到整窗背景层） ==================== -->
             <Grid Grid.Row="1" ClipToBounds="True">
-                <Ellipse Width="620" Height="620" Fill="{DynamicResource Brush.MeshA}"
-                         HorizontalAlignment="Right" VerticalAlignment="Top"
-                         Margin="0,-260,-220,0" IsHitTestVisible="False"/>
-                <Ellipse Width="520" Height="520" Fill="{DynamicResource Brush.MeshB}"
-                         HorizontalAlignment="Left" VerticalAlignment="Bottom"
-                         Margin="-200,0,0,-240" IsHitTestVisible="False"/>
-                <Ellipse Width="420" Height="420" Fill="{DynamicResource Brush.MeshC}"
-                         HorizontalAlignment="Center" VerticalAlignment="Center"
-                         Margin="160,200,0,0" IsHitTestVisible="False"/>
-
-                <Grid Margin="20,16,20,0">
+                <Grid Margin="20,18,20,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>

@@ -315,7 +315,7 @@
         <Setter Property="Background" Value="{DynamicResource Brush.Input}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Height" Value="36"/>
+        <Setter Property="Height" Value="32"/>
         <Setter Property="Padding" Value="10,0"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
@@ -644,7 +644,7 @@
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{DynamicResource Brush.TheadFg}"/>
         <Setter Property="Background" Value="{DynamicResource Brush.TheadBg}"/>
-        <Setter Property="Height" Value="36"/>
+        <Setter Property="Height" Value="32"/>
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
         <Setter Property="Padding" Value="12,0"/>
         <Setter Property="Template">

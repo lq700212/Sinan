@@ -34,7 +34,7 @@
         </Grid.RowDefinitions>
 
             <!-- ==================== 摘要卡 ==================== -->
-            <Border Grid.Row="0" Style="{StaticResource Card}" Padding="18,16">
+            <Border Grid.Row="0" Style="{StaticResource Card}" Padding="16,13">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -43,24 +43,24 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- 序号印章：设计稿 .detail-mark（52×52，主色柔底，两位序号） -->
-                    <Border Grid.Column="0" Width="52" Height="52" CornerRadius="12"
+                    <Border Grid.Column="0" Width="50" Height="50" CornerRadius="12"
                             Background="{DynamicResource Brush.PrimaryDim}"
                             BorderBrush="{DynamicResource Brush.PrimaryLine}" BorderThickness="1"
                             VerticalAlignment="Top" Margin="0,0,14,0">
                         <TextBlock Text="{Binding SeqBadge}" FontFamily="{DynamicResource Font.Mono}"
-                                   FontSize="20" FontWeight="Bold"
+                                   FontSize="21" FontWeight="Bold"
                                    Foreground="{DynamicResource Brush.Primary}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
 
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Issue.Title}" FontSize="17" FontWeight="Bold"
+                        <TextBlock Text="{Binding Issue.Title}" FontSize="18" FontWeight="Bold"
                                    Foreground="{DynamicResource Brush.Fg}"
-                                   TextWrapping="Wrap" LineHeight="24"/>
+                                   TextWrapping="Wrap" LineHeight="23"/>
 
                         <!-- 副标题：机台 · 序号 · 源表行 · 创建时间（设计稿 .detail-sub） -->
-                        <TextBlock FontSize="10.5" Foreground="{DynamicResource Brush.Muted}"
-                                   Margin="0,4,0,0" TextTrimming="CharacterEllipsis">
+                        <TextBlock FontSize="11.5" Foreground="{DynamicResource Brush.Muted}"
+                                   Margin="0,3,0,0" TextTrimming="CharacterEllipsis">
                             <Run Text="机台 "/><Run Text="{Binding MachineCode, Mode=OneWay}"
                                                     FontFamily="{DynamicResource Font.Mono}"
                                                     FontWeight="SemiBold"/><Run Text=" · 序号 "/><Run
@@ -70,34 +70,34 @@
                         </TextBlock>
 
                         <!-- 解决措施：标签 + 正文（设计稿 .detail-measure） -->
-                        <Grid Margin="0,8,0,0">
+                        <Grid Margin="0,6,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="解决措施" FontSize="10.5"
+                            <TextBlock Text="解决措施" FontSize="11.5"
                                        Foreground="{DynamicResource Brush.Muted}"
                                        Margin="0,0,8,0" VerticalAlignment="Top"/>
                             <TextBlock Grid.Column="1" Text="{Binding MeasureDisplay}"
-                                       FontSize="11" FontWeight="SemiBold"
+                                       FontSize="12" FontWeight="SemiBold"
                                        Foreground="{DynamicResource Brush.Fg}"
                                        TextWrapping="Wrap" LineHeight="17"/>
                         </Grid>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,9,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,7,0,0">
                             <ContentControl Style="{StaticResource Chip}" Tag="info">
-                                <TextBlock Text="{Binding StatusDisplay}" FontSize="10"/>
+                                <TextBlock Text="{Binding StatusDisplay}" FontSize="11"/>
                             </ContentControl>
                             <ContentControl Style="{StaticResource Chip}" Tag="on" Margin="6,0,0,0">
-                                <TextBlock Text="{Binding ProgressText, StringFormat=阶段 {0}}" FontSize="10"/>
+                                <TextBlock Text="{Binding ProgressText, StringFormat=阶段 {0}}" FontSize="11"/>
                             </ContentControl>
                             <ContentControl Style="{StaticResource Chip}" Tag="ng" Margin="6,0,0,0"
                                             Visibility="{Binding HasInverted, Converter={StaticResource TrueToVisibility}}">
-                                <TextBlock Text="{Binding InvertedDaysText, StringFormat=计划倒挂 {0}}" FontSize="10"/>
+                                <TextBlock Text="{Binding InvertedDaysText, StringFormat=计划倒挂 {0}}" FontSize="11"/>
                             </ContentControl>
                             <ContentControl Style="{StaticResource Chip}" Tag="warn" Margin="6,0,0,0"
                                             Visibility="{Binding HasOverdue, Converter={StaticResource TrueToVisibility}}">
-                                <TextBlock Text="{Binding OverdueDays, StringFormat=逾期 {0} 天}" FontSize="10"/>
+                                <TextBlock Text="{Binding OverdueDays, StringFormat=逾期 {0} 天}" FontSize="11"/>
                             </ContentControl>
                         </StackPanel>
                     </StackPanel>
@@ -113,14 +113,14 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="设计下图" FontSize="10.5"
+                                <TextBlock Text="设计下图" FontSize="11.5"
                                            Foreground="{DynamicResource Brush.Muted}"/>
                                 <TextBlock Grid.Column="1" Text="{Binding DesignOwnerDisplay}"
-                                           FontSize="11" FontWeight="SemiBold"
+                                           FontSize="12" FontWeight="SemiBold"
                                            Foreground="{DynamicResource Brush.Fg}"
                                            TextTrimming="CharacterEllipsis" Margin="0,0,6,0"/>
                                 <TextBlock Grid.Column="2" Text="{Binding DesignDueDisplay}"
-                                           FontFamily="{DynamicResource Font.Mono}" FontSize="9.5"
+                                           FontFamily="{DynamicResource Font.Mono}" FontSize="10.5"
                                            Foreground="{DynamicResource Brush.Muted}"/>
                             </Grid>
                         </Border>
@@ -133,14 +133,14 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="装配调试" FontSize="10.5"
+                                <TextBlock Text="装配调试" FontSize="11.5"
                                            Foreground="{DynamicResource Brush.Muted}"/>
                                 <TextBlock Grid.Column="1" Text="{Binding AssemblyOwnerDisplay}"
-                                           FontSize="11" FontWeight="SemiBold"
+                                           FontSize="12" FontWeight="SemiBold"
                                            Foreground="{DynamicResource Brush.Fg}"
                                            TextTrimming="CharacterEllipsis" Margin="0,0,6,0"/>
                                 <TextBlock Grid.Column="2" Text="{Binding AssemblyDueDisplay}"
-                                           FontFamily="{DynamicResource Font.Mono}" FontSize="9.5"
+                                           FontFamily="{DynamicResource Font.Mono}" FontSize="10.5"
                                            Foreground="{DynamicResource Brush.Muted}"/>
                             </Grid>
                         </Border>
@@ -153,7 +153,7 @@
                     Visibility="{Binding IsEditingDetails, Converter={StaticResource TrueToVisibility}}">
                 <StackPanel>
                     <Grid Margin="0,0,0,10">
-                        <TextBlock Text="编辑问题主信息" Style="{StaticResource T.H2}" FontSize="14"/>
+                        <TextBlock Text="编辑问题主信息" Style="{StaticResource T.H2}" FontSize="15"/>
                         <TextBlock Text="保存前不会写库；标题与解决措施会进审计"
                                    Style="{StaticResource T.Tiny}" HorizontalAlignment="Right"
                                    VerticalAlignment="Center"/>
@@ -264,16 +264,16 @@
                             <StackPanel Orientation="Horizontal">
                                 <Border Width="22" Height="22" CornerRadius="6"
                                         Background="{DynamicResource Brush.PrimaryDim}">
-                                    <TextBlock Text="◷" FontSize="11"
+                                    <TextBlock Text="◷" FontSize="12"
                                                Foreground="{DynamicResource Brush.Primary}"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <TextBlock Text="四阶段推进" FontSize="13.5" FontWeight="Bold"
+                                <TextBlock Text="四阶段推进" FontSize="14.5" FontWeight="Bold"
                                            Foreground="{DynamicResource Brush.Fg}"
                                            VerticalAlignment="Center" Margin="8,0,0,0"/>
                             </StackPanel>
                             <TextBlock Text="空白 ≠ 不适用；“/”才是跳过"
-                                       Style="{StaticResource T.Tiny}" FontSize="10"
+                                       Style="{StaticResource T.Tiny}" FontSize="11"
                                        HorizontalAlignment="Right" VerticalAlignment="Center"/>
                         </Grid>
 
@@ -286,7 +286,7 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Border BorderBrush="{DynamicResource Brush.SepLine}"
-                                                BorderThickness="0,0,0,1" Padding="0,9">
+                                                BorderThickness="0,0,0,1" Padding="0,6">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="16"/>
@@ -344,41 +344,41 @@
                                                 </Border>
 
                                                 <TextBlock Grid.Column="1" Text="{Binding Label}"
-                                                           FontSize="11.5" FontWeight="SemiBold"
+                                                           FontSize="12.5" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource Brush.Fg}"
                                                            VerticalAlignment="Center"
                                                            TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
 
                                                 <!-- 责任人：未填时设计稿写"—（未填责任人）" -->
                                                 <Grid Grid.Column="2" Margin="0,0,8,0" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding OwnerDisplay}" FontSize="10.5"
+                                                    <TextBlock Text="{Binding OwnerDisplay}" FontSize="11.5"
                                                                Foreground="{DynamicResource Brush.Fg}"
                                                                TextTrimming="CharacterEllipsis"
                                                                Visibility="{Binding HasOwner, Converter={StaticResource TrueToVisibility}}"/>
                                                     <StackPanel Orientation="Horizontal"
                                                                 Visibility="{Binding HasOwner, Converter={StaticResource InverseBoolToVisibility}}">
-                                                        <TextBlock Text="—" FontSize="10.5"
+                                                        <TextBlock Text="—" FontSize="11.5"
                                                                    Foreground="{DynamicResource Brush.Muted}"/>
-                                                        <TextBlock Text="（未填责任人）" FontSize="10"
+                                                        <TextBlock Text="（未填责任人）" FontSize="11"
                                                                    Foreground="{DynamicResource Brush.Muted}"/>
                                                     </StackPanel>
                                                 </Grid>
 
                                                 <TextBlock Grid.Column="3" Text="{Binding DueFullDisplay}"
-                                                           FontFamily="{DynamicResource Font.Mono}" FontSize="10"
+                                                           FontFamily="{DynamicResource Font.Mono}" FontSize="11"
                                                            Foreground="{DynamicResource Brush.Muted}"
                                                            VerticalAlignment="Center"
                                                            TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
 
                                                 <TextBlock Grid.Column="4" Text="{Binding StateWord}"
-                                                           FontSize="10.5"
+                                                           FontSize="11.5"
                                                            Foreground="{DynamicResource Brush.Muted}"
                                                            VerticalAlignment="Center"/>
 
                                                 <ContentControl Grid.Column="5" Style="{StaticResource Chip}"
                                                                 Tag="{Binding TagTone}" HorizontalAlignment="Left"
                                                                 Padding="7,0" MinHeight="18">
-                                                    <TextBlock Text="{Binding TagText}" FontSize="9"/>
+                                                    <TextBlock Text="{Binding TagText}" FontSize="10"/>
                                                 </ContentControl>
                                             </Grid>
                                         </Border>
@@ -389,25 +389,25 @@
                             <!-- 阶段备注：设计稿 .stage-note -->
                             <Border Background="{DynamicResource Brush.CardWell}"
                                     BorderBrush="{DynamicResource Brush.SepLine}" BorderThickness="1"
-                                    CornerRadius="8" Padding="12,10" Margin="0,12,0,0">
+                                    CornerRadius="8" Padding="12,8" Margin="0,10,0,0">
                                 <StackPanel>
                                     <Grid>
-                                        <TextBlock Text="{Binding StageNoteLabel}" FontSize="11.5"
+                                        <TextBlock Text="{Binding StageNoteLabel}" FontSize="12.5"
                                                    FontWeight="Bold"
                                                    Foreground="{DynamicResource Brush.Fg}"/>
                                         <ContentControl Style="{StaticResource Chip}"
                                                         HorizontalAlignment="Right" Tag="plain"
                                                         Visibility="{Binding HasAttachments, Converter={StaticResource TrueToVisibility}}">
-                                            <TextBlock Text="{Binding StageNotePhotoText}" FontSize="9"/>
+                                            <TextBlock Text="{Binding StageNotePhotoText}" FontSize="10"/>
                                         </ContentControl>
                                     </Grid>
 
-                                    <TextBlock Text="{Binding StageNoteText}" FontSize="10.5"
+                                    <TextBlock Text="{Binding StageNoteText}" FontSize="11.5"
                                                Foreground="{DynamicResource Brush.Fg}"
                                                TextWrapping="Wrap" LineHeight="17" Margin="0,6,0,0"
                                                Visibility="{Binding HasStageNote, Converter={StaticResource TrueToVisibility}}"/>
                                     <TextBlock Text="还没有阶段备注。现场情况可在「填写阶段」里补，或添加现场评论。"
-                                               FontSize="10" Foreground="{DynamicResource Brush.Muted}"
+                                               FontSize="11" Foreground="{DynamicResource Brush.Muted}"
                                                TextWrapping="Wrap" Margin="0,6,0,0"
                                                Visibility="{Binding HasStageNote, Converter={StaticResource InverseBoolToVisibility}}"/>
 
@@ -438,14 +438,14 @@
                                                                         BorderThickness="{TemplateBinding BorderThickness}"
                                                                         ClipToBounds="True">
                                                                     <Grid>
-                                                                        <TextBlock Text="▣" FontSize="17"
+                                                                        <TextBlock Text="▣" FontSize="18"
                                                                                    HorizontalAlignment="Center"
                                                                                    VerticalAlignment="Center"
                                                                                    Foreground="{DynamicResource Brush.Faint}"/>
                                                                         <Border VerticalAlignment="Bottom"
                                                                                 Background="#B3000000" Padding="4,2">
                                                                             <TextBlock Text="{Binding FileName}"
-                                                                                       FontSize="8" Foreground="White"
+                                                                                       FontSize="9" Foreground="White"
                                                                                        TextTrimming="CharacterEllipsis"/>
                                                                         </Border>
                                                                         <ContentControl Style="{StaticResource Chip}" Tag="warn"
@@ -453,7 +453,7 @@
                                                                                         VerticalAlignment="Top" Margin="3"
                                                                                         MinHeight="14" Padding="5,0"
                                                                                         Visibility="{Binding IsDemo, Converter={StaticResource TrueToVisibility}}">
-                                                                            <TextBlock Text="演示" FontSize="8"/>
+                                                                            <TextBlock Text="演示" FontSize="9"/>
                                                                         </ContentControl>
                                                                     </Grid>
                                                                 </Border>
@@ -471,7 +471,7 @@
                                         </ItemsControl>
 
                                         <Button Content="＋ 添加照片" Style="{StaticResource Btn.Ghost}"
-                                                Height="24" FontSize="10" Padding="0" Width="72"
+                                                Height="24" FontSize="11" Padding="0" Width="72"
                                                 HorizontalAlignment="Left"
                                                 Margin="0,2,0,0"
                                                 AutomationProperties.AutomationId="AddAttachmentButton"
@@ -481,20 +481,20 @@
                                     <Grid Margin="0,2,0,0">
                                         <StackPanel Orientation="Horizontal"
                                                     Visibility="{Binding HasStageNote, Converter={StaticResource TrueToVisibility}}">
-                                            <TextBlock Text="更新于 " FontSize="9.5"
+                                            <TextBlock Text="更新于 " FontSize="10.5"
                                                        Foreground="{DynamicResource Brush.Muted}"/>
-                                            <TextBlock Text="{Binding StageNoteTime}" FontSize="9.5"
+                                            <TextBlock Text="{Binding StageNoteTime}" FontSize="10.5"
                                                        FontFamily="{DynamicResource Font.Mono}"
                                                        Foreground="{DynamicResource Brush.Muted}"/>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                             <Button Content="附件明细" Style="{StaticResource Btn.Ghost}"
-                                                    Height="20" FontSize="9.5" Padding="6,0"
+                                                    Height="20" FontSize="10.5" Padding="6,0"
                                                     AutomationProperties.AutomationId="ToggleAttachmentsButton"
                                                     Visibility="{Binding HasAttachments, Converter={StaticResource TrueToVisibility}}"
                                                     Command="{Binding ToggleAttachmentsCommand}"/>
                                             <Button Content="查看大图" Style="{StaticResource Btn.Ghost}"
-                                                    Height="20" FontSize="9.5" Padding="6,0" Margin="6,0,0,0"
+                                                    Height="20" FontSize="10.5" Padding="6,0" Margin="6,0,0,0"
                                                     AutomationProperties.AutomationId="OpenPhotoViewerButton"
                                                     Command="{Binding ViewPhotosCommand}"/>
                                         </StackPanel>
@@ -515,16 +515,16 @@
                                                             </Grid.ColumnDefinitions>
                                                             <StackPanel Grid.Column="0" Margin="0,0,8,0">
                                                                 <StackPanel Orientation="Horizontal">
-                                                                    <TextBlock Text="{Binding FileName}" FontSize="10"
+                                                                    <TextBlock Text="{Binding FileName}" FontSize="11"
                                                                                Foreground="{DynamicResource Brush.Fg}"
                                                                                TextTrimming="CharacterEllipsis"/>
                                                                     <ContentControl Style="{StaticResource Chip}" Tag="warn"
                                                                                     Margin="6,0,0,0"
                                                                                     Visibility="{Binding IsDemo, Converter={StaticResource TrueToVisibility}}">
-                                                                        <TextBlock Text="演示" FontSize="8.5"/>
+                                                                        <TextBlock Text="演示" FontSize="9.5"/>
                                                                     </ContentControl>
                                                                 </StackPanel>
-                                                                <TextBlock FontSize="9" Margin="0,2,0,0"
+                                                                <TextBlock FontSize="10" Margin="0,2,0,0"
                                                                            Foreground="{DynamicResource Brush.Muted}">
                                                                     <Run Text="{Binding SizeDisplay, Mode=OneWay}"/><Run Text=" · "/><Run
                                                                         Text="{Binding CreatedDisplay, Mode=OneWay}"/>
@@ -532,12 +532,12 @@
                                                             </StackPanel>
                                                             <StackPanel Grid.Column="1" Orientation="Horizontal">
                                                                 <Button Content="打开" Style="{StaticResource Btn.Ghost}"
-                                                                        Height="20" FontSize="9.5" Padding="6,0"
+                                                                        Height="20" FontSize="10.5" Padding="6,0"
                                                                         Command="{Binding DataContext.OpenAttachmentCommand,
                                                                                   RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                                         CommandParameter="{Binding}"/>
                                                                 <Button Content="删除" Style="{StaticResource Btn.Ghost}"
-                                                                        Height="20" FontSize="9.5" Padding="6,0"
+                                                                        Height="20" FontSize="10.5" Padding="6,0"
                                                                         Margin="6,0,0,0"
                                                                         Foreground="{DynamicResource Brush.Ng}"
                                                                         Command="{Binding DataContext.DeleteAttachmentCommand,
@@ -557,7 +557,7 @@
                             <Rectangle Height="1" Margin="0,12,0,0" SnapsToDevicePixels="True"
                                        Stroke="{DynamicResource Brush.Border}" StrokeDashArray="4 3"/>
                             <StackPanel Margin="0,10,0,0">
-                                <TextBlock Text="推进规则（本系统固定）" FontSize="10.5"
+                                <TextBlock Text="推进规则（本系统固定）" FontSize="11.5"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource Brush.Muted}"
                                            Margin="0,0,0,6"/>
@@ -569,11 +569,11 @@
                                     <Border Width="14" Height="14" CornerRadius="7"
                                             Background="{DynamicResource Brush.PanelSoft}"
                                             BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1">
-                                        <TextBlock Text="1" FontSize="8" FontWeight="Bold"
+                                        <TextBlock Text="1" FontSize="9" FontWeight="Bold"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"
                                                    Foreground="{DynamicResource Brush.Muted}"/>
                                     </Border>
-                                    <TextBlock Grid.Column="1" FontSize="10"
+                                    <TextBlock Grid.Column="1" FontSize="11"
                                                Foreground="{DynamicResource Brush.Muted}"
                                                TextWrapping="Wrap"
                                                Text="前一阶段完成或标“/”后，后一阶段才允许填写实际完成日。"/>
@@ -586,11 +586,11 @@
                                     <Border Width="14" Height="14" CornerRadius="7"
                                             Background="{DynamicResource Brush.PanelSoft}"
                                             BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1">
-                                        <TextBlock Text="2" FontSize="8" FontWeight="Bold"
+                                        <TextBlock Text="2" FontSize="9" FontWeight="Bold"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"
                                                    Foreground="{DynamicResource Brush.Muted}"/>
                                     </Border>
-                                    <TextBlock Grid.Column="1" FontSize="10"
+                                    <TextBlock Grid.Column="1" FontSize="11"
                                                Foreground="{DynamicResource Brush.Muted}"
                                                TextWrapping="Wrap"
                                                Text="计划日可改，但每次修改必须填写原因并留痕。"/>
@@ -603,11 +603,11 @@
                                     <Border Width="14" Height="14" CornerRadius="7"
                                             Background="{DynamicResource Brush.PanelSoft}"
                                             BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1">
-                                        <TextBlock Text="3" FontSize="8" FontWeight="Bold"
+                                        <TextBlock Text="3" FontSize="9" FontWeight="Bold"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"
                                                    Foreground="{DynamicResource Brush.Muted}"/>
                                     </Border>
-                                    <TextBlock Grid.Column="1" FontSize="10"
+                                    <TextBlock Grid.Column="1" FontSize="11"
                                                Foreground="{DynamicResource Brush.Muted}"
                                                TextWrapping="Wrap"
                                                Text="装配计划日早于设计计划日时，保存即触发倒挂告警（不阻断）。"/>
@@ -621,18 +621,18 @@
                                 BorderThickness="0,1,0,0" Padding="16,10">
                             <Grid>
                                 <TextBlock Text="{Binding LastUpdatedLine}" Style="{StaticResource T.Tiny}"
-                                           FontSize="10" VerticalAlignment="Center"/>
+                                           FontSize="11" VerticalAlignment="Center"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                     <Button Content="编辑主信息" Style="{StaticResource Btn.Ghost}"
-                                            Height="28" FontSize="11" Padding="10,0"
+                                            Height="28" FontSize="12" Padding="10,0"
                                             AutomationProperties.AutomationId="ToggleDetailsEditButton"
                                             Command="{Binding ToggleDetailsEditCommand}"/>
                                     <Button Content="填写阶段" Style="{StaticResource Btn.Ghost}"
-                                            Height="28" FontSize="11" Padding="10,0" Margin="6,0,0,0"
+                                            Height="28" FontSize="12" Padding="10,0" Margin="6,0,0,0"
                                             AutomationProperties.AutomationId="OpenStageDialogButton"
                                             Command="{Binding EditStageCommand}"/>
                                     <Button Content="删除" Style="{StaticResource Btn.Ghost}"
-                                            Height="28" FontSize="11" Padding="10,0" Margin="6,0,0,0"
+                                            Height="28" FontSize="12" Padding="10,0" Margin="6,0,0,0"
                                             Foreground="{DynamicResource Brush.Ng}"
                                             AutomationProperties.AutomationId="OpenDeleteDialogButton"
                                             Command="{Binding DeleteIssueCommand}"/>
@@ -663,30 +663,30 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Border Width="22" Height="22" CornerRadius="6"
                                             Background="{DynamicResource Brush.NgLine}">
-                                        <TextBlock Text="⚠" FontSize="11"
+                                        <TextBlock Text="⚠" FontSize="12"
                                                    Foreground="{DynamicResource Brush.Ng}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="计划倒挂" FontSize="13" FontWeight="Bold"
+                                    <TextBlock Text="计划倒挂" FontSize="14" FontWeight="Bold"
                                                Foreground="{DynamicResource Brush.Fg}"
                                                VerticalAlignment="Center" Margin="8,0,0,0"/>
                                 </StackPanel>
                                 <ContentControl Style="{StaticResource Chip}" Tag="ng"
                                                 HorizontalAlignment="Right">
-                                    <TextBlock Text="{Binding InvertedDaysText}" FontSize="9.5"/>
+                                    <TextBlock Text="{Binding InvertedDaysText}" FontSize="10.5"/>
                                 </ContentControl>
                             </Grid>
-                            <TextBlock Text="{Binding InvertedDescription}" FontSize="10.5"
+                            <TextBlock Text="{Binding InvertedDescription}" FontSize="11.5"
                                        Foreground="{DynamicResource Brush.Fg}"
                                        TextWrapping="Wrap" LineHeight="17"/>
                             <Border BorderBrush="{DynamicResource Brush.NgLine}"
                                     BorderThickness="0,1,0,0" Margin="0,10,0,0" Padding="0,8,0,0">
                                 <Grid>
                                     <Button Content="调整计划日" Style="{StaticResource Btn.Ghost}"
-                                            Height="24" FontSize="10" Padding="8,0"
+                                            Height="24" FontSize="11" Padding="8,0"
                                             Foreground="{DynamicResource Brush.Ng}"
                                             Command="{Binding EditStageCommand}"/>
-                                    <TextBlock Text="{Binding InvertedRankText}" FontSize="9.5"
+                                    <TextBlock Text="{Binding InvertedRankText}" FontSize="10.5"
                                                Foreground="{DynamicResource Brush.Muted}"
                                                HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                 </Grid>
@@ -704,20 +704,20 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Border Width="22" Height="22" CornerRadius="6"
                                             Background="{DynamicResource Brush.OkLine}">
-                                        <TextBlock Text="✓" FontSize="11"
+                                        <TextBlock Text="✓" FontSize="12"
                                                    Foreground="{DynamicResource Brush.Ok}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="计划顺序正常" FontSize="13" FontWeight="Bold"
+                                    <TextBlock Text="计划顺序正常" FontSize="14" FontWeight="Bold"
                                                Foreground="{DynamicResource Brush.Fg}"
                                                VerticalAlignment="Center" Margin="8,0,0,0"/>
                                 </StackPanel>
                                 <ContentControl Style="{StaticResource Chip}" Tag="ok"
                                                 HorizontalAlignment="Right">
-                                    <TextBlock Text="无倒挂" FontSize="9.5"/>
+                                    <TextBlock Text="无倒挂" FontSize="10.5"/>
                                 </ContentControl>
                             </Grid>
-                            <TextBlock Text="{Binding InvertedDescription}" FontSize="10.5"
+                            <TextBlock Text="{Binding InvertedDescription}" FontSize="11.5"
                                        Foreground="{DynamicResource Brush.Fg}"
                                        TextWrapping="Wrap" LineHeight="17"/>
                         </StackPanel>
@@ -730,11 +730,11 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Border Width="22" Height="22" CornerRadius="6"
                                             Background="{DynamicResource Brush.PrimaryDim}">
-                                        <TextBlock Text="▣" FontSize="11"
+                                        <TextBlock Text="▣" FontSize="12"
                                                    Foreground="{DynamicResource Brush.Primary}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="机台档案" FontSize="13" FontWeight="Bold"
+                                    <TextBlock Text="机台档案" FontSize="14" FontWeight="Bold"
                                                Foreground="{DynamicResource Brush.Fg}"
                                                VerticalAlignment="Center" Margin="8,0,0,0"/>
                                 </StackPanel>
@@ -743,7 +743,7 @@
                                                 Background="{DynamicResource Brush.CardWell}"
                                                 BorderBrush="{DynamicResource Brush.SepLine}"
                                                 Foreground="{DynamicResource Brush.Muted}">
-                                    <TextBlock Text="{Binding MachineCode}" FontSize="9"
+                                    <TextBlock Text="{Binding MachineCode}" FontSize="10"
                                                FontFamily="{DynamicResource Font.Mono}"/>
                                 </ContentControl>
                             </Grid>
@@ -761,43 +761,43 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Text="机台号" FontSize="10"
+                                <TextBlock Text="机台号" FontSize="11"
                                            Foreground="{DynamicResource Brush.Muted}"
                                            VerticalAlignment="Center"/>
                                 <TextBlock Grid.Column="1" Text="{Binding MachineCode}"
-                                           FontFamily="{DynamicResource Font.Mono}" FontSize="10.5"
+                                           FontFamily="{DynamicResource Font.Mono}" FontSize="11.5"
                                            Foreground="{DynamicResource Brush.Fg}"
                                            VerticalAlignment="Center"/>
 
-                                <TextBlock Grid.Row="1" Text="所属分项目" FontSize="10"
+                                <TextBlock Grid.Row="1" Text="所属分项目" FontSize="11"
                                            Foreground="{DynamicResource Brush.Muted}"
                                            VerticalAlignment="Center"/>
                                 <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SubprojectDisplay}"
-                                           FontFamily="{DynamicResource Font.Mono}" FontSize="10.5"
+                                           FontFamily="{DynamicResource Font.Mono}" FontSize="11.5"
                                            Foreground="{DynamicResource Brush.Fg}"
                                            VerticalAlignment="Center"/>
 
-                                <TextBlock Grid.Row="2" Text="台账序号" FontSize="10"
+                                <TextBlock Grid.Row="2" Text="台账序号" FontSize="11"
                                            Foreground="{DynamicResource Brush.Muted}"
                                            VerticalAlignment="Center"/>
                                 <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SeqDisplay}"
-                                           FontSize="10.5"
+                                           FontSize="11.5"
                                            Foreground="{DynamicResource Brush.Fg}"
                                            VerticalAlignment="Center"/>
 
-                                <TextBlock Grid.Row="3" Text="同机台问题" FontSize="10"
+                                <TextBlock Grid.Row="3" Text="同机台问题" FontSize="11"
                                            Foreground="{DynamicResource Brush.Muted}"
                                            VerticalAlignment="Top" Margin="0,3,0,0"/>
                                 <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SameMachineIssueText}"
-                                           FontSize="10.5" TextWrapping="Wrap"
+                                           FontSize="11.5" TextWrapping="Wrap"
                                            Foreground="{DynamicResource Brush.Fg}"
                                            Margin="0,2,0,2"/>
 
-                                <TextBlock Grid.Row="4" Text="主要责任人" FontSize="10"
+                                <TextBlock Grid.Row="4" Text="主要责任人" FontSize="11"
                                            Foreground="{DynamicResource Brush.Muted}"
                                            VerticalAlignment="Top" Margin="0,3,0,0"/>
                                 <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding PrimaryOwnerText}"
-                                           FontSize="10.5" TextWrapping="Wrap"
+                                           FontSize="11.5" TextWrapping="Wrap"
                                            Foreground="{DynamicResource Brush.Fg}"
                                            Margin="0,2,0,0"/>
                             </Grid>
@@ -812,16 +812,16 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Border Width="22" Height="22" CornerRadius="6"
                                             Background="{DynamicResource Brush.PrimaryDim}">
-                                        <TextBlock Text="◷" FontSize="11"
+                                        <TextBlock Text="◷" FontSize="12"
                                                    Foreground="{DynamicResource Brush.Primary}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="修改留痕" FontSize="13" FontWeight="Bold"
+                                    <TextBlock Text="修改留痕" FontSize="14" FontWeight="Bold"
                                                Foreground="{DynamicResource Brush.Fg}"
                                                VerticalAlignment="Center" Margin="8,0,0,0"/>
                                 </StackPanel>
                                 <TextBlock Text="{Binding ActivityCount, StringFormat={}{0} 条}"
-                                           FontFamily="{DynamicResource Font.Mono}" FontSize="9.5"
+                                           FontFamily="{DynamicResource Font.Mono}" FontSize="10.5"
                                            Foreground="{DynamicResource Brush.Muted}"
                                            HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
@@ -838,10 +838,10 @@
                                                      Fill="{DynamicResource Brush.Primary}"
                                                      VerticalAlignment="Top" Margin="0,4,0,0"/>
                                             <StackPanel Grid.Column="1" Margin="7,0,0,0">
-                                                <TextBlock Text="{Binding Summary}" FontSize="10.5"
+                                                <TextBlock Text="{Binding Summary}" FontSize="11.5"
                                                            Foreground="{DynamicResource Brush.Fg}"
                                                            TextWrapping="Wrap"/>
-                                                <TextBlock FontSize="9" Margin="0,2,0,0"
+                                                <TextBlock FontSize="10" Margin="0,2,0,0"
                                                            Foreground="{DynamicResource Brush.Muted}"
                                                            FontFamily="{DynamicResource Font.Mono}">
                                                     <Run Text="{Binding CreatedDisplay, Mode=OneWay}"/><Run Text=" · "/><Run
@@ -864,12 +864,12 @@
                                          Fill="{DynamicResource Brush.Muted}"
                                          VerticalAlignment="Top" Margin="0,4,0,0"/>
                                 <StackPanel Grid.Column="1" Margin="7,0,0,0">
-                                    <TextBlock Text="由 Excel 导入创建" FontSize="10.5"
+                                    <TextBlock Text="由 Excel 导入创建" FontSize="11.5"
                                                Foreground="{DynamicResource Brush.Fg}"/>
-                                    <TextBlock Text="{Binding SourceTrace}" FontSize="9"
+                                    <TextBlock Text="{Binding SourceTrace}" FontSize="10"
                                                Foreground="{DynamicResource Brush.Muted}"
                                                TextWrapping="Wrap" Margin="0,2,0,0"/>
-                                    <TextBlock FontSize="9" Margin="0,2,0,0"
+                                    <TextBlock FontSize="10" Margin="0,2,0,0"
                                                Foreground="{DynamicResource Brush.Muted}"
                                                FontFamily="{DynamicResource Font.Mono}">
                                         <Run Text="{Binding CreatedDisplay, Mode=OneWay}"/><Run Text=" · 系统"/>
@@ -882,10 +882,10 @@
                                     BorderThickness="0,1,0,0" Margin="0,2,0,0" Padding="0,10,0,0">
                                 <StackPanel>
                                     <Grid Margin="0,0,0,6">
-                                        <TextBlock Text="现场评论" FontSize="11" FontWeight="SemiBold"
+                                        <TextBlock Text="现场评论" FontSize="12" FontWeight="SemiBold"
                                                    Foreground="{DynamicResource Brush.Fg}"/>
                                         <TextBlock Text="{Binding CommentCount, StringFormat={}{0} 条}"
-                                                   FontSize="9.5"
+                                                   FontSize="10.5"
                                                    Foreground="{DynamicResource Brush.Muted}"
                                                    HorizontalAlignment="Right"/>
                                     </Grid>
@@ -897,16 +897,16 @@
                                                         BorderThickness="0,0,0,1" Padding="0,5">
                                                     <StackPanel>
                                                         <Grid>
-                                                            <TextBlock Text="{Binding UserName}" FontSize="10"
+                                                            <TextBlock Text="{Binding UserName}" FontSize="11"
                                                                        FontWeight="SemiBold"
                                                                        Foreground="{DynamicResource Brush.Fg}"/>
                                                             <TextBlock Text="{Binding CreatedDisplay}"
                                                                        FontFamily="{DynamicResource Font.Mono}"
-                                                                       FontSize="9"
+                                                                       FontSize="10"
                                                                        Foreground="{DynamicResource Brush.Muted}"
                                                                        HorizontalAlignment="Right"/>
                                                         </Grid>
-                                                        <TextBlock Text="{Binding Content}" FontSize="10"
+                                                        <TextBlock Text="{Binding Content}" FontSize="11"
                                                                    Foreground="{DynamicResource Brush.Fg}"
                                                                    TextWrapping="Wrap" Margin="0,2,0,0"/>
                                                     </StackPanel>
@@ -923,7 +923,7 @@
                                              ToolTip="记录现场口头结论、临时处理办法等"/>
                                     <Button Content="添加评论" Style="{StaticResource Btn.Ghost}" Height="26"
                                             AutomationProperties.AutomationId="AddCommentButton"
-                                            HorizontalAlignment="Right" FontSize="10.5" Padding="10,0"
+                                            HorizontalAlignment="Right" FontSize="11.5" Padding="10,0"
                                             Margin="0,6,0,0"
                                             Command="{Binding AddCommentCommand}"/>
                                 </StackPanel>

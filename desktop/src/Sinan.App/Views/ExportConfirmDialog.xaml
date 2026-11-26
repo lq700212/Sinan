@@ -37,10 +37,10 @@
         <StackPanel Grid.Row="0">
             <TextBlock Text="文件名" Style="{StaticResource T.Label}" Margin="2,0,0,5"/>
             <TextBox Style="{StaticResource Input.Text}" Height="32"
-                     FontFamily="{DynamicResource Font.Mono}" FontSize="11"
+                     FontFamily="{DynamicResource Font.Mono}" FontSize="12"
                      AutomationProperties.AutomationId="ExportFileNameBox"
                      Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}"/>
-            <TextBlock Text="{Binding FileNameHint}" Style="{StaticResource T.Tiny}" FontSize="9.5"
+            <TextBlock Text="{Binding FileNameHint}" Style="{StaticResource T.Tiny}" FontSize="10.5"
                        Margin="2,4,0,0"/>
 
             <TextBlock Text="保存到" Style="{StaticResource T.Label}" Margin="2,12,0,5"/>
@@ -48,7 +48,7 @@
                     BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
                     CornerRadius="9" Padding="10,7">
                 <TextBlock Text="{Binding Directory}" FontFamily="{DynamicResource Font.Mono}"
-                           FontSize="10" TextTrimming="CharacterEllipsis"
+                           FontSize="11" TextTrimming="CharacterEllipsis"
                            ToolTip="{Binding Directory}"/>
             </Border>
 
@@ -56,7 +56,7 @@
             <Border Background="{DynamicResource Brush.CardWell}"
                     BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
                     CornerRadius="9" Padding="10,7">
-                <TextBlock Text="{Binding SheetListText}" FontSize="10.5"
+                <TextBlock Text="{Binding SheetListText}" FontSize="11.5"
                            TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
             </Border>
         </StackPanel>
@@ -83,9 +83,9 @@
                                     <ContentControl Grid.Column="0" Style="{StaticResource Chip}"
                                                     Tag="{Binding TagKind}" MinHeight="18"
                                                     Padding="6,0" VerticalAlignment="Top">
-                                        <TextBlock Text="{Binding Mark}" FontSize="8.5"/>
+                                        <TextBlock Text="{Binding Mark}" FontSize="9.5"/>
                                     </ContentControl>
-                                    <TextBlock Grid.Column="1" Text="{Binding Text}" FontSize="10.5"
+                                    <TextBlock Grid.Column="1" Text="{Binding Text}" FontSize="11.5"
                                                TextWrapping="Wrap" Margin="8,1,0,0"
                                                VerticalAlignment="Center"/>
                                 </Grid>
@@ -103,7 +103,7 @@
 
         <!-- ============ 底部 ============ -->
         <Grid Grid.Row="2" Margin="0,14,0,0">
-            <TextBlock Text="{Binding FooterHint}" Style="{StaticResource T.Tiny}" FontSize="9.5"
+            <TextBlock Text="{Binding FooterHint}" Style="{StaticResource T.Tiny}" FontSize="10.5"
                        VerticalAlignment="Center"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="取消" Style="{StaticResource Btn.Ghost}" Height="34" Width="82"

@@ -41,9 +41,9 @@
     <SolidColorBrush x:Key="Brush.CardWell" Color="#2E2218"/>
 
     <LinearGradientBrush x:Key="Brush.BrandPanel" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#3A2A1B" Offset="0"/>
-        <GradientStop Color="#241A11" Offset="0.55"/>
-        <GradientStop Color="#241A11" Offset="1"/>
+        <GradientStop Color="#59D97706" Offset="0"/>
+        <GradientStop Color="#942E2116" Offset="0.55"/>
+        <GradientStop Color="#942E2116" Offset="1"/>
     </LinearGradientBrush>
 
     <!-- ==================== 前景 ==================== -->
@@ -106,21 +106,28 @@
     <SolidColorBrush x:Key="Brush.GlassSheen" Color="#17FFFFFF"/>
     <SolidColorBrush x:Key="Brush.GlassRing" Color="#0FFFFFFF"/>
 
-    <RadialGradientBrush x:Key="Brush.MeshA" GradientOrigin="0.5,0.5" Center="0.5,0.5"
-                         RadiusX="0.5" RadiusY="0.5">
+    <!-- 画布柔光：与明主题同几何、同四层，只换暗色透明度（设计稿 dark token：
+         mesh-a 24% / mesh-b 20% / mesh-c 14% / tint 9%）。 -->
+    <RadialGradientBrush x:Key="Brush.MeshA" GradientOrigin="-0.04,-0.10" Center="-0.04,-0.10"
+                         RadiusX="0.764" RadiusY="0.778">
         <GradientStop Color="#3DD97706" Offset="0"/>
-        <GradientStop Color="#00D97706" Offset="1"/>
+        <GradientStop Color="#00D97706" Offset="0.62"/>
     </RadialGradientBrush>
-    <RadialGradientBrush x:Key="Brush.MeshB" GradientOrigin="0.5,0.5" Center="0.5,0.5"
-                         RadiusX="0.5" RadiusY="0.5">
+    <RadialGradientBrush x:Key="Brush.MeshB" GradientOrigin="1.04,0.06" Center="1.04,0.06"
+                         RadiusX="0.625" RadiusY="0.711">
         <GradientStop Color="#330F766E" Offset="0"/>
-        <GradientStop Color="#000F766E" Offset="1"/>
+        <GradientStop Color="#000F766E" Offset="0.58"/>
     </RadialGradientBrush>
-    <RadialGradientBrush x:Key="Brush.MeshC" GradientOrigin="0.5,0.5" Center="0.5,0.5"
-                         RadiusX="0.5" RadiusY="0.5">
+    <RadialGradientBrush x:Key="Brush.MeshC" GradientOrigin="0.56,1.12" Center="0.56,1.12"
+                         RadiusX="0.694" RadiusY="0.8">
         <GradientStop Color="#24FB923C" Offset="0"/>
-        <GradientStop Color="#00FB923C" Offset="1"/>
+        <GradientStop Color="#00FB923C" Offset="0.64"/>
     </RadialGradientBrush>
+    <LinearGradientBrush x:Key="Brush.MeshTint" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#17D97706" Offset="0"/>
+        <GradientStop Color="#00D97706" Offset="0.46"/>
+        <GradientStop Color="#170F766E" Offset="1"/>
+    </LinearGradientBrush>
 
     <!-- ==================== Kaleidoscope 弹窗基类别名键（暗色版） ==================== -->
     <SolidColorBrush x:Key="Brush.TopbarFg" Color="#F6EBDD"/>
@@ -148,11 +155,11 @@
     <!-- ==================== 排版（与浅色一致） ==================== -->
     <FontFamily x:Key="Font.Ui">Microsoft YaHei UI</FontFamily>
     <FontFamily x:Key="Font.Mono">Consolas</FontFamily>
-    <sys:Double x:Key="Text.Size.H1">19</sys:Double>
-    <sys:Double x:Key="Text.Size.H2">12.5</sys:Double>
-    <sys:Double x:Key="Text.Size.Body">13.5</sys:Double>
-    <sys:Double x:Key="Text.Size.Small">11.5</sys:Double>
-    <sys:Double x:Key="Text.Size.Tiny">10.5</sys:Double>
+    <sys:Double x:Key="Text.Size.H1">20</sys:Double>
+    <sys:Double x:Key="Text.Size.H2">13.5</sys:Double>
+    <sys:Double x:Key="Text.Size.Body">14</sys:Double>
+    <sys:Double x:Key="Text.Size.Small">12</sys:Double>
+    <sys:Double x:Key="Text.Size.Tiny">11</sys:Double>
 
     <!-- ==================== 几何（与浅色一致） ====================
          只保留"卡片 20 / 内卡 16"两档实体键（设计稿 radius / card-r-sm）；

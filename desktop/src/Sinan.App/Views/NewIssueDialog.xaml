@@ -26,10 +26,10 @@
         <!-- 顶部说明 -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,14">
             <ContentControl Style="{StaticResource Chip}" Tag="info" Margin="0,0,8,0">
-                <TextBlock Text="机台不存在会自动建档并归组" FontSize="11"/>
+                <TextBlock Text="机台不存在会自动建档并归组" FontSize="12"/>
             </ContentControl>
             <ContentControl Style="{StaticResource Chip}" Tag="on">
-                <TextBlock Text="计划原文照存，不猜测年份" FontSize="11"/>
+                <TextBlock Text="计划原文照存，不猜测年份" FontSize="12"/>
             </ContentControl>
         </StackPanel>
 
@@ -108,7 +108,7 @@
                 <Border Style="{StaticResource Card.Inset}" Padding="16,14">
                     <StackPanel>
                         <Grid Margin="0,0,0,8">
-                            <TextBlock Text="四阶段推进" Style="{StaticResource T.H2}" FontSize="14"/>
+                            <TextBlock Text="四阶段推进" Style="{StaticResource T.H2}" FontSize="15"/>
                             <TextBlock Text="可先只填方案；其余阶段之后在详情页推进"
                                        Style="{StaticResource T.Tiny}" HorizontalAlignment="Right"
                                        VerticalAlignment="Center"/>
@@ -135,15 +135,15 @@
                                             <ColumnDefinition Width="1.1*"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="{Binding Label}"
-                                                   Style="{StaticResource T.Value}" FontSize="12.5"
+                                                   Style="{StaticResource T.Value}" FontSize="13.5"
                                                    VerticalAlignment="Center"/>
                                         <TextBox Grid.Column="1" Style="{StaticResource Input.Text}" Height="32"
                                                  AutomationProperties.AutomationId="{Binding Code, StringFormat=StageOwner_{0}}"
-                                                 Margin="0,0,8,0" FontSize="12.5"
+                                                 Margin="0,0,8,0" FontSize="13.5"
                                                  Text="{Binding OwnerText, UpdateSourceTrigger=PropertyChanged}"/>
                                         <TextBox Grid.Column="2" Style="{StaticResource Input.Text}" Height="32"
                                                  AutomationProperties.AutomationId="{Binding Code, StringFormat=StageDue_{0}}"
-                                                 FontSize="12.5" FontFamily="{DynamicResource Font.Mono}"
+                                                 FontSize="13.5" FontFamily="{DynamicResource Font.Mono}"
                                                  Text="{Binding DueRaw, UpdateSourceTrigger=PropertyChanged}"
                                                  ToolTip="11.5 / 2026-11-05 / 已下图 / （斜杠表示此阶段不适用）"/>
                                     </Grid>

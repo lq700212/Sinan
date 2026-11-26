@@ -49,14 +49,14 @@
                     <TextBlock Text="▣" FontSize="46" HorizontalAlignment="Center"
                                Foreground="#3A4A54"/>
                     <TextBlock Text="{Binding MissingHint}" TextWrapping="Wrap" TextAlignment="Center"
-                               FontSize="11.5" Margin="0,12,0,0" Foreground="#8FA3AE"/>
+                               FontSize="12.5" Margin="0,12,0,0" Foreground="#8FA3AE"/>
                 </StackPanel>
 
                 <!-- 文件名角标 -->
                 <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="10"
                         Padding="8,3" CornerRadius="8" Background="#B3000000"
                         Visibility="{Binding HasImage, Converter={StaticResource TrueToVisibility}}">
-                    <TextBlock Text="{Binding FileName}" FontSize="9"
+                    <TextBlock Text="{Binding FileName}" FontSize="10"
                                FontFamily="{DynamicResource Font.Mono}" Foreground="White"/>
                 </Border>
             </Grid>
@@ -76,39 +76,39 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                    <TextBlock Text="关联问题" Style="{StaticResource T.Tiny}" FontSize="9.5"/>
+                    <TextBlock Text="关联问题" Style="{StaticResource T.Tiny}" FontSize="10.5"/>
                     <TextBlock Text="{Binding IssueCode}" FontFamily="{DynamicResource Font.Mono}"
-                               FontSize="12.5" FontWeight="Bold"
+                               FontSize="13.5" FontWeight="Bold"
                                Foreground="{DynamicResource Brush.Fg}" Margin="0,3,0,0"/>
-                    <TextBlock Text="{Binding IssueTitle}" Style="{StaticResource T.Small}" FontSize="11"
+                    <TextBlock Text="{Binding IssueTitle}" Style="{StaticResource T.Small}" FontSize="12"
                                TextWrapping="Wrap" Margin="0,2,0,0"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Margin="0,0,0,10">
-                    <TextBlock Text="照片说明" Style="{StaticResource T.Tiny}" FontSize="9.5"/>
-                    <TextBlock Text="{Binding Caption}" Style="{StaticResource T.Small}" FontSize="11"
+                    <TextBlock Text="照片说明" Style="{StaticResource T.Tiny}" FontSize="10.5"/>
+                    <TextBlock Text="{Binding Caption}" Style="{StaticResource T.Small}" FontSize="12"
                                TextWrapping="Wrap" Margin="0,3,0,0"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="2" Margin="0,0,0,10">
-                    <TextBlock Text="拍摄人 / 时间" Style="{StaticResource T.Tiny}" FontSize="9.5"/>
-                    <TextBlock FontSize="11" Margin="0,3,0,0">
+                    <TextBlock Text="拍摄人 / 时间" Style="{StaticResource T.Tiny}" FontSize="10.5"/>
+                    <TextBlock FontSize="12" Margin="0,3,0,0">
                         <Run Text="{Binding UploadedBy, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding TakenAtDisplay, Mode=OneWay}"/>
                     </TextBlock>
                 </StackPanel>
 
                 <StackPanel Grid.Row="3" Margin="0,0,0,10">
-                    <TextBlock Text="原始文件" Style="{StaticResource T.Tiny}" FontSize="9.5"/>
+                    <TextBlock Text="原始文件" Style="{StaticResource T.Tiny}" FontSize="10.5"/>
                     <TextBlock Text="{Binding FileName}" FontFamily="{DynamicResource Font.Mono}"
-                               FontSize="11" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
-                    <TextBlock FontSize="10" Foreground="{DynamicResource Brush.Muted}" Margin="0,2,0,0">
+                               FontSize="12" Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock FontSize="11" Foreground="{DynamicResource Brush.Muted}" Margin="0,2,0,0">
                         <Run Text="{Binding DimensionText, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding SizeDisplay, Mode=OneWay}"/>
                     </TextBlock>
                 </StackPanel>
 
                 <StackPanel Grid.Row="4">
-                    <TextBlock Text="设备 / 分项目" Style="{StaticResource T.Tiny}" FontSize="9.5"/>
-                    <TextBlock FontSize="11" Margin="0,3,0,0">
+                    <TextBlock Text="设备 / 分项目" Style="{StaticResource T.Tiny}" FontSize="10.5"/>
+                    <TextBlock FontSize="12" Margin="0,3,0,0">
                         <Run Text="{Binding MachineCode, Mode=OneWay}" FontFamily="{DynamicResource Font.Mono}"/>
                         <Run Text=" · "/>
                         <Run Text="{Binding SubprojectCode, Mode=OneWay}" FontFamily="{DynamicResource Font.Mono}"/>
@@ -117,12 +117,12 @@
 
                 <Border Grid.Row="5" Style="{StaticResource Card.Inset}" Padding="10,8"
                         VerticalAlignment="Bottom" Margin="0,12,0,0">
-                    <TextBlock TextWrapping="Wrap" FontSize="10"
+                    <TextBlock TextWrapping="Wrap" FontSize="11"
                                Foreground="{DynamicResource Brush.Muted}"
                                Text="附件表只存相对路径，不把图片二进制塞进数据库；缩略图按需生成。"/>
                 </Border>
 
-                <TextBlock Grid.Row="6" Text="{Binding MissingHint}" TextWrapping="Wrap" FontSize="10"
+                <TextBlock Grid.Row="6" Text="{Binding MissingHint}" TextWrapping="Wrap" FontSize="11"
                            Foreground="{DynamicResource Brush.Ng}" Margin="0,8,0,0"
                            Visibility="{Binding ShowDetailHint, Converter={StaticResource TrueToVisibility}}"/>
             </Grid>
@@ -132,10 +132,10 @@
         <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,12,0,0">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <ContentControl Style="{StaticResource Chip}" Tag="plain">
-                    <TextBlock Text="{Binding Count, StringFormat=共 {0} 张}" FontSize="9.5"/>
+                    <TextBlock Text="{Binding Count, StringFormat=共 {0} 张}" FontSize="10.5"/>
                 </ContentControl>
                 <TextBlock Text="演示照片只有元数据、没有图片文件" Style="{StaticResource T.Tiny}"
-                           FontSize="9.5" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                           FontSize="10.5" Margin="10,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="‹ 上一张" Style="{StaticResource Btn.Ghost}" Height="30" Width="82"

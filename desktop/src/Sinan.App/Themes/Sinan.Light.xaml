@@ -44,11 +44,13 @@
     <SolidColorBrush x:Key="Brush.TheadFg" Color="#7B6A56"/>
     <SolidColorBrush x:Key="Brush.CardWell" Color="#FCF7EF"/>
 
-    <!-- 登录页左侧品牌区：比页面底色更暖的渐变，不能写死在页面里 -->
+    <!-- 登录页左侧品牌区：设计稿 .login-brand =
+         linear-gradient(150deg, primarydim, transparent 55%) + panel2 暖白。
+         WPF 单画刷近似：左上橙调 → 55% 后收到暖白。 -->
     <LinearGradientBrush x:Key="Brush.BrandPanel" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#FBE9D2" Offset="0"/>
-        <GradientStop Color="#FFFCF6" Offset="0.55"/>
-        <GradientStop Color="#FFFCF6" Offset="1"/>
+        <GradientStop Color="#3AD97706" Offset="0"/>
+        <GradientStop Color="#94FFFCF6" Offset="0.55"/>
+        <GradientStop Color="#94FFFCF6" Offset="1"/>
     </LinearGradientBrush>
 
     <!-- ==================== 前景 ==================== -->
@@ -111,22 +113,37 @@
     <SolidColorBrush x:Key="Brush.GlassSheen" Color="#59FFFFFF"/>
     <SolidColorBrush x:Key="Brush.GlassRing" Color="#1FB4783C"/>
 
-    <!-- 页面底层柔光斑：三团径向渐变（琥珀 / 深青 / 暖橙），WPF 版 backdrop 近似 -->
-    <RadialGradientBrush x:Key="Brush.MeshA" GradientOrigin="0.5,0.5" Center="0.5,0.5"
-                         RadiusX="0.5" RadiusY="0.5">
+    <!-- ==================== 画布柔光（对齐设计稿 .page .app 四层背景） ====================
+         设计稿 extra.css 598-605 行是四层叠加：
+           radial 1100×700 at -4% -10%  琥珀 26%  → 左上主光
+           radial  900×640 at 104%  6%  深青 16%  → 右上冷调
+           radial 1000×720 at  56% 112% 暖橙 18%  → 底部收口
+           linear 135° 琥珀 8% → 透明 46% → 深青 5.5%
+         再加底色 #FBF6EE。
+         WPF 没有多背景叠加，所以把四层做成四个铺满全窗的 Rectangle 依次叠放。
+         Center/Radius 是相对填充区域的比例：1100/1440=0.764、700/900=0.778，
+         其余同理；stop 位置对应 CSS 的 62%/58%/64% 透明点。 -->
+    <RadialGradientBrush x:Key="Brush.MeshA" GradientOrigin="-0.04,-0.10" Center="-0.04,-0.10"
+                         RadiusX="0.764" RadiusY="0.778">
         <GradientStop Color="#42F59E0B" Offset="0"/>
-        <GradientStop Color="#00F59E0B" Offset="1"/>
+        <GradientStop Color="#00F59E0B" Offset="0.62"/>
     </RadialGradientBrush>
-    <RadialGradientBrush x:Key="Brush.MeshB" GradientOrigin="0.5,0.5" Center="0.5,0.5"
-                         RadiusX="0.5" RadiusY="0.5">
+    <RadialGradientBrush x:Key="Brush.MeshB" GradientOrigin="1.04,0.06" Center="1.04,0.06"
+                         RadiusX="0.625" RadiusY="0.711">
         <GradientStop Color="#290F766E" Offset="0"/>
-        <GradientStop Color="#000F766E" Offset="1"/>
+        <GradientStop Color="#000F766E" Offset="0.58"/>
     </RadialGradientBrush>
-    <RadialGradientBrush x:Key="Brush.MeshC" GradientOrigin="0.5,0.5" Center="0.5,0.5"
-                         RadiusX="0.5" RadiusY="0.5">
+    <RadialGradientBrush x:Key="Brush.MeshC" GradientOrigin="0.56,1.12" Center="0.56,1.12"
+                         RadiusX="0.694" RadiusY="0.8">
         <GradientStop Color="#2EFB923C" Offset="0"/>
-        <GradientStop Color="#00FB923C" Offset="1"/>
+        <GradientStop Color="#00FB923C" Offset="0.64"/>
     </RadialGradientBrush>
+    <!-- 第四层：整窗 135° 线性薄染，让底色不是死平一片 -->
+    <LinearGradientBrush x:Key="Brush.MeshTint" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#14F59E0B" Offset="0"/>
+        <GradientStop Color="#00F59E0B" Offset="0.46"/>
+        <GradientStop Color="#0E0F766E" Offset="1"/>
+    </LinearGradientBrush>
 
     <!-- ==================== Kaleidoscope 弹窗基类别名键 ====================
          ChromeDialogWindow/TitleBar 只认库内语义键；司南不合并其缺省键板，
@@ -159,13 +176,14 @@
     <FontFamily x:Key="Font.Ui">Microsoft YaHei UI</FontFamily>
     <FontFamily x:Key="Font.Mono">Consolas</FontFamily>
     <!-- 字号严格对齐设计稿 extra.css：根字号 14 / 卡片头 12.5 / tiny 10.5 / tag 9.5。
-         页面标题 H1 只给登录标题与详情大标题（设计稿 17–19），
-         卡片头一律 H2=12.5，正文 Body=13.5（浏览器 14px 在 WPF 下略放大，收 0.5）。 -->
-    <sys:Double x:Key="Text.Size.H1">19</sys:Double>
-    <sys:Double x:Key="Text.Size.H2">12.5</sys:Double>
-    <sys:Double x:Key="Text.Size.Body">13.5</sys:Double>
-    <sys:Double x:Key="Text.Size.Small">11.5</sys:Double>
-    <sys:Double x:Key="Text.Size.Tiny">10.5</sys:Double>
+         2026-11-26 目检整改：WPF 的微软雅黑字形比浏览器同 px 视觉偏小约 1px，
+         且用户反馈整屏偏紧，故整体上调一档（正文 14 / 卡片头 13.5 / 说明 12 / 小字 11），
+         与设计稿 94% 画布截图并排目检后仍保持同密度。 -->
+    <sys:Double x:Key="Text.Size.H1">20</sys:Double>
+    <sys:Double x:Key="Text.Size.H2">13.5</sys:Double>
+    <sys:Double x:Key="Text.Size.Body">14</sys:Double>
+    <sys:Double x:Key="Text.Size.Small">12</sys:Double>
+    <sys:Double x:Key="Text.Size.Tiny">11</sys:Double>
 
     <!-- ==================== 几何 ====================
          只保留"卡片 20 / 内卡 16"两档实体键：设计稿 radius、card-r-sm。
