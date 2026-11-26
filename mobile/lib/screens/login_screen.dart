@@ -108,16 +108,36 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 10),
                           // 设计稿这里是"已配对 · 192.168.1.26 / 局域网"；
-                          // 当前同步服务尚未联调，只能如实显示"未配对 / 离线"。
+                          // 这里读真实的配对配置：已配对显示桌面端地址，未配对如实显示"离线"。
+                          // 配对状态只代表"有令牌"，不代表此刻连得上——真正结果以同步中心为准。
                           Row(
                             children: [
-                              Icon(Icons.link_off, size: 13, color: p.faint),
+                              Icon(
+                                  widget.state.syncConfigured
+                                      ? Icons.link
+                                      : Icons.link_off,
+                                  size: 13,
+                                  color: p.faint),
                               const SizedBox(width: 5),
-                              Text('未配对 · 数据先存本机',
-                                  style: TextStyle(fontSize: 10.5, color: p.faint)),
-                              const Spacer(),
-                              const SinanChip(
-                                  text: '离线', tone: 'warn', dense: true),
+                              Expanded(
+                                child: Text(
+                                    widget.state.syncConfigured
+                                        ? '已配对 · ${widget.state.syncServerUrl.replaceFirst(RegExp(r'^https?://'), '')}'
+                                        : '未配对 · 数据先存本机',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style:
+                                        TextStyle(fontSize: 10.5, color: p.faint)),
+                              ),
+                              const SizedBox(width: 6),
+                              SinanChip(
+                                  text: widget.state.syncConfigured
+                                      ? '离线可用'
+                                      : '离线',
+                                  tone: widget.state.syncConfigured
+                                      ? 'ok'
+                                      : 'warn',
+                                  dense: true),
                             ],
                           ),
                           if (_error != null) ...[

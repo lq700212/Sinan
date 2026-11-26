@@ -7,6 +7,7 @@ using Sinan.App.Views;
 using Sinan.Data;
 using Sinan.Data.Excel;
 using Sinan.Data.Repositories;
+using Sinan.Data.Sync;
 
 namespace Sinan.App;
 
@@ -25,6 +26,8 @@ public partial class App : Application
     public AttachmentRepository Attachments { get; private set; } = null!;
     public ExcelImportService Import { get; private set; } = null!;
     public ExcelExportService Export { get; private set; } = null!;
+    public SyncRepository? Sync { get; private set; }
+    public SyncServer? SyncServer { get; private set; }
     public Session Session { get; } = new();
     public IDialogService Dialogs { get; private set; } = new DialogService();
 
@@ -55,6 +58,12 @@ public partial class App : Application
             Attachments = new AttachmentRepository(Database);
             Import = new ExcelImportService(Database, Issues, Projects);
             Export = new ExcelExportService(Database, Issues, Projects, Attachments);
+            Sync = new SyncRepository(Database, Issues, Projects, Users);
+
+            // 局域网同步服务：端口固定 5180，仅监听本机局域网 IPv4。
+            // 启动失败不阻断主程序，设置页如实显示"未运行 + 原因"。
+            SyncServer = new SyncServer(Sync, Attachments);
+            SyncServer.Start();
 
             // 演示附件（12 张 / 6 条）只登记元数据并标记 is_demo=1；
             // 界面显示"演示"角标，导出 ZIP 只写说明不塞假图。
@@ -79,6 +88,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        SyncServer?.Dispose();
         AppLog.Info($"司南退出，代码 {e.ApplicationExitCode}");
         base.OnExit(e);
     }

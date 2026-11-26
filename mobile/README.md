@@ -13,7 +13,7 @@ P7391 安装调试问题闭环系统的 Android 现场端。桌面端（`../desk
 
 | 项 | 值 | 口径 |
 |---|---|---|
-| 手机端版本 | `0.0.2+2` | 与桌面端各自独立升版，只动第三位；唯一来源 `pubspec.yaml`，界面只读 `lib/app_info.dart` |
+| 手机端版本 | `0.0.3+3` | 与桌面端各自独立升版，只动第三位；唯一来源 `pubspec.yaml`，界面只读 `lib/app_info.dart` |
 | Android 最低 | API 24 / Android 7.0 | `minSdk`，Flutter 3.50 引擎下限，主流现场手机都能装 |
 | Android 目标 | API 36 / Android 16 | `targetSdk`，行为适配目标，**不是装机上限** |
 | Android 编译 | API 36 | `compileSdk`，与 Flutter 引擎一致 |
@@ -70,9 +70,10 @@ lib/
 │   ├── attachment.dart    ← 附件（本机文件 + 同步状态）
 │   └── rules.dart         ← 日期解析、状态推导、倒挂、逾期、归组、我的待办
 ├── data/
-│   ├── local_db.dart      ← sqflite 建表（v2 含 attachments）+ 首启种子
+│   ├── local_db.dart      ← sqflite 建表（v3：附件 / outbox.base_version / sync_meta / conflicts）+ 首启种子
 │   ├── attachment_store.dart ← 拍照/相册、压缩落盘（attachments/{issueId}/）
-│   └── issue_repository.dart ← 查询、新建、附件、outbox、机台聚合
+│   ├── sync_client.dart   ← 局域网同步客户端（ping / 配对 / 上行 / 下行 / 照片上传）
+│   └── issue_repository.dart ← 查询、新建、附件、outbox、冲突、机台聚合
 ├── state/app_state.dart   ← 会话、主题、列表、统计、待传条数
 ├── widgets/
 │   ├── common.dart        ← 玻璃卡片、Chip、阶段点、KPI、空状态
@@ -87,7 +88,7 @@ lib/
     ├── issue_detail_screen.dart ← 详情、阶段推进、评论、真实附件 + 拍照
     ├── new_issue_screen.dart  ← 新建问题（离线落库 + 进 outbox）
     ├── machine_select_screen.dart ← 手输机台 + 最近机台（扫码待真机接入）
-    ├── sync_screen.dart       ← 待传队列逐条、配对码入口、同步规则
+    ├── sync_screen.dart       ← 配对 / 立即同步 / 冲突二选一 / 待传队列
     ├── photo_viewer_screen.dart ← 全屏看大图（左右切换 + 双指缩放）
     └── settings_screen.dart   ← 主题、账号、版本信息
 ```
@@ -105,9 +106,12 @@ lib/
 ## 当前边界
 
 - 移动端暂不直接解析 Excel（`.xls/.xlsx` 由桌面端处理）。
-- 配对码入口保留，但同步服务尚未联调，界面不伪造连接成功；outbox 只在本机累积。
+- 局域网同步已实现、待现场联调：与桌面端同一 WiFi，在「同步中心」填桌面端地址
+  （如 `http://192.168.0.89:5180`）和 6 位一次性配对码，之后按 outbox 上行、按游标下行；
+  冲突必须人工选择「保留手机 / 保留桌面」，界面只显示真实结果，不伪造连接成功。
 - 拍照/相册已接入 `image_picker`（长边 1600px、质量 82）；相机扫码待真机接入，
   当前用“手输机台号 + 最近机台”替代，界面上明确写“相机扫码待真机接入”。
-- 附件只存在本机 `attachments/{issueId}/{uuid}.jpg`，上传由后续同步服务承担。
+- 附件存本机 `attachments/{issueId}/{uuid}.jpg`，同步时按 outbox 逐张上传；
+  桌面端按 `attachmentId` 幂等归档。
 - 登录态不持久化：每次冷启动都要输工号密码（共享现场设备的默认口径）。
   密码框不预填，debug 包同样如此。

@@ -10,8 +10,8 @@
       系统设置（设计稿 settings 页，docs/_build/shots/07_settings.png）
       左：固定 6 项目录（点击滚动到右侧对应卡片，不做二级折叠）
       右：数据源 / 导入规则 / 提醒与逾期 / 人员与角色 / 移动端配对 / 危险操作 / 关于与许可
-      纪律：路径取运行时实际值；未实现的能力（提醒、配对服务、一键清空）如实标注"未启用"，
-            不放假二维码、不放假开关。设置即时生效，因此不放"保存设置"按钮。
+      纪律：路径取运行时实际值；未实现的能力（提醒、一键清空）如实标注"未启用"，
+            配对服务状态读真实监听结果，不放假二维码、不放假开关。设置即时生效，因此不放"保存设置"按钮。
 
       2026-11-26 按设计稿逐项校准：
       · 卡头改回设计稿 `.card.fold .f-h`：panel2 浅底 + 底部 1px 分隔线 + 12.5px 700，
@@ -26,6 +26,9 @@
     -->
 
     <UserControl.Resources>
+        <!-- 布尔 → 可见性：配对服务运行态、设备空状态用。 -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+
         <!-- 设置卡头：设计稿 .card.fold .f-h（panel2 底 + 1px 分隔线 + 11.5px 700） -->
         <Style x:Key="Set.CardHead" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource Brush.PanelSoft}"/>
@@ -520,7 +523,10 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ========== 移动端配对 ========== -->
+                <!-- ========== 移动端配对 ==========
+                     2026-11-26 起真实可用：桌面端内嵌 SyncServer（端口 5180），
+                     手机用 6 位一次性配对码换 token，之后按 outbox 增量补传。
+                     不画假二维码：当前发的是 6 位数字码，手机端手输；二维码后续再接。 -->
                 <Border x:Name="SectionMobile" Style="{StaticResource Card}" Padding="0" Margin="0,12,0,0">
                     <StackPanel>
                         <Border Style="{StaticResource Set.CardHead}">
@@ -533,11 +539,16 @@
                                     </Border>
                                     <TextBlock Text="移动端配对" Style="{StaticResource Set.Title}"/>
                                 </StackPanel>
-                                <ContentControl Style="{StaticResource Chip}" Tag="warn"
-                                                HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                MinHeight="17" Padding="7,0">
-                                    <TextBlock Text="未启用" FontSize="10"/>
-                                </ContentControl>
+                                <Grid HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <ContentControl Style="{StaticResource Chip}" Tag="ok"
+                                                    Visibility="{Binding IsSyncRunning, Converter={StaticResource BoolToVisibility}}">
+                                        <TextBlock Text="服务运行中" FontSize="10"/>
+                                    </ContentControl>
+                                    <ContentControl Style="{StaticResource Chip}" Tag="warn"
+                                                    Visibility="{Binding IsSyncRunning, Converter={StaticResource InverseBoolToVisibility}}">
+                                        <TextBlock Text="未运行" FontSize="10"/>
+                                    </ContentControl>
+                                </Grid>
                             </Grid>
                         </Border>
 
@@ -546,34 +557,115 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <StackPanel Margin="0,0,16,0">
+                            <StackPanel Margin="0,0,18,0">
                                 <TextBlock Text="{Binding SyncStatusText}" FontSize="11.5" FontWeight="SemiBold"
                                            Foreground="{DynamicResource Brush.Fg}" TextWrapping="Wrap"/>
                                 <TextBlock Text="{Binding SyncPortDisplay}" Style="{StaticResource T.Tiny}"
-                                           FontSize="10.5" Margin="0,5,0,0"/>
+                                           FontSize="10.5" Margin="0,5,0,0" TextWrapping="Wrap"/>
                                 <TextBlock Style="{StaticResource T.Tiny}" FontSize="10.5" Margin="0,7,0,0"
                                            TextWrapping="Wrap" LineHeight="16"
-                                           Text="配对后手机可离线记录，回到局域网按队列补传；照片默认压缩到长边 1600px。桌面端是主库，手机端只做离线副本，不做双向合并。"/>
+                                           Text="手机与桌面端连同一局域网：在手机端「同步中心」填写上面的地址和配对码即可。配对后手机可离线记录，回到局域网按队列补传；桌面端是主库，冲突由手机端人工选择，不静默覆盖。"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                    <Button Content="生成配对码" Style="{StaticResource Btn.Primary}"
+                                            Height="28" FontSize="11" Padding="12,0"
+                                            Command="{Binding GeneratePairCodeCommand}"/>
+                                    <Button Content="刷新状态" Style="{StaticResource Btn.Ghost}"
+                                            Height="28" FontSize="11" Padding="12,0" Margin="8,0,0,0"
+                                            Command="{Binding RefreshSyncCommand}"/>
+                                </StackPanel>
                             </StackPanel>
 
-                            <!-- 未启用时给占位框，不画假二维码 -->
-                            <Border Grid.Column="1" Width="112" Height="112" CornerRadius="10"
+                            <!-- 6 位配对码：真实生成，10 分钟一次性；未生成时给占位，不冒充二维码 -->
+                            <Border Grid.Column="1" Width="150" MinHeight="112" CornerRadius="10"
                                     Background="{DynamicResource Brush.CardWell}"
                                     BorderBrush="{DynamicResource Brush.Border}"
-                                    BorderThickness="1" VerticalAlignment="Top">
-                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <TextBlock Text="▦" FontSize="24"
-                                               Foreground="{DynamicResource Brush.Faint}"
+                                    BorderThickness="1" VerticalAlignment="Top" Padding="10,9">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="{Binding PairCodeDisplay}" FontFamily="Consolas"
+                                               FontSize="22" FontWeight="Bold"
+                                               Foreground="{DynamicResource Brush.Primary}"
                                                HorizontalAlignment="Center"/>
-                                    <TextBlock Text="配对服务" FontSize="10.5"
+                                    <TextBlock Text="{Binding PairCodeExpiry}" FontSize="10"
                                                Foreground="{DynamicResource Brush.Muted}"
-                                               HorizontalAlignment="Center" Margin="0,5,0,0"/>
-                                    <TextBlock Text="未启用" FontSize="10.5" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource Brush.Warn}"
-                                               HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                               TextAlignment="Center" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                                    <TextBlock Text="手机端「同步中心 → 配对」输入此码" FontSize="9.5"
+                                               Foreground="{DynamicResource Brush.Faint}"
+                                               TextAlignment="Center" TextWrapping="Wrap" Margin="0,6,0,0"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
+
+                        <!-- 已配对设备：在线状态按最近 2 分钟是否有同步请求实时算 -->
+                        <Border Margin="14,0,14,12" Padding="11,9" CornerRadius="10"
+                                Background="{DynamicResource Brush.CardWell}"
+                                BorderBrush="{DynamicResource Brush.Border}"
+                                BorderThickness="1">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,6">
+                                    <TextBlock Text="已配对设备" FontSize="11" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource Brush.Fg}"/>
+                                    <TextBlock Text="{Binding DeviceSummary}" FontSize="10.5"
+                                               Foreground="{DynamicResource Brush.Muted}"
+                                               HorizontalAlignment="Right"/>
+                                </Grid>
+
+                                <ItemsControl ItemsSource="{Binding Devices}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Height="28">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Name}" FontSize="11"
+                                                               Foreground="{DynamicResource Brush.Fg}"
+                                                               TextTrimming="CharacterEllipsis" MaxWidth="180"/>
+                                                    <TextBlock Text="{Binding PlatformDisplay}" FontSize="10"
+                                                               Foreground="{DynamicResource Brush.Muted}"
+                                                               Margin="8,0,0,0"/>
+                                                    <TextBlock Text="{Binding ModelDisplay}" FontSize="10"
+                                                               Foreground="{DynamicResource Brush.Faint}"
+                                                               Margin="6,0,0,0" TextTrimming="CharacterEllipsis" MaxWidth="130"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Text="{Binding LastSyncDisplay}" FontSize="10"
+                                                           Foreground="{DynamicResource Brush.Muted}"
+                                                           VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding StatusText}" FontSize="10"
+                                                           VerticalAlignment="Center" Margin="10,0,10,0">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{DynamicResource Brush.Faint}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsOnline}" Value="True">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource Brush.Ok}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Active}" Value="False">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource Brush.Ng}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <Button Grid.Column="3" Content="移除" Style="{StaticResource Btn.Ghost}"
+                                                        Height="22" FontSize="10" Padding="8,0"
+                                                        Command="{Binding DataContext.RemoveDeviceCommand,
+                                                                  RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        IsEnabled="{Binding Active}"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <TextBlock Text="尚未配对手机：先生成配对码，再在手机端「同步中心」填写地址和配对码。"
+                                           FontSize="10.5" Foreground="{DynamicResource Brush.Faint}"
+                                           TextWrapping="Wrap" Margin="0,2,0,0"
+                                           Visibility="{Binding HasDevices, Converter={StaticResource InverseBoolToVisibility}}"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Border>
 

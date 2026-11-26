@@ -9,7 +9,7 @@
 ![Flutter](https://img.shields.io/badge/Flutter-Dart%203.14-02569B?logo=flutter&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?logo=sqlite&logoColor=white)
 ![Excel](https://img.shields.io/badge/Excel-.xls%20%2B%20.xlsx-217346?logo=microsoftexcel&logoColor=white)
-![Version](https://img.shields.io/badge/version-v0.0.4-D97706)
+![Version](https://img.shields.io/badge/version-v0.0.7-D97706)
 
 </div>
 
@@ -122,7 +122,7 @@
 
 **离线优先，先记后传**
 
-没有网络也能记录：新建问题、推进阶段、拍照全部先落本机 SQLite，同时写入 outbox 待传队列。同步页只展示真实队列，界面如实标"本机待传"，不伪造"已同步 / 已连接"。
+没有网络也能记录：新建问题、推进阶段、拍照全部先落本机 SQLite，同时写入 outbox 待传队列。同步页展示真实队列与真实结果：配对后按队列补传，冲突逐条让人工选择，不伪造"已同步 / 已连接"。
 
 **拍照与看图**
 
@@ -229,7 +229,7 @@ Sinan/
 | --- | --- |
 | 桌面端 | .NET 10 + WPF（`net10.0-windows`），MVVM，自写最小 `ObservableObject` / `RelayCommand` |
 | 手机端 | Flutter + Dart 3.14，MVVM，`sqflite` + `shared_preferences`（Android 可构建，iOS 仅设计支持） |
-| 手机端兼容 | Android 7.0+（`minSdk` 24 / `targetSdk` 36）、iOS 15.0+；手机端版本 v0.0.2 |
+| 手机端兼容 | Android 7.0+（`minSdk` 24 / `targetSdk` 36）、iOS 15.0+；手机端版本 v0.0.3 |
 | 数据库 | SQLite（WAL，单文件），`Microsoft.Data.Sqlite` 10.0；15 张表 |
 | Excel | NPOI 2.7.3，同时支持 `.xls`（BIFF8）与 `.xlsx` |
 | 复用库 | `Kaleidoscope.UI`：窗基类、标题栏、胶囊圆角控件、圆角自检 |
@@ -246,7 +246,7 @@ dotnet build desktop/Sinan.sln -c Debug
 # 运行
 dotnet run --project desktop/src/Sinan.App/Sinan.App.csproj
 
-# 回归（199 条）
+# 回归（208 条）
 dotnet test desktop/tests/Sinan.Tests/Sinan.Tests.csproj -c Debug
 
 # 后台静默 UI 冒烟：登录 → 逐页/弹窗截图 → 圆角自检，不抢焦点
@@ -297,17 +297,19 @@ Flutter 资源与 pub 包建议设置 `FLUTTER_STORAGE_BASE_URL=https://storage.
 - [x] 数据层：SQLite DDL（15 张表）、脱敏种子（36 条 / 31 台）、仓储、统计口径
 - [x] 桌面端 9 个业务页面：登录 / 项目总览 / 分项目设备预览 / 工作台 / 问题台账 / 问题详情 / 数据交换 / 统计报表 / 系统设置
 - [x] 桌面端 6 个独立弹窗：新建问题 / 推进阶段 / 删除确认 / 查看照片 / 导入确认 / 导出确认
-      （设计稿另 2 个桌面弹窗按实际形态落地：手机配对因服务未实现改为如实提示，分项目预览改为独立页面）
+      （设计稿另 2 个桌面弹窗按实际形态落地：手机配对弹窗显示真实监听地址，配对码在设置页生成；分项目预览改为独立页面）
 - [x] Excel 无损通道：`.xls` + `.xlsx`，36 条往返 0 新增 0 更新，冲突逐条决策
 - [x] 附件与演示照片：上传 / 查看 / 导出 ZIP + `manifest.csv`
 - [x] 手机端全部页面：登录 / 待办 / 项目 / 分项目 / 台账 / 详情 / 新建 / 选机台 / 同步 / 拍照 / 照片查看 / 设置，
       五槽底栏 + 离线 SQLite + outbox 记账；拍照与相册已接入 `image_picker`
 - [x] 手机端 Android 模拟器实机截图（7 张，`docs/images/mobile/`）：登录 / 待办 / 项目 / 台账 / 详情 / 新建 / 同步
-- [x] 桌面端自动化回归 199 条（`desktop/tests/Sinan.Tests`：仓储 / 统计口径 / 日期解析 /
-      Excel 三种版式往返 / 导入冲突 / 权限 + 6 页 × 明暗双主题离屏渲染）
+- [x] 桌面端自动化回归 208 条（`desktop/tests/Sinan.Tests`：仓储 / 统计口径 / 日期解析 /
+      Excel 三种版式往返 / 导入冲突 / 局域网同步配对与冲突 / 权限 + 6 页 × 明暗双主题离屏渲染）
 - [x] 桌面端后台静默 UI 冒烟（`tools/ui_smoke`）：不抢焦点地登录、逐页截图、弹窗截图、圆角自检
-- [ ] **局域网同步服务**：当前为离线单机版，配对码 / Bearer / 增量同步尚未实现，界面如实提示不伪造连接状态
-- [ ] 现场端附件上传（拍照已落本机，按 outbox 补传待同步服务）
+- [x] **局域网同步**：桌面端内嵌 Kestrel 配对服务（端口 5180，仅局域网），6 位一次性配对码 +
+      Bearer 令牌；手机端按 outbox 上行（问题 / 阶段 / 状态 / 评论 / 照片）、按游标下行快照，
+      冲突逐条人工选择"保留手机 / 保留桌面"
+- [x] 现场端附件上传（拍照落本机后按 outbox 补传，桌面端按 `attachmentId` 幂等归档）
 - [ ] iOS 构建（需 macOS）
 
 ## 关键设计
@@ -329,9 +331,9 @@ due_raw   TEXT          -- "11.5" / "已下图" / "/"，用于原样导出
 
 | 项 | 现状 |
 | --- | --- |
-| 局域网同步 | 未实现。当前为离线单机版，桌面端不监听端口，手机端不发起连接；界面如实提示，不伪造连接状态 |
+| 局域网同步 | 已实现，待现场多机联调。桌面端监听 5180（仅局域网），手机端用 6 位一次性码配对；不做外网穿透、不做双主库双向合并 |
 | 相机扫码 | 待真机接入。当前用「手输机台号 + 最近机台」，界面上明写这一点 |
-| 手机端附件上传 | 拍照已存本机 `attachments/{issueId}/`，按 outbox 队列补传；上传通道随同步服务一起做 |
+| 手机端附件上传 | 已实现：拍照存本机 `attachments/{issueId}/`，同步时按 outbox 逐张上传；桌面端按 `attachmentId` 幂等归档 |
 | 手机端登录态 | 不持久化，冷启动需重新输工号密码（共享现场设备的默认口径） |
 | 传递依赖漏洞 | `SixLabors.ImageSharp` 2.1.10 中危（GHSA-rxmq-m78w-7wmc）。修复需 NPOI 升 2.8.x + OSMF 商业许可；本项目不调用 ImageSharp API，风险路径不走 |
 | iOS | 仅设计支持，构建需 macOS |

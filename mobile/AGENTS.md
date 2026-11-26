@@ -11,7 +11,9 @@
 - **iOS 只做设计支持**：本机没有 macOS/Xcode，无法构建与真机验证；改了 iOS 配置只能做
   语法级校验，并在交付说明里写明"待 macOS 验证"。
 - **不做**：Excel 导入/导出（`.xls/.xlsx` 由桌面端处理）、MES 对接、审批流、客户门户、外网穿透。
-- **同步尚未联调**：配对码入口已留，outbox 只在本机累积；界面**不得伪造**"同步成功 / 已连接"。
+- **同步已实现，待现场联调**：桌面端内嵌 Kestrel 配对服务（端口 5180，仅局域网），
+  手机端「同步中心」用 6 位一次性码配对，按 outbox 上行、按游标下行；冲突必须人工选择。
+  界面只显示真实结果，**不得伪造**"同步成功 / 已连接"。
 - **扫码尚未接入**：当前用"手输机台号 + 最近机台"替代，界面明确写"相机扫码待真机接入"，
   不伪造扫码成功。
 - 登录态**不持久化**：每次冷启动都要输工号密码（共享现场设备的默认口径）；密码框不预填，
@@ -24,7 +26,7 @@
 | 框架 | **Flutter 3.50 + Dart 3.14** | 只构建 Android；业务代码全部 Dart |
 | 架构 | **MVVM**：View / `AppState`（ChangeNotifier）/ Repository / LocalDb | 不引状态管理库；`provider` 都不用 |
 | 状态 | `lib/state/app_state.dart` | 只做编排；业务规则在 `models/rules.dart` |
-| 本地库 | **sqflite**（schema v2） | 建表口径对照 `shared/db/schema.sql`，只保留现场需要的字段 |
+| 本地库 | **sqflite**（schema v3） | 建表口径对照 `shared/db/schema.sql`，只保留现场需要的字段 |
 | 配置 | shared_preferences | 主题等轻量偏好 |
 | 拍照/选图 | image_picker | 长边 1600px、质量 82 |
 | 主题 | `SinanPalette` 明/暗两套 Token | 只允许引用 Token，禁止在页面里写死色值 |
@@ -37,7 +39,7 @@ mobile/
 │  ├─ app_info.dart          ← 版本号唯一来源（与 pubspec 一致）
 │  ├─ theme/                 ← SinanPalette Token / ThemeData
 │  ├─ models/                ← 问题 / 阶段 / 状态 / 附件 / 纯规则
-│  ├─ data/                  ← LocalDb（sqflite 建表+迁移+种子）、Repository、AttachmentStore
+│  ├─ data/                  ← LocalDb（sqflite 建表+迁移+种子）、Repository、AttachmentStore、SyncClient
 │  ├─ state/app_state.dart   ← 会话、主题、列表、统计、待传条数
 │  ├─ widgets/               ← 玻璃卡片、Chip、阶段点、KPI、空状态、照片缩略图
 │  └─ screens/               ← 登录 / 五槽主壳 / 项目 / 分项目 / 台账 / 详情 / 新建 / 机台 / 同步 / 设置 / 看图
@@ -50,7 +52,7 @@ mobile/
 ## 3. 版本与平台兼容（改清单前必读）
 
 **版本号（与桌面端各自独立）**：`pubspec.yaml` 的 `version` 是唯一来源，界面只读
-`lib/app_info.dart`。当前 `0.0.2+2`（`+2` 是 build number，Android `versionCode` /
+`lib/app_info.dart`。当前 `0.0.3+3`（`+3` 是 build number，Android `versionCode` /
 iOS `CFBundleVersion`）。
 
 - **默认只升 patch**：`0.0.1 → 0.0.2 → 0.0.3`，永远只动第三位；`0.0.9` 之后是
@@ -111,8 +113,8 @@ iOS `CFBundleVersion`）。
 
 ## 6. 数据与口径（移动侧）
 
-- `LocalDb` 当前 schema **v2**（附件表 + 迁移）；改表必须同步改 `onCreate`、`onUpgrade`
-  和桌面端 `shared/db/schema.sql`，并升版本号。
+- `LocalDb` 当前 schema **v3**（附件表、outbox.base_version、sync_meta、conflicts）；
+  改表必须同步改 `onCreate`、`onUpgrade` 和桌面端 `shared/db/schema.sql`，并升版本号。
 - 种子：`assets/seed/issues.seed.json` 与 `shared/db/seed/issues.seed.json` 必须是同一份
   （36 条 / 31 台，虚构数据），改完两端同步拷贝。
 - 新建问题：`seq_no` 先用 `L001` 占位，同步后由桌面主库重编号；责任阶段初始
@@ -120,7 +122,7 @@ iOS `CFBundleVersion`）。
 - 每次写操作同时落 `outbox`（`synced_at IS NULL` 即待传）；同步页只展示真实队列，
   不预填"已同步"。
 - 附件：`attachments/{issueId}/{uuid}.jpg`，DB 只存相对路径；缺失文件明确占位；
-  上传由后续同步服务承担。
+  同步时按 outbox 逐张上传，桌面端按 `attachmentId` 幂等归档。
 - 日期与 `/`、`已下图`、空白的区别，逾期只认 `due_date`——全部走 `Rules`，与桌面同源。
 - 单机台号归组：`P7391101–P7391199` → 01，`…2xx` → 02，`…3xx` → 03；位数异常留"待确认"
   （完整规则见根第 6 节）。
@@ -178,14 +180,15 @@ flutter build apk --debug
 | `mobile/lib/models/rules.dart` | 日期解析、状态推导、倒挂/逾期、归组、我的待办 |
 | `mobile/lib/models/issue.dart` | 问题 / 阶段 / 状态 / 统计模型 |
 | `mobile/lib/models/attachment.dart` | 附件模型（本机文件 + 同步状态） |
-| `mobile/lib/data/local_db.dart` | sqflite 建表 v2、迁移、首启种子 |
+| `mobile/lib/data/local_db.dart` | sqflite 建表 v3、迁移、首启种子 |
 | `mobile/lib/data/issue_repository.dart` | 查询、新建、附件、outbox、机台聚合 |
 | `mobile/lib/data/attachment_store.dart` | 拍照/相册、压缩落盘 |
+| `mobile/lib/data/sync_client.dart` | 局域网同步客户端（ping/配对/上行/下行/照片上传） |
 | `mobile/lib/state/app_state.dart` | 会话、主题、列表、统计、待传条数 |
 | `mobile/lib/screens/shell_screen.dart` | 五槽底栏与页面切换 |
 | `mobile/lib/screens/new_issue_screen.dart` | 新建问题（离线落库 + 写 outbox） |
 | `mobile/lib/screens/issue_detail_screen.dart` | 详情、阶段推进、评论、附件 |
-| `mobile/lib/screens/sync_screen.dart` | 待传队列、配对码入口、同步规则说明 |
+| `mobile/lib/screens/sync_screen.dart` | 同步中心：配对、立即同步、冲突二选一、待传队列 |
 | `mobile/android/app/build.gradle.kts` | SDK 口径、版本号来源、签名（当前 debug） |
 | `mobile/android/app/src/main/AndroidManifest.xml` | 权限、明文 HTTP、应用名 |
 | `mobile/ios/Runner/Info.plist` | iOS 权限描述、本地网络、ATS、显示名 |

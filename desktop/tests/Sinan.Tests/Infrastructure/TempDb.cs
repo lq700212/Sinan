@@ -4,6 +4,7 @@ using Sinan.Core.Models;
 using Sinan.Data;
 using Sinan.Data.Excel;
 using Sinan.Data.Repositories;
+using Sinan.Data.Sync;
 
 namespace Sinan.Tests.Infrastructure;
 
@@ -22,6 +23,7 @@ public sealed class TempDb : IDisposable
     public AttachmentRepository Attachments { get; }
     public ExcelImportService Import { get; }
     public ExcelExportService Export { get; }
+    public SyncRepository Sync { get; }
 
     public TempDb()
     {
@@ -36,6 +38,7 @@ public sealed class TempDb : IDisposable
         Attachments = new AttachmentRepository(Db);
         Import = new ExcelImportService(Db, Issues, Projects);
         Export = new ExcelExportService(Db, Issues, Projects, Attachments);
+        Sync = new SyncRepository(Db, Issues, Projects, Users);
     }
 
     /// <summary>种子管理员（admin / 123456）；每次取新实例，避免测试共享可变对象。</summary>

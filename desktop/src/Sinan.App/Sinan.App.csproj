@@ -13,6 +13,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Kestrel 来自 .NET 共享框架（随运行时安装），不是 NuGet 包：
+         用普通 socket 监听 5180，非管理员也能绑定局域网 IP，不需要 netsh urlacl。 -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Sinan.Core\Sinan.Core.csproj" />
     <ProjectReference Include="..\Sinan.Data\Sinan.Data.csproj" />
     <!-- 公司级 WPF 复用库（git submodule）；只引 UI 工程，主库 Kaleidoscope 是 net472 通讯库，司南不引。 -->

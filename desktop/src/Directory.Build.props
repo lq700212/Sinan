@@ -1,10 +1,10 @@
-<Project>
+﻿<Project>
   <!-- 全解决方案共享的编译与版本约定；子工程只写自己特有的属性。 -->
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>0.0.6</Version>
+    <Version>0.0.7</Version>
     <Product>司南 · P7391 安装调试问题闭环系统</Product>
     <Company>Sinan</Company>
     <NeutralLanguage>zh-CN</NeutralLanguage>

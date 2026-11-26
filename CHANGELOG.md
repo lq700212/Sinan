@@ -1,5 +1,70 @@
 # 变更记录
 
+## 开发期（2026-11-26）局域网同步打通（桌面 v0.0.7 / 手机 v0.0.3）
+
+### 问题
+- MVP 唯一整块缺失是联机：桌面端没有监听服务，手机端 outbox 只在本机累积，
+  设置页与同步中心都只能显示"未启用"。用户要求补齐项目剩余部分。
+
+### 契约与共享层（`shared/`）
+- `shared/api/sync-api.md`：新增同步协议唯一真源（协议版本 `1`）——
+  `GET /api/ping`、`POST /api/pair`、`POST /api/sync/push`、`GET /api/sync/pull`、
+  `POST/GET /api/attachments/...`；上行结果 `applied / conflict / rejected / duplicate`。
+- `shared/db/schema.sql`：`devices` 增加 `platform`、`user_id`；新增
+  `sync_receipts(device_id, client_op_id, result_json, created_at)` 做上行幂等。
+- 桌面 `Database.SchemaVersion` 升 `2`，启动时按 `PRAGMA table_info` 幂等补列；
+  全新库直接按最新 DDL 建表。
+
+### 桌面端
+- `Sinan.Data/Sync/SyncModels.cs`：配对码、设备、上行操作/结果、增量变更 DTO。
+- `Sinan.Data/Sync/SyncRepository.cs`：配对码生成与一次性消费、令牌 SHA-256 鉴权、
+  设备上限 8 台、上行落库（新建 / 阶段 / 状态 / 评论）、回执幂等、按 `change_log.seq`
+  增量拉取、附件落盘（`attachmentId` 幂等 + 可选 sha256 校验）。
+  - 手机新建问题保留手机 `local-*` ID 作主键，`seq_no` 由桌面按当前最大数字序号 +1 重编三位；
+  - 阶段/状态用 `baseVersion` 判乐观锁，落后返回 `conflict` + 桌面当前值；
+  - 手机 `saveStage` 顺带的同状态操作直接 `applied`（no-op），不误报冲突。
+- `Sinan.App/Services/SyncServer.cs`：内嵌 **Kestrel**（.NET 共享框架，非第三方包）监听
+  `5180`，不用 HttpListener/HTTP.sys，非管理员也能绑定局域网 IP；启动失败只记日志，
+  设置页如实显示原因。
+- 组合根装配 `SyncRepository` + `SyncServer`，退出时释放；登录页「手机端配对」改为显示
+  真实监听地址与服务状态；数据交换页删除未绑定的过时同步状态属性（不再出现“当前未监听”）。
+- 手机端登录页底部读真实配对配置：已配对显示桌面端地址，未配对如实显示“离线”，
+  不再写死“未配对”。
+- 系统设置「移动端配对」卡改为真实可用：服务状态、监听地址、6 位一次性码（10 分钟倒计时）、
+  已配对设备列表（在线按最近 2 分钟同步请求判定）、移除设备。
+- 新增 `SyncRepositoryTests` 8 条：配对码一次性、手机新建重编序号、同 `clientOpId` 幂等、
+  阶段/状态冲突、增量游标、附件幂等与 sha 校验、移除设备令牌失效。
+
+### 手机端
+- `LocalDb` 升 `v3`：`outbox` 增加 `base_version`；新增 `sync_meta`（地址/设备/令牌/游标/
+  上次同步）与 `conflicts`（冲突原文 + 桌面当前值）。
+- 新增 `data/sync_client.dart`：地址归一化、ping 校验协议、配对、上行、下行、照片上传，
+  全部 8 秒超时；错误转可读 `SyncException`。
+- `AppState` 增加同步编排：配对 → 上行（业务操作 → 照片）→ 按游标下行 → 结算队列；
+  冲突写 `conflicts` 表；「保留手机」用桌面版本号重发，「保留桌面」用桌面快照覆盖本机。
+- 同步中心重写为真实页面：地址/配对码输入、连接状态、立即同步、待传队列、冲突二选一、
+  上次同步时间；不写假进度、不伪造"已同步"。
+- **版本号语义修正**：手机本地写操作不再递增 `version`——它是主库版本号，
+  本地递增会让上行 `baseVersion` 比桌面大，误报冲突。
+- `saveStage` 不再顺带入队 `issue/status`：问题状态由主库按同一套 `StageRules` 推导，
+  避免两端推导时序不同造成状态来回覆盖。
+
+### 仓库卫生
+- 修复根 `.gitignore` 的 `data/` 规则误伤：改为 `/data/`、`/source/` 锚定根目录。
+  原规则会匹配任意层级的 `data` 目录，导致 `mobile/lib/data/`（本地库 / 仓储 / 同步客户端）
+  与 `desktop/tests/Sinan.Tests/Data/`（4 个数据层测试）整目录被忽略、从未入库；
+  别人 clone 后手机端无法构建、桌面测试缺文件。
+
+### 验证
+- `dotnet build desktop/Sinan.sln -c Debug`：0 error / 0 warning。
+- `dotnet test`：208 条全过（新增 8 条同步数据层用例 + 1 条 HTTP 层集成用例）。
+  HTTP 用例真实起 Kestrel、走 ping / 401 / 配对 / 上行幂等 / 下行游标 / 附件上传下载。
+- 实机启动桌面端 + 本机 HTTP 脚本走完整链路：ping、配对、配对码单次有效、
+  新建上行、幂等重发、下行快照、阶段上行、同状态 no-op、旧版本冲突并带回桌面值、
+  照片上传与幂等、坏令牌 401，全部通过。
+- 手机端 `flutter analyze` 0 issue、`flutter test` 22 条全过、`flutter build apk --debug` 生成。
+- 已知边界：外网访问、桌面端向下推送附件、扫码仍未做；冲突必须人工处理，不静默覆盖。
+
 ## 开发期（2026-11-26）数据交换页复刻 + 系统设置页修复（桌面 v0.0.6 / 手机 v0.0.2）
 
 ### 问题

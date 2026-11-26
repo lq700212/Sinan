@@ -14,8 +14,9 @@ attachments/
 archive/
 
 # 本机真实资料（仅用于本地自测，禁止入库）
-source/
-data/
+# 注意：必须锚定根目录，否则会误伤 `mobile/lib/data/` 源码目录。
+/source/
+/data/
 .sensitive.local
 
 # 系统与工具临时文件

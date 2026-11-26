@@ -1,19 +1,25 @@
+import 'dart:convert';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/attachment_store.dart';
 import '../data/issue_repository.dart';
+import '../data/sync_client.dart';
 import '../models/attachment.dart';
 import '../models/issue.dart';
 
 /// 应用级状态：会话、主题、问题列表与统计。
 /// 只做编排，业务规则在 `models/rules.dart`，数据访问在 `IssueRepository`。
 class AppState extends ChangeNotifier {
-  AppState(this.repository, {AttachmentStore? attachments})
-      : attachments = attachments ?? AttachmentStore();
+  AppState(this.repository,
+      {AttachmentStore? attachments, SyncClient? syncClient})
+      : attachments = attachments ?? AttachmentStore(),
+        syncClient = syncClient ?? SyncClient();
 
   final IssueRepository repository;
   final AttachmentStore attachments;
+  final SyncClient syncClient;
 
   ThemeMode _themeMode = ThemeMode.light;
   bool _loading = true;
@@ -28,6 +34,16 @@ class AppState extends ChangeNotifier {
   int _pendingOutbox = 0;
   int _todayRecorded = 0;
 
+  bool _syncBusy = false;
+  String _syncStatus = '';
+  String _syncServerUrl = '';
+  String _syncDeviceId = '';
+  String _syncDeviceName = '';
+  String _syncToken = '';
+  int _syncCursor = 0;
+  String _syncLastAt = '';
+  List<SyncConflict> _syncConflicts = const [];
+
   ThemeMode get themeMode => _themeMode;
   bool get loading => _loading;
   String? get loadError => _loadError;
@@ -40,6 +56,17 @@ class AppState extends ChangeNotifier {
   int get pendingOutbox => _pendingOutbox;
   int get todayRecorded => _todayRecorded;
 
+  bool get syncBusy => _syncBusy;
+  String get syncStatus => _syncStatus;
+  String get syncServerUrl => _syncServerUrl;
+  String get syncDeviceId => _syncDeviceId;
+  String get syncDeviceName => _syncDeviceName;
+  String get syncLastAt => _syncLastAt;
+  List<SyncConflict> get syncConflicts => _syncConflicts;
+  int get syncConflictCount => _syncConflicts.length;
+  bool get syncConfigured =>
+      _syncToken.isNotEmpty && _syncServerUrl.isNotEmpty;
+
   /// 首次启动与“重试”共用：读主题、建库、灌种子、拉统计。
   /// 任何一步失败都不能让界面停在启动页，错误交给 `loadError` 由 UI 展示。
   Future<void> init() async {
@@ -50,7 +77,9 @@ class AppState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       _themeMode =
           prefs.getString('theme') == 'dark' ? ThemeMode.dark : ThemeMode.light;
+      await _loadSyncConfig();
       await refresh();
+      await _refreshConflicts();
     } catch (e) {
       _loadError = e.toString();
     }
@@ -179,5 +208,315 @@ class AppState extends ChangeNotifier {
     final saved = await repository.addAttachment(issueId: issueId, picked: picked);
     await refresh();
     return saved;
+  }
+
+  // ---------------------------------------------------------------------
+  // 局域网同步
+  // ---------------------------------------------------------------------
+
+  Future<void> _loadSyncConfig() async {
+    _syncServerUrl = await repository.readMeta('server_url') ?? '';
+    _syncDeviceId = await repository.readMeta('device_id') ?? '';
+    _syncDeviceName = await repository.readMeta('device_name') ?? '';
+    _syncToken = await repository.readMeta('token') ?? '';
+    _syncCursor = int.tryParse(await repository.readMeta('cursor') ?? '') ?? 0;
+    _syncLastAt = await repository.readMeta('last_sync_at') ?? '';
+  }
+
+  Future<void> _refreshConflicts() async {
+    _syncConflicts = await repository.listConflicts();
+  }
+
+  /// 配对：先 ping 确认是司南服务，再用一次性 6 位码换 token。
+  /// 成功即保存地址/令牌并立刻跑一次同步；失败把可读原因写进 syncStatus。
+  Future<bool> pair({required String serverUrl, required String code}) async {
+    if (_syncBusy) return false;
+    final baseUrl = SyncClient.normalizeBaseUrl(serverUrl);
+    if (baseUrl.isEmpty) {
+      _syncStatus = '请填写桌面端地址，例如 192.168.1.26:5180';
+      notifyListeners();
+      return false;
+    }
+    if (code.trim().length != 6) {
+      _syncStatus = '配对码是桌面端生成的 6 位数字。';
+      notifyListeners();
+      return false;
+    }
+
+    _syncBusy = true;
+    _syncStatus = '正在连接 $baseUrl …';
+    notifyListeners();
+    try {
+      final ping = await syncClient.ping(baseUrl);
+      final deviceName = _syncDeviceName.isEmpty
+          ? '${_userName.isEmpty ? '现场' : _userName}的 Android'
+          : _syncDeviceName;
+      final result = await syncClient.pair(
+        baseUrl: baseUrl,
+        code: code,
+        deviceName: deviceName,
+        model: '',
+        employeeNo: _userAccount,
+      );
+
+      await repository.writeMeta('server_url', baseUrl);
+      await repository.writeMeta('device_id', result.deviceId);
+      await repository.writeMeta('device_name', deviceName);
+      await repository.writeMeta('token', result.token);
+      await repository.writeMeta('cursor', '0');
+      _syncServerUrl = baseUrl;
+      _syncDeviceId = result.deviceId;
+      _syncDeviceName = deviceName;
+      _syncToken = result.token;
+      _syncCursor = 0;
+      _syncStatus = '已配对 · ${ping.serverName}';
+      notifyListeners();
+
+      _syncBusy = false;
+      await syncNow();
+      return true;
+    } on SyncException catch (e) {
+      _syncStatus = '配对失败：${e.message}';
+      return false;
+    } catch (e) {
+      _syncStatus = '配对失败：$e';
+      return false;
+    } finally {
+      _syncBusy = false;
+      notifyListeners();
+    }
+  }
+
+  /// 全量同步：先上行（业务操作 → 照片），再按游标下行。
+  /// 冲突不静默覆盖：写 conflicts 表，等用户在同步页选"保留手机 / 保留桌面"。
+  Future<bool> syncNow() async {
+    if (!syncConfigured) {
+      _syncStatus = '尚未配对：请先在桌面端生成配对码。';
+      notifyListeners();
+      return false;
+    }
+    if (_syncBusy) return false;
+
+    _syncBusy = true;
+    _syncStatus = '正在同步…';
+    notifyListeners();
+
+    var uploaded = 0;
+    var downloaded = 0;
+    var failed = 0;
+    var conflicts = 0;
+    final errors = <String>[];
+
+    try {
+      final entries = await repository.pendingOutboxEntries();
+      final business =
+          entries.where((e) => e.entity != 'attachment').toList();
+      final photos = entries.where((e) => e.entity == 'attachment').toList();
+
+      if (business.isNotEmpty) {
+        final results = await syncClient.push(
+          baseUrl: _syncServerUrl,
+          token: _syncToken,
+          entries: business,
+        );
+        final settled = <int>[];
+        for (final result in results) {
+          OutboxEntry? entry;
+          for (final item in business) {
+            if (item.id == result.clientOpId) {
+              entry = item;
+              break;
+            }
+          }
+          if (entry == null) continue;
+
+          switch (result.status) {
+            case 'applied':
+            case 'duplicate':
+              settled.add(entry.id);
+              uploaded++;
+              break;
+            case 'conflict':
+              await repository.addConflict(
+                entity: entry.entity,
+                entityId: entry.entityId,
+                op: entry.op,
+                payload: entry.payload,
+                serverVersion: result.serverVersion,
+                serverPayload: jsonEncode(result.serverPayload ?? const {}),
+                message: result.message.isEmpty
+                    ? '桌面端也修改了这条记录，请选择保留哪一边。'
+                    : result.message,
+              );
+              settled.add(entry.id);
+              conflicts++;
+              break;
+            default:
+              failed++;
+              if (result.message.isNotEmpty) errors.add(result.message);
+              break;
+          }
+        }
+        await repository.markOutboxSynced(settled);
+      }
+
+      for (final entry in photos) {
+        final payload = _decodeObject(entry.payload);
+        final issueId = payload['issue_id'] as String? ?? '';
+        final storedPath = payload['stored_path'] as String? ?? '';
+        final fileName = payload['file_name'] as String? ?? 'IMG.jpg';
+        if (issueId.isEmpty || storedPath.isEmpty) {
+          failed++;
+          continue;
+        }
+        final path = await attachments.absolutePath(storedPath);
+        if (path == null) {
+          failed++;
+          errors.add('照片文件已丢失：$storedPath');
+          continue;
+        }
+        final result = await syncClient.uploadAttachment(
+          baseUrl: _syncServerUrl,
+          token: _syncToken,
+          issueId: issueId,
+          attachmentId: entry.entityId,
+          fileName: fileName,
+          filePath: path,
+        );
+        if (result.ok) {
+          await repository.markOutboxSynced([entry.id]);
+          await repository.markAttachmentSynced(entry.entityId);
+          uploaded++;
+        } else {
+          failed++;
+          if (result.message.isNotEmpty) errors.add(result.message);
+        }
+      }
+
+      var cursor = _syncCursor;
+      var hasMore = true;
+      while (hasMore) {
+        final pull = await syncClient.pull(
+          baseUrl: _syncServerUrl,
+          token: _syncToken,
+          cursor: cursor,
+        );
+        for (final change in pull.changes) {
+          if (change.entity != 'issue') continue;
+          final map = change.payload is Map
+              ? (change.payload as Map).cast<String, dynamic>()
+              : const <String, dynamic>{};
+          if (map.isEmpty) continue;
+
+          if (await repository.hasPendingFor(change.entityId)) {
+            // 本机还有未结算操作：不覆盖，交人工选择。
+            await repository.addConflict(
+              entity: 'issue',
+              entityId: change.entityId,
+              op: 'pull',
+              payload: '{}',
+              serverVersion: (map['version'] as num?)?.toInt() ?? 0,
+              serverPayload: jsonEncode(map),
+              message: '桌面端更新了这条问题，本机仍有待传操作。',
+            );
+            conflicts++;
+          } else {
+            await repository.applyServerIssue(map);
+            downloaded++;
+          }
+        }
+        cursor = pull.cursor;
+        hasMore = pull.hasMore;
+        if (pull.changes.isEmpty) break;
+      }
+
+      await repository.writeMeta('cursor', cursor.toString());
+      _syncCursor = cursor;
+      final now = DateTime.now().toIso8601String();
+      await repository.writeMeta('last_sync_at', now);
+      _syncLastAt = now;
+
+      if (failed == 0) {
+        _syncStatus = '同步完成：上行 $uploaded 条 · 下行 $downloaded 条'
+            '${conflicts > 0 ? ' · 冲突 $conflicts 条' : ''}';
+      } else {
+        final reason = errors.isEmpty ? '' : '：${errors.first}';
+        _syncStatus = '部分完成：上行 $uploaded 条 · 失败 $failed 条'
+            '${conflicts > 0 ? ' · 冲突 $conflicts 条' : ''}$reason';
+      }
+      await refresh();
+      await _refreshConflicts();
+      return failed == 0;
+    } on SyncException catch (e) {
+      _syncStatus = '同步失败：${e.message}';
+      return false;
+    } catch (e) {
+      _syncStatus = '同步失败：$e';
+      return false;
+    } finally {
+      _syncBusy = false;
+      notifyListeners();
+    }
+  }
+
+  /// 冲突处置：保留手机 = 用桌面最新版本号重发本机操作；
+  /// 保留桌面 = 用 serverPayload 覆盖本机对应字段。
+  Future<void> resolveConflict(SyncConflict conflict,
+      {required bool keepMobile}) async {
+    try {
+      if (keepMobile) {
+        await repository.requeueOperation(
+          entity: conflict.entity,
+          entityId: conflict.entityId,
+          op: conflict.op == 'pull' ? 'upsert' : conflict.op,
+          payload: conflict.payload,
+          baseVersion: conflict.serverVersion,
+        );
+      } else {
+        final map = _decodeObject(conflict.serverPayload);
+        if (conflict.entity == 'issue_stage') {
+          final parts = conflict.entityId.split(':');
+          if (parts.length == 2) {
+            await repository.applyServerStage(parts[0], parts[1], map);
+          }
+        } else if (conflict.entity == 'issue') {
+          await repository.applyServerIssue(map);
+        }
+      }
+      await repository.deleteConflict(conflict.id);
+      await _refreshConflicts();
+      notifyListeners();
+
+      if (keepMobile) {
+        await syncNow();
+      } else {
+        await refresh();
+      }
+    } catch (e) {
+      _syncStatus = '处理冲突失败：$e';
+      notifyListeners();
+    }
+  }
+
+  /// 解除配对：清掉令牌与游标，本机队列保留，重新配对后可继续补传。
+  Future<void> resetPairing() async {
+    await repository.clearSyncMeta();
+    _syncServerUrl = '';
+    _syncDeviceId = '';
+    _syncDeviceName = '';
+    _syncToken = '';
+    _syncCursor = 0;
+    _syncLastAt = '';
+    _syncStatus = '已解除配对。本机待传队列仍保留。';
+    notifyListeners();
+  }
+
+  static Map<String, dynamic> _decodeObject(String text) {
+    try {
+      final decoded = jsonDecode(text);
+      return decoded is Map ? decoded.cast<String, dynamic>() : const {};
+    } catch (_) {
+      return const {};
+    }
   }
 }

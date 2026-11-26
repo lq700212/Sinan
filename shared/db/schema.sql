@@ -175,6 +175,8 @@ CREATE TABLE IF NOT EXISTS devices (
     id              TEXT PRIMARY KEY,
     name            TEXT NOT NULL,
     model           TEXT NOT NULL DEFAULT '',
+    platform        TEXT NOT NULL DEFAULT 'android',
+    user_id         TEXT NOT NULL DEFAULT '',           -- 配对时使用的账号（审计用）
     token_hash      TEXT NOT NULL,
     paired_at       TEXT NOT NULL,
     last_sync_at    TEXT,
@@ -205,4 +207,15 @@ CREATE TABLE IF NOT EXISTS sync_state (
     device_id   TEXT PRIMARY KEY,
     last_cursor INTEGER NOT NULL DEFAULT 0,
     last_sync_at TEXT
+);
+
+-- 上行操作幂等回执：手机网络抖动会重发同一批操作，服务端按
+-- (device_id, client_op_id) 直接返回上次结果，不重复写业务数据。
+CREATE TABLE IF NOT EXISTS sync_receipts (
+    device_id       TEXT NOT NULL,
+    client_op_id    INTEGER NOT NULL,
+    status          TEXT NOT NULL,                      -- applied / conflict / rejected
+    result_json     TEXT NOT NULL,
+    created_at      TEXT NOT NULL,
+    PRIMARY KEY (device_id, client_op_id)
 );

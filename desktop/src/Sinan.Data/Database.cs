@@ -52,7 +52,11 @@ public sealed class DataPaths
 /// </summary>
 public sealed class Database
 {
-    public const int SchemaVersion = 1;
+    /// <summary>
+    /// 2：devices 增加 platform/user_id，新增 sync_receipts（上行幂等回执）。
+    /// 修改 shared/db/schema.sql 时必须同步升这里并补迁移。
+    /// </summary>
+    public const int SchemaVersion = 2;
 
     private readonly string _connectionString;
 
@@ -98,6 +102,7 @@ public sealed class Database
         var version = ReadMeta(connection, "schema_version");
         if (version == null)
         {
+            // 全新库：ExecuteSchema 已按最新 DDL 建表，直接写当前版本。
             WriteMeta(connection, "schema_version", SchemaVersion.ToString());
         }
         else if (!int.TryParse(version, out var parsed) || parsed > SchemaVersion)
@@ -105,8 +110,46 @@ public sealed class Database
             throw new InvalidOperationException(
                 $"数据库结构版本 {version} 高于当前程序支持的 {SchemaVersion}，请升级司南程序。");
         }
+        else if (parsed < SchemaVersion)
+        {
+            // 旧库补列：CREATE TABLE IF NOT EXISTS 不会给已存在的表加列，必须显式 ALTER。
+            Migrate(connection, parsed);
+            WriteMeta(connection, "schema_version", SchemaVersion.ToString());
+        }
 
         SeedBootstrapper.Seed(connection);
+    }
+
+    /// <summary>
+    /// 结构迁移。每一步都幂等（先查 PRAGMA 再补列），
+    /// 现场机器断电后重启可以安全重跑，不会因"列已存在"报错。
+    /// </summary>
+    private static void Migrate(SqliteConnection connection, int from)
+    {
+        if (from < 2)
+        {
+            EnsureColumn(connection, "devices", "platform", "TEXT NOT NULL DEFAULT 'android'");
+            EnsureColumn(connection, "devices", "user_id", "TEXT NOT NULL DEFAULT ''");
+        }
+    }
+
+    private static void EnsureColumn(SqliteConnection connection, string table,
+        string column, string definition)
+    {
+        using var check = connection.CreateCommand();
+        check.CommandText = $"PRAGMA table_info({table})";
+        using (var reader = check.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                if (string.Equals(reader.GetString(1), column, StringComparison.OrdinalIgnoreCase))
+                    return;
+            }
+        }
+
+        using var alter = connection.CreateCommand();
+        alter.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {definition}";
+        alter.ExecuteNonQuery();
     }
 
     private static void ExecuteSchema(SqliteConnection connection)

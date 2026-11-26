@@ -127,15 +127,29 @@ public sealed class LoginViewModel : ObservableObject
         !IsBusy && !string.IsNullOrWhiteSpace(EmployeeNo) && Password.Length > 0;
 
     /// <summary>
-    /// 手机配对入口。当前 MVP 单机批尚未启用内嵌同步服务，
-    /// 这里如实告知，不展示不存在的配对码（根 AGENTS.md 第 7 节第 9 条：不伪造）。
+    /// 手机配对入口（登录前也能看）。同步服务随主程序启动，
+    /// 这里只报真实地址与状态；配对码需要登录后在「系统设置 → 移动端配对」生成，
+    /// 不在登录页伪造二维码或假配对码。
     /// </summary>
     private void ShowPairing()
     {
+        var server = _app.SyncServer;
+        if (server is not { IsRunning: true })
+        {
+            _app.Dialogs.Alert("手机端配对",
+                $"配对服务未运行：{server?.LastError ?? "同步服务未装配"}\n\n" +
+                $"请确认端口 {SyncServer.Port} 未被其它程序占用，然后重新启动司南。\n\n" +
+                "本机数据不会上传到任何服务器。");
+            return;
+        }
+
+        var addresses = server.Urls.Count > 0
+            ? string.Join("\n", server.Urls)
+            : $"本机局域网 IP:{SyncServer.Port}";
         _app.Dialogs.Alert("手机端配对",
-            "当前版本是离线单机版：桌面端配对服务尚未启用，不会生成配对码。\n\n" +
-            "规划中的方式：电脑与手机在同一局域网，桌面端生成 6 位配对码，" +
-            "手机端（Flutter）凭码建立信任，之后可离线记录、联网增量上传。\n\n" +
+            "配对服务运行中，电脑与手机连同一局域网即可。\n\n" +
+            $"手机端「同步中心」填写桌面端地址：\n{addresses}\n\n" +
+            "登录后在「系统设置 → 移动端配对」生成 6 位一次性配对码（10 分钟有效）。\n\n" +
             "本机数据不会上传到任何服务器。");
     }
 

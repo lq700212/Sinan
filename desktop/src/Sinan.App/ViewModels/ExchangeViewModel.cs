@@ -19,7 +19,7 @@ namespace Sinan.App.ViewModels;
 /// - 写入逐行独立事务，单行失败不影响整体，失败原因回填 Messages；
 /// - 导出统一落在数据根目录 archive\exports，界面只给路径与"打开目录"，不弹保存对话框
 ///   自选路径，避免现场把导出文件散落到桌面然后找不到。
-/// - 移动端配对服务尚未实现（MVP 单机批），页面如实说明，不展示假配对码。
+/// - 移动端配对在「系统设置 → 移动端配对」完成，本页只管 Excel 进出，不展示假配对码。
 /// </summary>
 public sealed class ExchangeViewModel : ObservableObject
 {
@@ -108,7 +108,6 @@ public sealed class ExchangeViewModel : ObservableObject
         ExportDirDisplay = Path.Combine(app.Database.Paths.ArchiveDir, "exports");
         DbPathDisplay = app.Database.Paths.DbPath;
         AttachmentsDirDisplay = app.Database.Paths.AttachmentsDir;
-        SyncStatusText = "配对服务尚未启用（当前为离线单机版）";
     }
 
     public ObservableCollection<ImportRowPreview> Rows { get; }
@@ -281,8 +280,6 @@ public sealed class ExchangeViewModel : ObservableObject
     public string ExportDirDisplay { get; }
     public string DbPathDisplay { get; }
     public string AttachmentsDirDisplay { get; }
-    public string SyncStatusText { get; }
-    public string SyncPortDisplay => "规划端口 5180 · 仅局域网 · 当前未监听";
 
     public StrategyOption Strategy
     {
