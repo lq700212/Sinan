@@ -4,8 +4,8 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>0.0.7</Version>
-    <Product>司南 · P7391 安装调试问题闭环系统</Product>
+    <Version>0.0.8</Version>
+    <Product>司南 · 安装调试问题闭环系统</Product>
     <Company>Sinan</Company>
     <NeutralLanguage>zh-CN</NeutralLanguage>
     <Deterministic>true</Deterministic>

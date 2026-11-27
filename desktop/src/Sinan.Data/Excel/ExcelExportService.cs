@@ -37,8 +37,11 @@ public sealed class ExcelExportService
 
     public ExportResult Export(ExportRequest request, User user)
     {
-        var project = _projects.GetMain() ?? throw new InvalidOperationException("数据库尚未初始化项目。");
-        var selected = Select(_issues.All(), request);
+        // 导出永远只导当前项目：request.ProjectId 由界面按项目上下文填入，
+        // 缺失时才回退到主项目（兼容旧调用/测试）。
+        var project = _projects.Get(request.ProjectId) ?? _projects.GetMain()
+            ?? throw new InvalidOperationException("数据库尚未初始化项目。");
+        var selected = Select(_issues.All(project.Id), request);
         var dir = Path.Combine(_database.Paths.ArchiveDir, "exports");
         Directory.CreateDirectory(dir);
 

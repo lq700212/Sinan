@@ -240,4 +240,69 @@ public class SyncRepositoryTests
         Assert.True(db.Sync.RemoveDevice(device.Id));
         Assert.Null(db.Sync.Authenticate(outcome.Token));
     }
+
+    [Fact]
+    public void 多项目下_手机新建问题按项目独立编号()
+    {
+        using var db = new TempDb();
+        var device = PairDevice(db);
+        var project = db.Projects.CreateProject(
+            "P7392", "P7392 安装调试问题闭环", "", db.Engineer);
+
+        static SyncOperation Op(long clientOpId, string entityId, string projectId,
+            string machineCode) => new()
+        {
+            ClientOpId = clientOpId,
+            Entity = "issue",
+            EntityId = entityId,
+            Op = "create",
+            BaseVersion = 0,
+            Payload = JsonSerializer.SerializeToElement(new
+            {
+                project_id = projectId,
+                seq_no = "L001",
+                machine_code = machineCode,
+                title = "手机新建：多项目编号",
+                solution = "",
+                status = "装配中",
+                stage_code = "assembly",
+                owner_text = "张工",
+                due_raw = "11.28",
+                state = "in_progress"
+            })
+        };
+
+        // P7392 是空项目：手机在它下面新建的第一条必须从 001 开始，
+        // 不能继承 P7391 种子已经用到的 040。
+        var first = db.Sync.ApplyOperations(device, new[]
+        {
+            Op(1, "local-p7392-1", project.Id, "P7392101")
+        });
+        Assert.Equal("applied", first[0].Status);
+
+        var issue = db.Issues.Get("local-p7392-1")!;
+        Assert.Equal(project.Id, issue.ProjectId);
+        Assert.Equal("P7392-01", issue.SubprojectCode);
+        Assert.Equal("001", issue.SeqNo);
+
+        var second = db.Sync.ApplyOperations(device, new[]
+        {
+            Op(2, "local-p7392-2", project.Id, "P7392201")
+        });
+        Assert.Equal("applied", second[0].Status);
+        Assert.Equal("002", db.Issues.Get("local-p7392-2")!.SeqNo);
+
+        // P7391 的编号不受 P7392 影响：仍按 P7391 自己的最大序号递增。
+        var p7391Max = db.Issues.All()
+            .Where(i => i.ProjectId == "PRJ-P7391")
+            .Select(i => int.TryParse(i.SeqNo, out var n) ? n : 0)
+            .DefaultIfEmpty(0).Max();
+        var p7391 = db.Sync.ApplyOperations(device, new[]
+        {
+            Op(3, "local-p7391-1", "PRJ-P7391", "P7391101")
+        });
+        Assert.Equal("applied", p7391[0].Status);
+        Assert.Equal((p7391Max + 1).ToString("D3"),
+            db.Issues.Get("local-p7391-1")!.SeqNo);
+    }
 }

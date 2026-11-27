@@ -67,6 +67,7 @@ public class UiRenderTests
             Inject(app, nameof(SinanApp.Users), db.Users);
             Inject(app, nameof(SinanApp.Issues), db.Issues);
             Inject(app, nameof(SinanApp.Projects), db.Projects);
+            Inject(app, nameof(SinanApp.ProjectsContext), db.Context);
             Inject(app, nameof(SinanApp.Attachments), db.Attachments);
             Inject(app, nameof(SinanApp.Import), db.Import);
             Inject(app, nameof(SinanApp.Export), db.Export);
@@ -202,6 +203,23 @@ public class UiRenderTests
 
             var newIssue = new NewIssueDialog();
             RenderDialog(newIssue, "dialog-new-issue.png", "新建问题", errors);
+
+            // 多总项目：切换弹窗 + 新建项目弹窗（新增入口，必须能离屏渲染）。
+            var switchDialog = new ProjectSwitchDialog();
+            switchDialog.Load(new ProjectSwitchRequest
+            {
+                Projects = db.Projects.ListSummaries(db.Context.CurrentId),
+                CurrentProjectId = db.Context.CurrentId ?? ""
+            });
+            RenderDialog(switchDialog, "dialog-project-switch.png", "新建总项目", errors);
+
+            var createDialog = new ProjectCreateDialog();
+            createDialog.Load(new ProjectCreateRequest
+            {
+                SuggestedCode = "P7392",
+                ExistingCodes = new List<string> { "P7391" }
+            });
+            RenderDialog(createDialog, "dialog-project-create.png", "项目号", errors);
 
             // 圆角自检：对主壳与弹窗跑库内扫描器，命中即记入失败。
             var audit = Kaleidoscope.UI.Views.KxRadiusAudit.Scan(window);

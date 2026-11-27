@@ -329,13 +329,19 @@ public sealed class SyncRepository
         var existing = _issues.Get(entityId);
         if (existing != null) return Applied(op, existing);
 
-        var project = _projects.GetMain()
-            ?? throw new InvalidOperationException("主项目不存在，无法接收手机新建问题。");
-
         var payload = op.Payload;
         var machineCode = GetString(payload, "machine_code");
         if (machineCode.Length == 0)
             return Rejected(op, "机台号不能为空。");
+
+        // 项目归属优先级：payload.project_id（手机明确指定）→ 机台号前缀推导 → 主项目兜底。
+        // 多总项目后不能无脑写进第一个项目，否则 P7392 的现场问题会串到 P7391。
+        var project = _projects.Get(GetString(payload, "project_id"))
+            ?? _projects.ListProjects().FirstOrDefault(p =>
+                string.Equals(p.Code, TextUtil.ProjectCodeOfMachine(machineCode),
+                    StringComparison.OrdinalIgnoreCase))
+            ?? _projects.GetMain()
+            ?? throw new InvalidOperationException("主项目不存在，无法接收手机新建问题。");
         var title = GetString(payload, "title").Trim();
         if (title.Length == 0)
             return Rejected(op, "问题描述不能为空。");
@@ -347,7 +353,7 @@ public sealed class SyncRepository
             ProjectId = project.Id,
             SubprojectId = machine.SubprojectId,
             MachineId = machine.Id,
-            SeqNo = NextSeqNo(),
+            SeqNo = NextSeqNo(project.Id),
             Title = title,
             Solution = GetString(payload, "solution"),
             Status = GetString(payload, "status"),
@@ -681,16 +687,22 @@ public sealed class SyncRepository
         Message = message
     };
 
-    /// <summary>手机端新建问题不占原表序号：取当前数字序号最大值 +1，格式三位。</summary>
-    private string NextSeqNo()
+    /// <summary>
+    /// 手机端新建问题不占原表序号：在**当前总项目内**取数字序号最大值 +1，格式三位。
+    /// 多总项目后必须按 project_id 过滤：P7392 的第一条从 001 开始，
+    /// 不能延续 P7391 的 040（否则新项目的问题号看起来像从半截开始）。
+    /// </summary>
+    private string NextSeqNo(string projectId)
     {
         using var connection = _database.Open();
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT COALESCE(MAX(CAST(seq_no AS INTEGER)), 0)
             FROM issues
-            WHERE seq_no <> '' AND seq_no NOT GLOB '*[^0-9]*'
+            WHERE project_id = $project
+              AND seq_no <> '' AND seq_no NOT GLOB '*[^0-9]*'
             """;
+        command.Parameters.AddWithValue("$project", projectId);
         var max = Convert.ToInt32(command.ExecuteScalar());
         return (max + 1).ToString("D3");
     }

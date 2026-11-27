@@ -24,8 +24,15 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
+# Python 工具缓存（tools/ 下的辅助脚本）
+__pycache__/
+*.pyc
+
 # UI 目检临时截图（ui_smoke --shots 产物，需要时重新生成）
 docs/_build/shots_current/
 
 # CodeGraph 本机索引（每台机器自建，22MB 数据库不入库）
 .codegraph/
+
+# 手机端 E2E 失败产物（截图 + UI 树，需要时重新跑用例生成）
+tools/mobile_e2e/artifacts/

@@ -9,7 +9,7 @@
 ![Flutter](https://img.shields.io/badge/Flutter-Dart%203.14-02569B?logo=flutter&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?logo=sqlite&logoColor=white)
 ![Excel](https://img.shields.io/badge/Excel-.xls%20%2B%20.xlsx-217346?logo=microsoftexcel&logoColor=white)
-![Version](https://img.shields.io/badge/version-v0.0.7-D97706)
+![Version](https://img.shields.io/badge/version-v0.0.8-D97706)
 
 </div>
 
@@ -21,7 +21,7 @@
 
 **司南**把这件事收进一套软件：总项目 → 分项目 → 机台 → 问题 → 四阶段推进，每条问题都有责任人和计划时间，倒挂与逾期自动标红。现场用手机拍照记录，办公室用桌面端排期、追踪、导出；客户发来的原表能直接导入，导出的文件也能原样还原回去。
 
-首个落地项目为 **P7391**（虚构编号）。
+首个落地项目为 **P7391**（虚构编号）；系统支持同时维护多个总项目并在其间切换。
 
 > **演示数据声明**：仓库内全部项目号、机台号、人员、问题标题、解决措施均为随机生成的虚构数据，**不含任何真实客户信息**。设计稿与截图里的照片是占位图并标注"演示"。
 
@@ -91,6 +91,10 @@
 **一套数据模型**
 
 桌面端 WPF 是主库，手机端 Flutter 是离线副本。两端共用同一份 SQLite DDL 与同一份 36 条种子数据，字段语义不会各写一套。
+
+**多总项目与切换**
+
+一套库可以同时维护多个总项目（`P7391`、`P7392`…）。桌面端在总览头卡的"切换项目"里新建或点选，新建时自动带 `01/02/03` 三个分项目；手机端在项目页顶部同样可切换。选择会被记住，重启回到上次项目；总览、台账、报表、导入导出、同步上行全部跟随当前项目，不会把 A 项目的问题写进 B 项目。新总项目由桌面端创建，手机端同步后可见。
 
 **四阶段推进带审计**
 
@@ -218,7 +222,8 @@ Sinan/
 │   └── images/                ← README 截图：桌面端平铺 + mobile/ 手机端
 └── tools/
     ├── desensitize_scan.py    ← 脱敏扫描
-    └── ui_smoke/              ← 后台静默 UI 冒烟：登录、逐页与弹窗截图、圆角自检
+    ├── ui_smoke/              ← 后台静默 UI 冒烟：登录、逐页与弹窗截图、圆角自检
+    └── mobile_e2e/            ← 手机端真机 UI 回归：adb + 无障碍树，15 条只读用例
 ```
 
 > `source/`、`data/` 只用于本机真实资料自测，已在 `.gitignore` 中排除，不属于交付物，软件运行时也不读取。
@@ -229,7 +234,7 @@ Sinan/
 | --- | --- |
 | 桌面端 | .NET 10 + WPF（`net10.0-windows`），MVVM，自写最小 `ObservableObject` / `RelayCommand` |
 | 手机端 | Flutter + Dart 3.14，MVVM，`sqflite` + `shared_preferences`（Android 可构建，iOS 仅设计支持） |
-| 手机端兼容 | Android 7.0+（`minSdk` 24 / `targetSdk` 36）、iOS 15.0+；手机端版本 v0.0.3 |
+| 手机端兼容 | Android 7.0+（`minSdk` 24 / `targetSdk` 36）、iOS 15.0+；手机端版本 v0.0.5 |
 | 数据库 | SQLite（WAL，单文件），`Microsoft.Data.Sqlite` 10.0；15 张表 |
 | Excel | NPOI 2.7.3，同时支持 `.xls`（BIFF8）与 `.xlsx` |
 | 复用库 | `Kaleidoscope.UI`：窗基类、标题栏、胶囊圆角控件、圆角自检 |
@@ -246,7 +251,7 @@ dotnet build desktop/Sinan.sln -c Debug
 # 运行
 dotnet run --project desktop/src/Sinan.App/Sinan.App.csproj
 
-# 回归（208 条）
+# 回归（210 条）
 dotnet test desktop/tests/Sinan.Tests/Sinan.Tests.csproj -c Debug
 
 # 后台静默 UI 冒烟：登录 → 逐页/弹窗截图 → 圆角自检，不抢焦点
@@ -276,6 +281,23 @@ Android 构建走国内镜像：Gradle 腾讯云、Maven 阿里云（已写入
 Flutter 资源与 pub 包建议设置 `FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn`、
 `PUB_HOSTED_URL=https://pub.flutter-io.cn`。
 
+### 手机端 UI 回归（真机/模拟器）
+
+`flutter test` 只覆盖纯规则；界面改动另有一套 adb + `uiautomator` 的 UI 回归，装好
+`app-debug.apk` 后即可跑，不需要重编译、不装第三方库：
+
+```powershell
+python tools/mobile_e2e/run.py --list                 # 列出 15 条用例
+python tools/mobile_e2e/run.py --module smoke         # 登录 + 四页可达
+python tools/mobile_e2e/run.py --module projects      # 多总项目 / 切换 / 空项目
+python tools/mobile_e2e/run.py --module ledger        # 搜索 / 倒挂筛选 / 详情
+python tools/mobile_e2e/run.py                        # 全部只读用例（约 3.5 分钟）
+python tools/mobile_e2e/run.py --cold --module smoke  # 冷启动必须停在登录页
+```
+
+用例只读、不写库；失败在 `tools/mobile_e2e/artifacts/` 留截图与 UI 树（已 gitignore）。
+用法与新增用例见 `tools/mobile_e2e/README.md`。
+
 ### 运行时数据
 
 不写入仓库，全部落在 `%LOCALAPPDATA%\Sinan`（可用环境变量 `SINAN_DATA_DIR` 覆盖）：
@@ -303,9 +325,11 @@ Flutter 资源与 pub 包建议设置 `FLUTTER_STORAGE_BASE_URL=https://storage.
 - [x] 手机端全部页面：登录 / 待办 / 项目 / 分项目 / 台账 / 详情 / 新建 / 选机台 / 同步 / 拍照 / 照片查看 / 设置，
       五槽底栏 + 离线 SQLite + outbox 记账；拍照与相册已接入 `image_picker`
 - [x] 手机端 Android 模拟器实机截图（7 张，`docs/images/mobile/`）：登录 / 待办 / 项目 / 台账 / 详情 / 新建 / 同步
-- [x] 桌面端自动化回归 208 条（`desktop/tests/Sinan.Tests`：仓储 / 统计口径 / 日期解析 /
+- [x] 桌面端自动化回归 210 条（`desktop/tests/Sinan.Tests`：仓储 / 统计口径 / 日期解析 /
       Excel 三种版式往返 / 导入冲突 / 局域网同步配对与冲突 / 权限 + 6 页 × 明暗双主题离屏渲染）
 - [x] 桌面端后台静默 UI 冒烟（`tools/ui_smoke`）：不抢焦点地登录、逐页截图、弹窗截图、圆角自检
+- [x] 手机端真机 UI 回归（`tools/mobile_e2e`）：adb + 无障碍树，15 条只读用例覆盖登录 / 四页 /
+      待办 / 多总项目与切换 / 台账搜索筛选详情 / 同步 / 设置 / 刷新 / 新建表单，按模块几十秒跑完
 - [x] **局域网同步**：桌面端内嵌 Kestrel 配对服务（端口 5180，仅局域网），6 位一次性配对码 +
       Bearer 令牌；手机端按 outbox 上行（问题 / 阶段 / 状态 / 评论 / 照片）、按游标下行快照，
       冲突逐条人工选择"保留手机 / 保留桌面"
@@ -321,7 +345,7 @@ due_date  TEXT          -- 2026-11-05，用于逾期计算
 due_raw   TEXT          -- "11.5" / "已下图" / "/"，用于原样导出
 ```
 
-**机台号带后缀**：`P7391\d{3}(-\d)?`。`P73913118` 属已知笔误，保留原文并归入"待确认"，**不静默改正**。
+**机台号带后缀**：`{项目号}\d{3}(-\d)?`（如 `P7391106`、`P7392106`）。`P73913118` 属已知笔误，保留原文并归入"待确认"，**不静默改正**。
 
 **软删除 + 审计**：问题删除只写 `deleted_at`，不物理删除；状态、责任人、计划时间变更写 `activity_log`，字段级 old/new。
 
@@ -354,6 +378,7 @@ due_raw   TEXT          -- "11.5" / "已下图" / "/"，用于原样导出
 | [`AGENTS.md`](AGENTS.md) | 总纲：项目定位、数据模型红线、业务口径、跨端铁律、脱敏 |
 | [`desktop/AGENTS.md`](desktop/AGENTS.md) | 桌面端细则：MVVM、WPF 界面规范、Excel、弹窗、构建验证 |
 | [`mobile/AGENTS.md`](mobile/AGENTS.md) | 手机端细则：Android/iOS 兼容口径、页面、outbox、构建验证 |
+| [`tools/mobile_e2e/README.md`](tools/mobile_e2e/README.md) | 手机端 UI 回归：环境、15 条用例、参数、新增用例 |
 | [`CHANGELOG.md`](CHANGELOG.md) | 逐轮变更记录与修复说明 |
 | [`shared/db/schema.sql`](shared/db/schema.sql) | SQLite DDL，双端唯一真源 |
 | [`shared/db/seed/issues.seed.json`](shared/db/seed/issues.seed.json) | 36 条脱敏演示种子 |

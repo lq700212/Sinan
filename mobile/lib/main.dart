@@ -14,7 +14,8 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   final repository = IssueRepository(LocalDb.instance);
   final state = AppState(repository);
-  // 不阻塞首帧：先显示启动页，数据库与种子在后台加载完再切主界面。
+  // 首帧直接进登录页：数据库与种子在后台加载，读完自动 notifyListeners 刷新。
+  // 本地 SQLite 通常几百毫秒，没必要用全屏“正在读取本机数据”挡住首屏。
   runApp(SinanApp(state: state));
   state.init();
 }
@@ -32,7 +33,7 @@ class SinanApp extends StatelessWidget {
       animation: state,
       builder: (context, _) {
         return MaterialApp(
-          title: '司南 · P7391 安装调试问题闭环',
+          title: '司南 · 安装调试问题闭环',
           debugShowCheckedModeBanner: false,
           theme: buildSinanTheme(Brightness.light),
           darkTheme: buildSinanTheme(Brightness.dark),
@@ -57,64 +58,21 @@ class SinanApp extends StatelessWidget {
               child: child ?? const SizedBox.shrink(),
             );
           },
-          home: state.loading
-              ? const _BootScreen()
-              : state.loadError != null
-                  ? _LoadErrorScreen(state: state)
-                  : state.loggedIn
-                      ? ShellScreen(state: state)
-                      : LoginScreen(state: state),
+          // 没有全屏启动页：加载中直接显示登录页，数据读完自己刷新；
+          // 只有读库失败才占满屏幕给原因与“重试”。
+          home: state.loadError != null
+              ? _LoadErrorScreen(state: state)
+              : state.loggedIn
+                  ? ShellScreen(state: state)
+                  : LoginScreen(state: state),
         );
       },
     );
   }
 }
 
-class _BootScreen extends StatelessWidget {
-  const _BootScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    final p = Theme.of(context).colorScheme;
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [p.primary, p.tertiary],
-                ),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              alignment: Alignment.center,
-              child: const Text('司',
-                  style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white)),
-            ),
-            const SizedBox(height: 16),
-            const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(height: 10),
-            Text('正在读取本机数据…',
-                style: TextStyle(fontSize: 11.5, color: p.onSurface)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 /// 本机数据库初始化失败时的兜底页：给出可读原因与“重试”，
-/// 不让现场人员面对一个永远转圈的启动页。
+/// 不让现场人员面对空白或一直转圈的登录页。
 class _LoadErrorScreen extends StatelessWidget {
   const _LoadErrorScreen({required this.state});
 

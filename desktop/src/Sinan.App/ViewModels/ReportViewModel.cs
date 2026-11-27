@@ -25,7 +25,7 @@ public sealed class ReportViewModel : ObservableObject
     {
         _app = app;
         _nav = nav;
-        _data = app.Projects.GetReport();
+        _data = app.Projects.GetReport(app.ProjectsContext.CurrentId);
 
         RefreshCommand = new RelayCommand(Refresh);
         GoExchangeCommand = new RelayCommand(() => _nav.Navigate(ShellViewModel.PageExchange));

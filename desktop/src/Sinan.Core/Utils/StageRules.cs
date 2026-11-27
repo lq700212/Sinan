@@ -125,25 +125,54 @@ public static class SubprojectRules
     public const string P02 = "P7391-02";
     public const string P03 = "P7391-03";
 
-    public static string? Resolve(string? machineCode)
+    /// <summary>
+    /// 机台号 → 分项目归属。1xx→01、2xx→02、3xx→03；格式异常（如 P73913118）返回 null。
+    /// 多总项目后按项目号动态拼分项目代码：P7392 的 1xx 段是 P7392-01。
+    /// </summary>
+    public static string? Resolve(string? machineCode, string projectCode)
     {
-        if (!TextUtil.IsStrictMachineCode(machineCode)) return null;
-        var seq = TextUtil.MachineSeq(machineCode);
+        if (!TextUtil.IsStrictMachineCode(machineCode, projectCode)) return null;
+        var seq = TextUtil.MachineSeq(machineCode, projectCode);
         if (seq == null) return null;
         return seq.Value switch
         {
-            >= 100 and <= 199 => P01,
-            >= 200 and <= 299 => P02,
-            >= 300 and <= 399 => P03,
+            >= 100 and <= 199 => Code(projectCode, 1),
+            >= 200 and <= 299 => Code(projectCode, 2),
+            >= 300 and <= 399 => Code(projectCode, 3),
             _ => null
         };
     }
 
-    public static string DisplayName(string code) => code switch
+    /// <summary>兼容 P7391 的单参入口（旧测试与导入代码仍可用）。</summary>
+    public static string? Resolve(string? machineCode) => Resolve(machineCode, "P7391");
+
+    /// <summary>总项目号 + 段号 → 分项目代码（P7392 + 2 → P7392-02）。</summary>
+    public static string Code(string projectCode, int segment) =>
+        $"{projectCode.Trim().ToUpperInvariant()}-{segment:D2}";
+
+    /// <summary>新项目自动建三段时的标准分项目代码。</summary>
+    public static IReadOnlyList<string> DefaultCodes(string projectCode) =>
+        new[] { Code(projectCode, 1), Code(projectCode, 2), Code(projectCode, 3) };
+
+    /// <summary>分项目代码 → 机台段号（P7392-02 → 2）；无法识别返回 0。</summary>
+    public static int Segment(string? subprojectCode)
     {
-        P01 => "机台 1xx 段",
-        P02 => "机台 2xx 段",
-        P03 => "机台 3xx 段",
+        var code = TextUtil.Normalize(subprojectCode);
+        var dash = code.LastIndexOf('-');
+        if (dash < 0 || dash == code.Length - 1) return 0;
+        return int.TryParse(code[(dash + 1)..], out var segment) ? segment : 0;
+    }
+
+    /// <summary>分项目展示名按段号生成，不再把 P7391 写死。</summary>
+    public static string DisplayName(string code) => Segment(code) switch
+    {
+        1 => "机台 1xx 段",
+        2 => "机台 2xx 段",
+        3 => "机台 3xx 段",
         _ => "待确认"
     };
+
+    /// <summary>新建项目时自动填的机台范围文案（真实机台以导入/新建问题为准）。</summary>
+    public static string MachineRange(string projectCode, int segment) =>
+        $"{projectCode}{segment}01 – {projectCode}{segment}99";
 }

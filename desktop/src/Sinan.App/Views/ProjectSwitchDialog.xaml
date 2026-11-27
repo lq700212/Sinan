@@ -1,0 +1,154 @@
+<ui:ChromeDialogWindow x:Class="Sinan.App.Views.ProjectSwitchDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:Kaleidoscope.UI.Views;assembly=Kaleidoscope.UI"
+        Title="切换总项目"
+        Subtitle="{Binding Subtitle}"
+        TitleIconChar="⇄"
+        Width="620" Height="560"
+        Resizeable="False"
+        CaptionHeight="40"
+        WindowStartupLocation="CenterOwner"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
+        FontFamily="{DynamicResource Font.Ui}"
+        FontSize="{DynamicResource Text.Size.Body}"
+        Foreground="{DynamicResource Brush.Fg}">
+
+    <!--
+      ============================================================================
+      切换总项目（总览头卡"进行中"右侧入口）
+        - 列出全部总项目，每行带实时规模（分项目 / 设备 / 问题）；
+        - 点一行即切换（SelectionChanged 由 code-behind 翻成 DialogResult）；
+        - 底部可转去"新建总项目"，新建后立即切入新项目。
+      纪律：规模数字由 ProjectRepository.ListSummaries 查库填入，弹窗不自己算。
+      ============================================================================
+    -->
+
+    <ui:ChromeDialogWindow.Resources>
+        <Style x:Key="ProjectRow" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <!-- 列表行默认 UIA 名是类型名，多行同名无法区分；绑定整行摘要便于读屏与自动化定位。 -->
+            <Setter Property="AutomationProperties.Name" Value="{Binding AccessibleName}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd"
+                                Background="{DynamicResource Brush.CardWell}"
+                                BorderBrush="{DynamicResource Brush.Border}"
+                                BorderThickness="1"
+                                CornerRadius="{DynamicResource Radius.CardInset}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush"
+                                        Value="{DynamicResource Brush.Primary}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush"
+                                        Value="{DynamicResource Brush.Primary}"/>
+                                <Setter TargetName="Bd" Property="BorderThickness" Value="2"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </ui:ChromeDialogWindow.Resources>
+
+    <Grid Margin="24,14,24,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="{Binding Hint}" Style="{StaticResource T.Tiny}"
+                   FontSize="11" TextWrapping="Wrap" Margin="2,0,0,10"/>
+
+        <ListBox Grid.Row="1" ItemsSource="{Binding Projects}"
+                 ItemContainerStyle="{StaticResource ProjectRow}"
+                 Background="Transparent" BorderThickness="0"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 SelectionChanged="OnSelectionChanged"
+                 AutomationProperties.AutomationId="ProjectSwitchList">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Width="46" Height="46" CornerRadius="13"
+                                Background="{DynamicResource Brush.PrimaryGrad}"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="{Binding Code}">
+                            <TextBlock Text="{Binding Code}" FontFamily="{DynamicResource Font.Mono}"
+                                       FontSize="10.5" FontWeight="Bold" Foreground="White"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" Margin="13,0,8,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Bold"
+                                       Foreground="{DynamicResource Brush.Fg}"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <TextBlock Text="{Binding Code}" FontFamily="{DynamicResource Font.Mono}"
+                                           FontSize="10.5" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource Brush.Muted}"/>
+                                <TextBlock Text="·" FontSize="10.5" Margin="7,0"
+                                           Foreground="{DynamicResource Brush.Faint}"/>
+                                <TextBlock Text="{Binding MetricText}" Style="{StaticResource T.Tiny}"
+                                           FontSize="10.5"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <ContentControl Style="{StaticResource Chip}" Tag="ok" MinHeight="20"
+                                            Padding="7,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding StatusDisplay}" FontSize="10"/>
+                            </ContentControl>
+                            <ContentControl MinHeight="20" Padding="7,0" Margin="6,0,0,0"
+                                            Tag="info" VerticalAlignment="Center">
+                                <ContentControl.Style>
+                                    <Style TargetType="ContentControl" BasedOn="{StaticResource Chip}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ContentControl.Style>
+                                <TextBlock Text="当前" FontSize="10"/>
+                            </ContentControl>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <Grid Grid.Row="2" Margin="0,14,0,0">
+            <TextBlock Text="桌面端是主库；手机端通过同步拿到新项目"
+                       Style="{StaticResource T.Tiny}" FontSize="10.5"
+                       VerticalAlignment="Center"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="取消" Style="{StaticResource Btn.Ghost}" Height="34" Width="82"
+                        AutomationProperties.AutomationId="ProjectSwitchCancelButton"
+                        Command="{Binding CancelCommand}"/>
+                <Button Content="＋ 新建总项目" Style="{StaticResource Btn.Ghost}"
+                        Height="34" Padding="14,0" Margin="10,0,0,0"
+                        AutomationProperties.AutomationId="ProjectCreateButton"
+                        Command="{Binding CreateCommand}"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</ui:ChromeDialogWindow>

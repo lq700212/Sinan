@@ -25,7 +25,7 @@ public sealed class OverviewViewModel : ObservableObject
     {
         _app = app;
         _nav = nav;
-        _data = app.Projects.GetOverview();
+        _data = app.Projects.GetOverview(app.ProjectsContext.CurrentId);
 
         OpenSubprojectCommand = new RelayCommand(p => _nav.NavigateToSubproject(p as string));
         OpenIssueCommand = new RelayCommand(p => _nav.NavigateToIssue(p as string ?? ""));
@@ -34,6 +34,8 @@ public sealed class OverviewViewModel : ObservableObject
         GoExchangeCommand = new RelayCommand(() => _nav.Navigate(ShellViewModel.PageExchange));
         GoReportCommand = new RelayCommand(() => _nav.Navigate(ShellViewModel.PageReport));
         GoSettingsCommand = new RelayCommand(() => _nav.Navigate(ShellViewModel.PageSettings));
+        // 头卡"进行中"右侧的总项目切换入口：用户在这里换项目或新建项目。
+        SwitchProjectCommand = new RelayCommand(() => _nav.OpenProjectSwitch());
     }
 
     public Project Project => _data.Project;
@@ -62,6 +64,8 @@ public sealed class OverviewViewModel : ObservableObject
     public List<SubprojectCard> Cards => _data.Cards;
     public List<StageFill> StageFills => _data.StageFills;
     public List<PhotoBucket> PhotoBuckets => _data.PhotoBuckets;
+
+    public RelayCommand SwitchProjectCommand { get; }
 
     /// <summary>
     /// 问题分布图例 + 环形图数据。段色按分项目顺序取主题键（01 主橙 / 02 亮橙 /

@@ -165,21 +165,58 @@ class Rules {
     return worst;
   }
 
-  /// 机台号 → 分项目：1xx→01、2xx→02、3xx→03；位数异常返回 null（待确认）。
-  static String? resolveSubproject(String machineCode) {
-    final m = RegExp(r'^P7391(\d{3})(-\d)?$').firstMatch(machineCode.trim());
-    if (m == null) return null;
-    final seq = int.parse(m.group(1)!);
-    if (seq >= 100 && seq <= 199) return 'P7391-01';
-    if (seq >= 200 && seq <= 299) return 'P7391-02';
-    if (seq >= 300 && seq <= 399) return 'P7391-03';
+  /// 默认演示项目号（与桌面种子一致）。
+  /// 多总项目后所有调用都应显式传当前项目号，避免把 P7392 的机台算进 P7391。
+  static const defaultProjectCode = 'P7391';
+
+  /// 项目号格式：P + 4 位数字（P7391 / P7392…）。
+  static bool isProjectCode(String code) =>
+      RegExp(r'^P\d{4}$').hasMatch(code.trim().toUpperCase());
+
+  /// 从机台号取项目号：P7392106 → P7392；不像机台号返回空串。
+  static String projectCodeOfMachine(String machineCode) {
+    final text = machineCode.trim().toUpperCase();
+    if (text.length < 5 || !text.startsWith('P')) return '';
+    final candidate = text.substring(0, 5);
+    return isProjectCode(candidate) ? candidate : '';
+  }
+
+  /// 机台号 → 分项目：{项目号} + 1xx→01、2xx→02、3xx→03；
+  /// 位数异常/前缀不属于当前项目返回 null（进"待确认"）。
+  static String? resolveSubproject(String machineCode,
+      {String projectCode = defaultProjectCode}) {
+    if (!isMachineCode(machineCode, projectCode: projectCode)) return null;
+    final seq = machineSeq(machineCode, projectCode: projectCode);
+    if (seq == null) return null;
+    final prefix = projectCode.trim().toUpperCase();
+    if (seq >= 100 && seq <= 199) return '$prefix-01';
+    if (seq >= 200 && seq <= 299) return '$prefix-02';
+    if (seq >= 300 && seq <= 399) return '$prefix-03';
     return null;
   }
 
-  /// 机台号格式：P7391 + 3 位序号，允许 `-1` 后缀。
+  /// 严格机台号：{项目号} + 3 位序号，允许 `-1` 后缀。
   /// `P73913118` 这类笔误不匹配格式，但历史数据仍按原文保留（不静默改正）。
-  static bool isMachineCode(String machineCode) =>
-      RegExp(r'^P7391\d{3}(-\d)?$').hasMatch(machineCode.trim().toUpperCase());
+  static bool isMachineCode(String machineCode,
+      {String projectCode = defaultProjectCode}) {
+    final prefix = projectCode.trim().toUpperCase();
+    if (!isProjectCode(prefix)) return false;
+    return RegExp('^${RegExp.escape(prefix)}\\d{3}(-\\d+)?' r'$')
+        .hasMatch(machineCode.trim().toUpperCase());
+  }
+
+  /// 按项目号取机台序号：P7392106 → 106。
+  /// 多一位的笔误（P73913118 → 3118）照样取数，供"待确认"排序；
+  /// 是否合法由 [isMachineCode] 单独判定，不混在序号提取里。
+  static int? machineSeq(String machineCode,
+      {String projectCode = defaultProjectCode}) {
+    final text = machineCode.trim().toUpperCase();
+    final prefix = projectCode.trim().toUpperCase();
+    if (prefix.isEmpty || text.length <= prefix.length) return null;
+    if (!text.startsWith(prefix)) return null;
+    final rest = text.substring(prefix.length).split('-').first;
+    return int.tryParse(rest);
+  }
 
   /// 附件相对路径：`attachments/{issueId}/{storedName}`。
   /// 数据库只存这个相对路径，换机/迁移目录时不失效；安卓与桌面端统一用 `/`。

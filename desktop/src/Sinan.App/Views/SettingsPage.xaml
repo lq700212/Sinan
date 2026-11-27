@@ -322,7 +322,7 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="匹配主键" Style="{StaticResource Set.Label}"/>
                                 <TextBlock Grid.Column="1" Style="{StaticResource Set.Value}"
-                                           Text="ID（P7391-001）；ID 缺失时按“机台 + 问题”匹配"
+                                           Text="ID（项目号-序号）；ID 缺失时按“机台 + 问题”匹配"
                                            TextWrapping="Wrap"/>
                             </Grid>
                             <Grid Margin="0,0,0,6">
@@ -752,8 +752,8 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="演示项目" Style="{StaticResource Set.Label}"/>
-                                <TextBlock Grid.Column="1" Text="P7391 · P7391-01 / 02 / 03 · 待确认 1 台"
+                                <TextBlock Text="当前项目" Style="{StaticResource Set.Label}"/>
+                                <TextBlock Grid.Column="1" Text="{Binding CurrentProjectLine}"
                                            FontSize="11.5" FontFamily="{DynamicResource Font.Mono}"
                                            Foreground="{DynamicResource Brush.Fg}" VerticalAlignment="Center"/>
                             </Grid>
@@ -802,7 +802,7 @@
                                     CornerRadius="10" Padding="11,9" Margin="0,12,0,0">
                                 <TextBlock Style="{StaticResource T.Tiny}" FontSize="10.5" TextWrapping="Wrap"
                                            LineHeight="16"
-                                           Text="演示数据全部虚构：项目号 P7391、人员“张工/李工/王工…”均为角色化假名，不含任何客户真实项目、机台或问题内容。照片为演示元数据。"/>
+                                           Text="演示数据全部虚构：项目号、人员“张工/李工/王工…”均为角色化假名，不含任何客户真实项目、机台或问题内容。照片为演示元数据。"/>
                             </Border>
                         </StackPanel>
                     </StackPanel>

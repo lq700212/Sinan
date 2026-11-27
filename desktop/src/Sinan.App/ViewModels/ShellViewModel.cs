@@ -33,6 +33,7 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
     private string _currentKey = PageOverview;
     private string _title = "项目总览";
     private string _subtitle = "";
+    private string _projectCode = "P7391";
     private bool _canGoBack;
 
     public ShellViewModel(App app)
@@ -45,7 +46,8 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
         RoleDisplay = user?.RoleDisplay ?? "";
         IsAdmin = user?.IsAdmin == true;
 
-        var issues = app.Issues.All();
+        var currentProjectId = app.ProjectsContext.CurrentId;
+        var issues = app.Issues.All(currentProjectId);
         _invertedCount = issues.Count(i => i.IsInverted);
         _issueTotal = issues.Count;
         _photoCount = issues.Sum(i => i.PhotoCount);
@@ -63,8 +65,7 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
             new(PageSettings, "⚙", "系统设置")
         };
 
-        ProjectCode = app.Projects.GetMain()?.Code ?? "P7391";
-        ProjectSubtitle = $"{ProjectCode} · Program Overview";
+        _projectCode = app.ProjectsContext.Current?.Code ?? "P7391";
         DataAsOf = $"数据截至 {DateTime.Now:MM-dd HH:mm}";
         VersionText = $"{AppInfo.VersionLabel} · 离线模式 · 库 {_app.Database.Paths.DbPath}";
 
@@ -73,6 +74,7 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
         SignOutCommand = new RelayCommand(() => SignOutRequested?.Invoke(this, EventArgs.Empty));
         NewIssueCommand = new RelayCommand(() => NewIssueRequested?.Invoke(this, EventArgs.Empty));
+        OpenProjectSwitchCommand = new RelayCommand(OpenProjectSwitch);
         BackCommand = new RelayCommand(Back);
 
         // 设置页也能切主题：主题变化后顶栏图标同步（静态事件生命周期=应用，无需退订）。
@@ -96,8 +98,19 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
     public string UserInitial { get; }
     public string RoleDisplay { get; }
     public bool IsAdmin { get; }
-    public string ProjectCode { get; }
-    public string ProjectSubtitle { get; }
+
+    /// <summary>当前总项目号；切换项目后会变，所有页面标题/顶栏都绑它。</summary>
+    public string ProjectCode
+    {
+        get => _projectCode;
+        private set
+        {
+            if (!SetProperty(ref _projectCode, value)) return;
+            OnPropertiesChanged(nameof(ProjectSubtitle));
+        }
+    }
+
+    public string ProjectSubtitle => $"{ProjectCode} · Program Overview";
     public string DataAsOf { get; private set; }
     public string VersionText { get; }
     public int IssueTotal => _issueTotal;
@@ -152,6 +165,7 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
     public RelayCommand ToggleThemeCommand { get; }
     public RelayCommand SignOutCommand { get; }
     public RelayCommand NewIssueCommand { get; }
+    public RelayCommand OpenProjectSwitchCommand { get; }
     public RelayCommand BackCommand { get; }
 
     private readonly Stack<string> _history = new();
@@ -180,7 +194,7 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
         SetActive(null);
         CurrentPage = new IssueDetailViewModel(_app, this, issue);
         // 设计稿 app-bar：标题是问题号（P7391-009），副标题是"问题详情 · 机台号"。
-        Title = $"P7391-{issue.DisplaySeqNo}";
+        Title = issue.DisplayCode;
         Subtitle = $"问题详情 · {issue.MachineCode}";
         OnPropertiesChanged(nameof(IsOverview), nameof(CanGoBack));
     }
@@ -252,7 +266,7 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
     /// </summary>
     public void NotifyDataChanged()
     {
-        var issues = _app.Issues.All();
+        var issues = _app.Issues.All(_app.ProjectsContext.CurrentId);
         _issueTotal = issues.Count;
         _invertedCount = issues.Count(i => i.IsInverted);
         _photoCount = issues.Sum(i => i.PhotoCount);
@@ -286,6 +300,73 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
             Title = title;
             Subtitle = subtitle;
         }
+    }
+
+    /// <summary>
+    /// 打开"切换总项目"弹窗。用户选已有项目→就地切换；选"新建"→再开新建窗。
+    /// 当前项目写在 App.ProjectsContext，切换后所有页面统一重建。
+    /// </summary>
+    public void OpenProjectSwitch()
+    {
+        var request = new ProjectSwitchRequest
+        {
+            Projects = _app.Projects.ListSummaries(_app.ProjectsContext.CurrentId),
+            CurrentProjectId = _app.ProjectsContext.CurrentId ?? ""
+        };
+        var result = _app.Dialogs.PickProject(request);
+        if (result == null) return;
+
+        if (result.CreateNew)
+        {
+            CreateProject();
+            return;
+        }
+        ApplyProjectSwitch(result.SelectedProjectId);
+    }
+
+    /// <summary>新建总项目：项目号 + 名称 + 客户；创建后立即切入新项目。</summary>
+    private void CreateProject()
+    {
+        var user = _app.Session.User;
+        if (user == null) return;
+
+        // 带上已有项目号：弹窗里就地拦截重复/格式错误，不用等建库时才报错。
+        var existing = _app.Projects.ListProjects();
+        var result = _app.Dialogs.CreateProject(new ProjectCreateRequest
+        {
+            SuggestedCode = ProjectCreateDialogViewModel.NextCode(existing.Select(p => p.Code)),
+            ExistingCodes = existing.Select(p => p.Code).ToList()
+        });
+        if (result == null) return;
+
+        try
+        {
+            var project = _app.Projects.CreateProject(result.Code, result.Name, result.Customer, user);
+            ApplyProjectSwitch(project.Id);
+        }
+        catch (Exception ex)
+        {
+            _app.Dialogs.Alert("新建总项目失败", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// 切换后必须清缓存并重建页面：总览/台账/报表都按旧 ProjectId 取了快照，
+    /// 不清会显示上一个项目的数字。切换回到总览页，避免停在旧项目的分项目详情里。
+    /// </summary>
+    private void ApplyProjectSwitch(string projectId)
+    {
+        if (!_app.ProjectsContext.Switch(projectId)) return;
+
+        ProjectCode = _app.ProjectsContext.Current?.Code ?? ProjectCode;
+        _cache.Clear();
+        _history.Clear();
+        CanGoBack = false;
+        _currentKey = "";
+        OpenPage(PageOverview, pushHistory: false);
+        NotifyDataChanged();
+        OnPropertiesChanged(nameof(ProjectCode), nameof(ProjectSubtitle),
+            nameof(IsOverview), nameof(CanGoBack));
     }
 
     private void OpenPage(string pageKey, bool pushHistory)

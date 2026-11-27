@@ -1,5 +1,118 @@
 # 变更记录
 
+## 开发期（2026-11-27）手机端去掉启动加载页（手机 v0.0.5）
+
+### 问题
+- 冷启动先出现全屏「司南图标 + 转圈 + 正在读取本机数据…」。本地 SQLite 通常几百毫秒
+  就绪，这一页既拖慢首屏又没有信息量，用户要求删掉。
+
+### 手机端
+- `main.dart` 删除 `_BootScreen`，首帧直接进登录页；数据库/种子仍在后台 `state.init()` 里加载，
+  读完 `notifyListeners()` 自动刷新（登录页「已同步 N 条」会跟着更新）。
+- 登录不依赖初始化：`AppState.login` 本来就是内存校验，不查库；极端情况下先登录会短暂
+  显示空列表，初始化完成即刷新。
+- 读库失败保留 `_LoadErrorScreen`（可读原因 + 重试），不做静默空页面。
+- 删除 `AppState._loading` / `loading` getter——唯一使用者是被删掉的启动页。
+- 登录页品牌图标换成系统启动图标（`logo-2-ladle` 司南磁勺：橙色地盘 + 白色磁勺 +
+  半透明圆环）的圆形矢量版，与 Android 12 启动画面那一枚一致；账号输入框删除
+  「账号」浮动标签，保留人形图标与读屏语义，输入区更干净。
+- 版本 `0.0.4+4 → 0.0.5+5`：`pubspec.yaml` 与 `lib/app_info.dart` 同步；`aapt` 反查
+  `versionName=0.0.5`、`versionCode=5`、`minSdk 24`、`targetSdk 36`、`INTERNET` 生效。
+
+### E2E 工具（`tools/mobile_e2e/`）
+- `ensure_shell` 增加前台包名检测：设备停在桌面/其它应用时主动 `am start` 拉起司南，
+  不再盲目按 back；修复覆盖安装后首次运行的「项目准备失败」噪声。
+- `--install` 后先启动应用再跑用例，避免包替换触发的进程重启与第一次点击竞争。
+- `goto_tab` 已在目标页（且无弹层）时直接复用，减少重复点击与 dump。
+
+### 验证
+- `flutter analyze` 0 issue；`flutter test` 22 条全过；`flutter build apk --debug` 成功。
+- 模拟器覆盖安装后冷启动截图：直接显示登录页，无「正在读取本机数据」。
+- E2E `--cold --module smoke` PASS 2；全量 15 条 PASS 15 / FAIL 0，用时 155.6s
+  （优化前 207.6s）。
+
+## 开发期（2026-11-27）手机端 UI 回归脚本（版本不变：桌面 v0.0.8 / 手机 v0.0.4）
+
+### 问题
+- 手机端每次人工回归都要「adb 点击 + 截图 + 看图判断」，一轮十几分钟且容易漏步。
+  需要一套可复用的真机 UI 用例脚本，改完哪个模块几十秒内就能跑对应回归。
+
+### 新增工具（`tools/mobile_e2e/`，不改业务代码）
+- 零侵入方案：Python 标准库 + adb + `uiautomator dump`，不引 `flutter drive`/`integration_test`，
+  不需要每次重编译安装；Flutter 文本在 `content-desc`，脚本按文本/正则定位控件。
+- `e2e/adb.py`：adb 自动发现、设备选择、shell/exec-out、截图、安装、启停应用。
+- `e2e/ui.py`：无障碍树解析（`UiNode`/`UiTree`/`UiSession`）、文本/正则/类型查找、
+  轮询等待、点击可点击祖先、ASCII 输入、清空输入、软键盘收起、底栏 tab 点击。
+- `e2e/runner.py`：`@case` 用例注册、`Context` 高层动作（登录、切页、切项目、台账重置、
+  断言、跳过）、失败留截图 + UI 树、JSON 报告；dump 结果缓存复用（单次 dump 约 2.2 秒，
+  复用后冒烟从 54 秒降到 18 秒）。
+- `run.py`：`--list / --module / --case / --tag / --cold / --mutating / --install / --device /
+  --json / -v`；退出码 0 通过、1 失败、2 环境错误。
+- 15 条只读用例：`smoke.*`（登录、四页）、`todo.summary`、`projects.overview /
+  consistency / subproject / switch / empty`、`ledger.search / filter / detail`、
+  `sync.status`、`settings.open`、`nav.refresh`、`issue.form`（只开表单后取消，不落库）。
+- 数字一律从界面实时解析并互相对账（项目页问题/倒挂 = 台账 chip = 筛出条数），不写死演示值；
+  空项目自动临时切到有数据的项目，跑完恢复用户原项目。
+
+### 文档与卫生
+- 新增 `tools/mobile_e2e/README.md`（环境、用例表、参数、新增用例、常见问题）。
+- `mobile/AGENTS.md` 第 7 节补 UI 回归命令，第 8 节交付清单加「改过界面要跑对应模块」。
+- `.gitignore` 追加 `tools/mobile_e2e/artifacts/`、`__pycache__/`、`*.pyc`。
+
+### 验证
+- 模拟器 `emulator-5554`（1080×2400）全量 15 条：PASS 15 / FAIL 0 / SKIP 0，用时 205.6s。
+- `--cold --module smoke`：冷启动停在登录页 → 自动登录 → 四页可达，PASS 2，用时 32.5s。
+- 单用例 `--case ledger.filter`：PASS，10.5s。
+- 本轮只新增测试工具与文档，未改 Dart/C# 业务代码，两端版本号不变。
+
+## 开发期（2026-11-26）多总项目与切换（桌面 v0.0.8 / 手机 v0.0.4）
+
+### 问题
+- 数据库本来就按多项目设计（`projects` 表、`issues.project_id`），但全链路默认取第一条：
+  桌面端各页面各查一遍 `GetMain()`，手机端查询不带项目条件。用户要求总项目能新增多个、
+  两端都能来回切换，并明确切换入口放在总览头卡"进行中"标签右侧。
+
+### 桌面端
+- 新增项目上下文 `Sinan.App/Services/ProjectContext.cs`：当前项目唯一真源，选择持久化到
+  `app_meta.current_project_id`，重启回到上次项目；切换后所有页面统一重建。
+- `ProjectRepository` 新增 `ListProjects / Get / ListSummaries / CreateProject / CountMachines /
+  WriteProjectChange`；`GetOverview / GetDashboard / GetReport / GetSubprojectDetail /
+  LastImportDisplay` 支持 `projectId`；机台归组按项目号动态推导。
+- 新建总项目自动创建 `01/02/03` 三个分项目，项目号按 `P + 4 位` 校验并拦截重复；
+  建议号取已有 `P####` 最大值 +1。
+- 总览头卡"进行中"右侧新增「切换项目 ⇄」胶囊按钮：弹窗列表点行即切换，底部提供"新建总项目"。
+- 全部 ViewModel 按当前项目过滤：总览、工作台、台账、报表、分项目、详情、新建、数据交换、设置。
+  台账问题号统一用 `项目号-三位序号`（`DisplayCode`），面包屑与标题同步跟随。
+- Excel 导入预览/写库、导出范围与版式、同步上行项目归属均按当前项目；上行优先级
+  `payload.project_id` → 机台号前缀推导 → 主项目兜底。
+- `TextUtil` / `SubprojectRules` 泛化：支持任意 `P####` 项目号，保留 P7391 单参兼容入口与
+  `P73913118 → 待确认` 旧口径。
+- 新增弹窗：`ProjectSwitchDialog`（切换）、`ProjectCreateDialog`（新建）；离屏渲染回归补两个场景。
+- 手机新建问题的 `seq_no` 改为**按总项目独立编号**：P7392 的第一条从 `001` 开始，
+  不再继承 P7391 的 `040`；切换弹窗列表行补 `AccessibleName`（项目号 + 名称 + 规模 + 当前），
+  读屏与自动化可逐行定位。
+
+### 手机端
+- `LocalDb` 升 `v4`：新增 `projects` / `subprojects` 表与 `issues.project_id`；升级旧库统一归演示项目；
+  首启种子写入 `PRJ-P7391` + `SUB-P7391-01/02/03`（与桌面 id 一致，避免同步重复建档）。
+- 新增 `models/project.dart`、`data/project_repository.dart`：项目列表、切换用实时规模、下行 upsert。
+- `Rules` 泛化项目号/机台号/归组：`resolveSubproject/isMachineCode/machineSeq` 支持按项目号校验，
+  保留 P7391 默认参数兼容既有测试；新增 `projectCodeOfMachine`。
+- `IssueRepository` 的 `all/stats/machines/recentAttachments` 全部按 `projectId` 过滤；
+  新建问题写 `project_id` 并入 outbox payload；下行 issue 按 `projectId/projectCode` 归属，
+  老 change_log 缺项目字段时按机台前缀回推。
+- `AppState` 增加项目列表、当前项目、`switchProject`；当前选择存 `sync_meta.current_project_id`。
+  同步下行同时处理 `project` / `subproject`，同步完成后重载项目字典。
+- 项目页 hero 顶栏新增「切换」入口（底部弹层，点行即切），切换后重载本项目现场照片与分项目数据；
+  待办、设置、登录、机台选择、新建问题文案全部改绑当前项目号。
+- 手机端不新建总项目：桌面端是主库，新项目创建后经同步下发。
+
+### 验证
+- 桌面 `dotnet build desktop/Sinan.sln -c Debug`：0 error / 0 warning；`dotnet test` 210 条全过
+  （新增 2 条：多项目下手机新建问题按项目独立编号、连续新建总项目并自动建 01/02/03）。
+- 手机 `flutter analyze` 0 issue；`flutter test` 22 条全过；`flutter build apk --debug` 生成。
+- 版本：桌面 `0.0.8`、手机 `0.0.4+4`（两端各自独立，只升 patch）。
+
 ## 开发期（2026-11-26）局域网同步打通（桌面 v0.0.7 / 手机 v0.0.3）
 
 ### 问题

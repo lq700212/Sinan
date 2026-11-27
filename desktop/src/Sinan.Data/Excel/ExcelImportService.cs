@@ -37,15 +37,20 @@ public sealed class ExcelImportService
         _projects = projects;
     }
 
-    /// <summary>只读解析与比对，不写库。界面先展示预览，用户确认后才 Apply。</summary>
-    public ImportPreview Preview(string filePath)
+    /// <summary>
+    /// 只读解析与比对，不写库。界面先展示预览，用户确认后才 Apply。
+    /// projectId 为当前总项目：比对"已存在问题"必须只在本项目内做，
+    /// 否则 P7392 的同名问题会被误判成 P7391 的冲突。
+    /// </summary>
+    public ImportPreview Preview(string filePath, string? projectId = null)
     {
         var file = new FileInfo(filePath);
         if (!file.Exists) throw new FileNotFoundException("找不到 Excel 文件。", filePath);
         if (file.Length > MaxFileSize)
             throw new InvalidOperationException($"文件超过 {MaxFileSize / 1024 / 1024} MB 限制。");
 
-        var project = _projects.GetMain() ?? throw new InvalidOperationException("数据库尚未初始化项目。");
+        var project = _projects.Get(projectId) ?? _projects.GetMain()
+            ?? throw new InvalidOperationException("数据库尚未初始化项目。");
         var hash = HashOf(filePath);
         var year = YearFromName(file.Name);
 
@@ -69,6 +74,7 @@ public sealed class ExcelImportService
             FilePath = file.FullName,
             FileName = file.Name,
             FileHash = hash,
+            ProjectId = project.Id,
             ProjectCode = project.Code,
             HeaderRow = map.TitleRow + 1,
             // 表头布局：有三行表头（阶段组 + 子表头 + 标题）就说明是原表版式，
@@ -86,7 +92,7 @@ public sealed class ExcelImportService
         if (map.Owner.All(c => c < 0) && map.Due.All(c => c < 0))
             preview.Messages.Add("警告：未识别到任何阶段列（责任人/计划时间），只导入基础字段。");
 
-        var existing = _issues.All()
+        var existing = _issues.All(project.Id)
             .GroupBy(i => Key(i.MachineCode, i.Title), StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
 
@@ -278,7 +284,9 @@ public sealed class ExcelImportService
     /// </summary>
     public ImportResult Apply(ImportPreview preview, string strategy, User user)
     {
-        var project = _projects.GetMain() ?? throw new InvalidOperationException("数据库尚未初始化项目。");
+        // 优先用预览时锁定的项目：解析与写入必须是同一个项目，避免中途切项目串数据。
+        var project = _projects.Get(preview.ProjectId) ?? _projects.GetMain()
+            ?? throw new InvalidOperationException("数据库尚未初始化项目。");
         var batchId = IdGen.NewBatchId();
         var now = AppTime.UtcNowIso();
 

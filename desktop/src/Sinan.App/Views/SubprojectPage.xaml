@@ -31,7 +31,8 @@
         <!-- ==================== 面包屑（.crumbbar） ==================== -->
         <Grid Grid.Row="0" Margin="2,0,2,10">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="P7391 总项目" Style="{StaticResource T.Tiny}" FontSize="11.5"
+                <TextBlock Text="{Binding ProjectCode, StringFormat={}{0} 总项目}"
+                           Style="{StaticResource T.Tiny}" FontSize="11.5"
                            Foreground="{DynamicResource Brush.Muted}" Cursor="Hand"/>
                 <TextBlock Text="›" Style="{StaticResource T.Tiny}" FontSize="11.5" Margin="6,0"
                            Foreground="{DynamicResource Brush.Faint}"/>

@@ -23,6 +23,8 @@ public partial class App : Application
     public UserRepository Users { get; private set; } = null!;
     public IssueRepository Issues { get; private set; } = null!;
     public ProjectRepository Projects { get; private set; } = null!;
+    /// <summary>当前总项目（多项目切换的唯一真源）；页面与仓储一律从这里取 ProjectId。</summary>
+    public ProjectContext ProjectsContext { get; private set; } = null!;
     public AttachmentRepository Attachments { get; private set; } = null!;
     public ExcelImportService Import { get; private set; } = null!;
     public ExcelExportService Export { get; private set; } = null!;
@@ -55,6 +57,8 @@ public partial class App : Application
             Users = new UserRepository(Database);
             Issues = new IssueRepository(Database);
             Projects = new ProjectRepository(Database, Issues);
+            ProjectsContext = new ProjectContext(Database, Projects);
+            ProjectsContext.Load();
             Attachments = new AttachmentRepository(Database);
             Import = new ExcelImportService(Database, Issues, Projects);
             Export = new ExcelExportService(Database, Issues, Projects, Attachments);

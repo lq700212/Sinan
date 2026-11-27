@@ -139,7 +139,7 @@ public sealed class IssueDetailViewModel : ObservableObject
         get
         {
             if (!_issue.IsInverted) return "";
-            var all = _app.Issues.All()
+            var all = _app.Issues.All(_app.ProjectsContext.CurrentId)
                 .Where(i => i.IsInverted)
                 .OrderByDescending(i => StageRules.InvertedDays(i))
                 .ThenBy(i => i.SeqNo, StringComparer.Ordinal)
@@ -191,7 +191,7 @@ public sealed class IssueDetailViewModel : ObservableObject
     {
         get
         {
-            var siblings = _app.Issues.All()
+            var siblings = _app.Issues.All(_app.ProjectsContext.CurrentId)
                 .Where(i => i.MachineId == _issue.MachineId)
                 .OrderBy(i => i.SourceRow ?? int.MaxValue)
                 .ThenBy(i => i.SeqNo, StringComparer.Ordinal)
@@ -213,15 +213,7 @@ public sealed class IssueDetailViewModel : ObservableObject
     /// 能解析成数字就补零到三位；解析不了（"已下图"这类脏值）就原样拼，
     /// 绝不因为格式化把原文改掉。
     /// </summary>
-    public string IssueCodeDisplay
-    {
-        get
-        {
-            var seq = (_issue.SeqNo ?? "").Trim();
-            var formatted = int.TryParse(seq, out int n) ? n.ToString("D3") : seq;
-            return $"P7391-{formatted}";
-        }
-    }
+    public string IssueCodeDisplay => _issue.DisplayCode;
     public string StatusDisplay => _issue.Status;
     public string ProgressText => _issue.ProgressText;
     public string OwnerFlow => _issue.OwnerFlow;

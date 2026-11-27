@@ -44,9 +44,9 @@ public sealed class IssueListViewModel : ObservableObject
     {
         _app = app;
         _nav = nav;
-        _source = app.Issues.All();
+        _source = app.Issues.All(app.ProjectsContext.CurrentId);
 
-        var project = app.Projects.GetMain();
+        var project = app.ProjectsContext.Current;
         var codes = project == null
             ? new List<string>()
             : app.Projects.ListSubprojects(project.Id).Select(s => s.Code).ToList();
@@ -174,7 +174,7 @@ public sealed class IssueListViewModel : ObservableObject
     public int VisibleCount => Items.Count;
     public int InvertedCount => _source.Count(i => i.IsInverted);
     public int PhotoIssueCount => _source.Count(i => i.PhotoCount > 0);
-    public string ProjectCode => _app.Projects.GetMain()?.Code ?? "P7391";
+    public string ProjectCode => _app.ProjectsContext.Current?.Code ?? "P7391";
     public string CountSummary => $"显示 {VisibleCount} / {TotalCount} 条";
 
     /// <summary>筛选卡面包屑：当前分项目（含"全部分项目"/"待确认"）。</summary>
@@ -238,7 +238,7 @@ public sealed class IssueListViewModel : ObservableObject
     public void Reload()
     {
         _source.Clear();
-        _source.AddRange(_app.Issues.All());
+        _source.AddRange(_app.Issues.All(_app.ProjectsContext.CurrentId));
         OnPropertyChanged(nameof(TotalCount));
         ApplyFilters();
     }

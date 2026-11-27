@@ -37,13 +37,28 @@ public sealed class SettingsViewModel : ObservableObject
         ArchiveDir = paths.ArchiveDir;
         SchemaVersion = $"schema {Database.SchemaVersion} · 程序 {AppInfo.VersionLabel}";
 
-        var issues = app.Issues.All();
+        // 设置页统计跟随当前总项目，避免"总览显示 P7392，设置页还是全库"的串项目。
+        var issues = app.Issues.All(app.ProjectsContext.CurrentId);
         IssueCount = issues.Count;
         MachineCount = issues.Select(i => i.MachineId).Distinct().Count();
         OverdueCount = issues.Count(i => i.OverdueDays > 0);
         InvertedCount = issues.Count(i => i.IsInverted);
         Users = app.Users.ListActive();
         UserCount = Users.Count;
+
+        // "当前项目"一行：项目号 + 三个分项目代码 + 未归组机台数，全部实时查库。
+        var project = app.ProjectsContext.Current;
+        var subCodes = project == null
+            ? ""
+            : string.Join(" / ", app.Projects.ListSubprojects(project.Id).Select(s => s.Code));
+        var unassignedMachines = issues
+            .Where(i => i.SubprojectId == null)
+            .Select(i => i.MachineId)
+            .Distinct()
+            .Count();
+        CurrentProjectLine = project == null
+            ? "—"
+            : $"{project.Code} · {subCodes} · 待确认 {unassignedMachines} 台";
 
         OpenFolderCommand = new RelayCommand(OpenFolder);
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
@@ -80,6 +95,9 @@ public sealed class SettingsViewModel : ObservableObject
     /// 读屏与自动化都能定位；样式仍由页面 ItemContainerStyle 控制。
     /// </summary>
     public IReadOnlyList<SettingNavItem> Sections { get; }
+
+    /// <summary>设置页"当前项目"一行：项目号 + 分项目 + 待确认台数（来自实时查询）。</summary>
+    public string CurrentProjectLine { get; }
 
     private SettingNavItem? _sectionItem;
 

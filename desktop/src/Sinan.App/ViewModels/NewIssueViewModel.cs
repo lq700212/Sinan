@@ -35,11 +35,13 @@ public sealed class NewIssueViewModel : ObservableObject
     public NewIssueViewModel(App app)
     {
         _app = app;
-        var project = app.Projects.GetMain()
+        // 新建问题永远落在当前总项目下；切换项目后弹窗重建，机台前缀跟着变。
+        var project = app.ProjectsContext.Current ?? app.Projects.GetMain()
             ?? throw new InvalidOperationException("数据库中没有项目，无法新建问题。");
         _projectId = project.Id;
+        ProjectCode = project.Code;
 
-        var issues = app.Issues.All();
+        var issues = app.Issues.All(project.Id);
         MachineOptions = issues
             .Select(i => i.MachineCode)
             .Where(c => !string.IsNullOrWhiteSpace(c))
@@ -47,7 +49,7 @@ public sealed class NewIssueViewModel : ObservableObject
             .OrderBy(c => c, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        MachineCode = MachineOptions.FirstOrDefault() ?? "P7391101";
+        MachineCode = MachineOptions.FirstOrDefault() ?? $"{ProjectCode}101";
         SeqNo = NextSeqNo(issues);
         PriorityOptions = new[] { "高", "中", "低" };
 
@@ -65,6 +67,12 @@ public sealed class NewIssueViewModel : ObservableObject
 
     public event EventHandler<string>? Saved;
     public event EventHandler? Cancelled;
+
+    /// <summary>当前总项目号：弹窗副标题与机台号示例都按它显示。</summary>
+    public string ProjectCode { get; }
+
+    /// <summary>机台号规则说明（含项目号），校验失败时就地展示，不再写死 P7391。</summary>
+    public string MachineHint => $"机台号格式：{ProjectCode} + 3 位数字，例如 {ProjectCode}101。";
 
     public IReadOnlyList<string> MachineOptions { get; }
     public IReadOnlyList<string> PriorityOptions { get; }
@@ -139,9 +147,9 @@ public sealed class NewIssueViewModel : ObservableObject
         ErrorMessage = "";
 
         var machineCode = TextUtil.Normalize(MachineCode);
-        if (!TextUtil.IsStrictMachineCode(machineCode))
+        if (!TextUtil.IsStrictMachineCode(machineCode, ProjectCode))
         {
-            ErrorMessage = "机台号格式不对：应为 P7391 + 3 位数字（可带 -序号），例如 P7391101。";
+            ErrorMessage = $"机台号格式不对：应为 {ProjectCode} + 3 位数字（可带 -序号），例如 {ProjectCode}101。";
             return;
         }
 

@@ -1,3 +1,4 @@
+using Sinan.App.ViewModels;
 using Sinan.Core.Models;
 using Sinan.Core.Utils;
 using Sinan.Tests.Infrastructure;
@@ -40,7 +41,7 @@ public class ProjectRepositoryTests
         Assert.Equal(1, overview.UnassignedIssueCount);
         Assert.Equal(4, overview.StageFills.Count);
         Assert.All(overview.StageFills, f => Assert.Equal(36, f.Total));
-        Assert.True(overview.Cards.Any(c => c.Code == "P7391-01"));
+        Assert.Contains(overview.Cards, c => c.Code == "P7391-01");
         Assert.Equal(4, overview.Cards.Count); // 3 个分项目 + 待确认
     }
 
@@ -224,6 +225,39 @@ public class ProjectRepositoryTests
         var seqs = machines.Select(m => TextUtil.MachineSeq(m.Code) ?? int.MaxValue).ToList();
         Assert.Equal(seqs.OrderBy(s => s), seqs);
         Assert.Equal("P7391101", machines.First().Code);
+    }
+
+    [Fact]
+    public void 连续新建总项目_自动建三个分项目且拦截重复与格式错误()
+    {
+        using var db = new TempDb();
+
+        // "总项目能连续新增多个"：连建两个，项目号不冲突，各自都有 01/02/03。
+        var first = db.Projects.CreateProject("P7392", "P7392 安装调试问题闭环", "演示客户", db.Engineer);
+        var second = db.Projects.CreateProject("P7393", "P7393 安装调试问题闭环", "", db.Engineer);
+
+        Assert.NotEqual(first.Id, second.Id);
+        Assert.Equal(
+            new[] { "P7391", "P7392", "P7393" },
+            db.Projects.ListProjects().Select(p => p.Code).OrderBy(c => c, StringComparer.Ordinal).ToArray());
+
+        foreach (var project in new[] { first, second })
+        {
+            var subs = db.Projects.ListSubprojects(project.Id);
+            Assert.Equal(
+                new[] { project.Code + "-01", project.Code + "-02", project.Code + "-03" },
+                subs.Select(s => s.Code).ToArray());
+        }
+
+        // 重复项目号必须拦在写库前；格式不合法的（少一位）同样拦截。
+        Assert.Throws<InvalidOperationException>(() =>
+            db.Projects.CreateProject("P7392", "重复项目", "", db.Engineer));
+        Assert.Throws<InvalidOperationException>(() =>
+            db.Projects.CreateProject("P739", "格式错误", "", db.Engineer));
+
+        // 新建弹窗的建议号按最大值 +1，连建后自动变成 P7394。
+        Assert.Equal("P7394", ProjectCreateDialogViewModel.NextCode(
+            db.Projects.ListProjects().Select(p => p.Code)));
     }
 
     [Fact]

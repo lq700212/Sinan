@@ -26,7 +26,7 @@
 | 框架 | **Flutter 3.50 + Dart 3.14** | 只构建 Android；业务代码全部 Dart |
 | 架构 | **MVVM**：View / `AppState`（ChangeNotifier）/ Repository / LocalDb | 不引状态管理库；`provider` 都不用 |
 | 状态 | `lib/state/app_state.dart` | 只做编排；业务规则在 `models/rules.dart` |
-| 本地库 | **sqflite**（schema v3） | 建表口径对照 `shared/db/schema.sql`，只保留现场需要的字段 |
+| 本地库 | **sqflite**（schema v4） | 建表口径对照 `shared/db/schema.sql`，只保留现场需要的字段 |
 | 配置 | shared_preferences | 主题等轻量偏好 |
 | 拍照/选图 | image_picker | 长边 1600px、质量 82 |
 | 主题 | `SinanPalette` 明/暗两套 Token | 只允许引用 Token，禁止在页面里写死色值 |
@@ -52,7 +52,7 @@ mobile/
 ## 3. 版本与平台兼容（改清单前必读）
 
 **版本号（与桌面端各自独立）**：`pubspec.yaml` 的 `version` 是唯一来源，界面只读
-`lib/app_info.dart`。当前 `0.0.3+3`（`+3` 是 build number，Android `versionCode` /
+`lib/app_info.dart`。当前 `0.0.5+5`（`+5` 是 build number，Android `versionCode` /
 iOS `CFBundleVersion`）。
 
 - **默认只升 patch**：`0.0.1 → 0.0.2 → 0.0.3`，永远只动第三位；`0.0.9` 之后是
@@ -92,8 +92,8 @@ iOS `CFBundleVersion`）。
 - **View 只留 glue**：页面负责布局与手势；业务判断、筛选、统计一律在 `AppState`/`Rules`。
 - **数据访问只在 `data/`**：页面不直接 `openDatabase`，也不拼 SQL；走 `IssueRepository`。
 - **状态变更走 `AppState`**：`notifyListeners()` 后刷新，不在页面里各存一份副本。
-- **IO 不阻塞首帧**：建库/种子/查询在异步初始化里做；`main.dart` 用 loading / error / 登录
-  三态兜住，失败给可读提示，不白屏。
+- **IO 不阻塞首帧**：建库/种子/查询在异步初始化里做；首帧直接显示登录页，数据读完自动刷新。
+  `main.dart` 只在读库失败时切 error 兜底页（可重试），**不设全屏启动/加载页**。
 - **规则纯函数优先**：日期解析、状态推导、倒挂/逾期、归组、我的待办都放
   `models/rules.dart`，并在 `test/rules_test.dart` 覆盖；页面里不许再写一套。
 - **错误就地展开**：表单校验、保存失败在字段/按钮附近提示，不弹二级窗、不吞异常。
@@ -113,7 +113,8 @@ iOS `CFBundleVersion`）。
 
 ## 6. 数据与口径（移动侧）
 
-- `LocalDb` 当前 schema **v3**（附件表、outbox.base_version、sync_meta、conflicts）；
+- `LocalDb` 当前 schema **v4**（附件表、outbox.base_version、sync_meta、conflicts、
+  `projects`/`subprojects` 与 `issues.project_id`）；
   改表必须同步改 `onCreate`、`onUpgrade` 和桌面端 `shared/db/schema.sql`，并升版本号。
 - 种子：`assets/seed/issues.seed.json` 与 `shared/db/seed/issues.seed.json` 必须是同一份
   （36 条 / 31 台，虚构数据），改完两端同步拷贝。
@@ -124,8 +125,11 @@ iOS `CFBundleVersion`）。
 - 附件：`attachments/{issueId}/{uuid}.jpg`，DB 只存相对路径；缺失文件明确占位；
   同步时按 outbox 逐张上传，桌面端按 `attachmentId` 幂等归档。
 - 日期与 `/`、`已下图`、空白的区别，逾期只认 `due_date`——全部走 `Rules`，与桌面同源。
-- 单机台号归组：`P7391101–P7391199` → 01，`…2xx` → 02，`…3xx` → 03；位数异常留"待确认"
-  （完整规则见根第 6 节）。
+- 单机台号归组：`{项目号}101–{项目号}199` → 01，`…2xx` → 02，`…3xx` → 03；位数或前缀异常留"待确认"
+  （完整规则见根第 6 节）。多总项目下机台号必须带当前项目号，`Rules` 全部带 `projectCode` 参数。
+- 总项目字典：`projects` / `subprojects` 本地只读，桌面端下发后 upsert；手机端不新建总项目。
+  当前项目选择存 `sync_meta.current_project_id`，所有查询/统计/新建/照片横条必须带 `projectId`，
+  禁止再出现"查全库等于当前项目"。
 - 统计数字实时算，不写死演示值。
 
 ## 7. 构建与验证
@@ -155,11 +159,33 @@ flutter build apk --debug
 - 本机开发机的 Flutter SDK 在 `E:\DevTools\flutter`（不在 PATH 时用
   `E:\DevTools\flutter\bin\flutter.bat`）；其他机器的安装位置以 `where flutter` 为准。
 
+### UI 回归（真机/模拟器）
+
+`flutter test` 只覆盖纯规则；界面改完还要跑一遍真机 UI 回归（根目录工具，Python 标准库 + adb，
+无需 pip、不重编译）：
+
+```powershell
+# 改哪个模块跑哪个，几十秒出结果
+python tools/mobile_e2e/run.py --list
+python tools/mobile_e2e/run.py --module smoke        # 登录 + 四页可达
+python tools/mobile_e2e/run.py --module projects     # 多总项目、切换、空项目
+python tools/mobile_e2e/run.py --module ledger       # 搜索 / 倒挂筛选 / 详情
+python tools/mobile_e2e/run.py                        # 全部只读用例（约 3.5 分钟）
+python tools/mobile_e2e/run.py --cold --module smoke  # 冷启动必须停在登录页
+```
+
+- 设备上要装当前 `app-debug.apk`；没装可加 `--install mobile/build/app/outputs/flutter-apk/app-debug.apk`。
+- 默认 15 条只读用例；失败会在 `tools/mobile_e2e/artifacts/` 留截图与 UI 树（已 gitignore）。
+- 新建问题只验证表单后取消，**不落库**；写操作用例需显式 `--mutating`。
+- 用例写法与新增步骤见 `tools/mobile_e2e/README.md`。
+
 ## 8. 交付清单（手机端）
 
 在根目录通用清单之外，逐条确认：
 
 - [ ] 改过 Dart：`flutter analyze` 0 issue、`flutter test` 全过（当前 22 条）、APK 生成；
+- [ ] 改过界面：`python tools/mobile_e2e/run.py --module <受影响模块>` 全 PASS
+      （或说明无法跑的原因，例如设备不在线）；
 - [ ] 改过版本号：`pubspec.yaml`、`lib/app_info.dart` 两处一致，且 `aapt` 反查的
       `versionName` 与 `pubspec.yaml` 相同；
 - [ ] 改过 SDK/权限：`merged_manifests` 或 `aapt` 里确认 `minSdk 24` / `targetSdk 36` /
@@ -173,18 +199,20 @@ flutter build apk --debug
 
 | 文件 | 作用 |
 |---|---|
-| `mobile/lib/main.dart` | 应用根：主题、语言、登录态三态（loading/error/登录） |
+| `mobile/lib/main.dart` | 应用根：主题、语言、登录态（error / 登录 / 主壳），无全屏启动页 |
 | `mobile/lib/app_info.dart` | 版本号唯一来源（与 `pubspec.yaml` 一致） |
 | `mobile/lib/theme/tokens.dart` | `SinanPalette` 明/暗 Token（唯一色值来源） |
 | `mobile/lib/theme/app_theme.dart` | `ThemeData` 组装 |
 | `mobile/lib/models/rules.dart` | 日期解析、状态推导、倒挂/逾期、归组、我的待办 |
 | `mobile/lib/models/issue.dart` | 问题 / 阶段 / 状态 / 统计模型 |
 | `mobile/lib/models/attachment.dart` | 附件模型（本机文件 + 同步状态） |
-| `mobile/lib/data/local_db.dart` | sqflite 建表 v3、迁移、首启种子 |
-| `mobile/lib/data/issue_repository.dart` | 查询、新建、附件、outbox、机台聚合 |
+| `mobile/lib/models/project.dart` | 总项目 / 分项目 / 切换用项目汇总模型 |
+| `mobile/lib/data/local_db.dart` | sqflite 建表 v4、迁移、首启项目与问题种子 |
+| `mobile/lib/data/issue_repository.dart` | 查询、新建、附件、outbox、机台聚合（按项目过滤） |
+| `mobile/lib/data/project_repository.dart` | 项目列表、切换规模、下行项目 upsert |
 | `mobile/lib/data/attachment_store.dart` | 拍照/相册、压缩落盘 |
 | `mobile/lib/data/sync_client.dart` | 局域网同步客户端（ping/配对/上行/下行/照片上传） |
-| `mobile/lib/state/app_state.dart` | 会话、主题、列表、统计、待传条数 |
+| `mobile/lib/state/app_state.dart` | 会话、主题、当前总项目、列表、统计、待传条数 |
 | `mobile/lib/screens/shell_screen.dart` | 五槽底栏与页面切换 |
 | `mobile/lib/screens/new_issue_screen.dart` | 新建问题（离线落库 + 写 outbox） |
 | `mobile/lib/screens/issue_detail_screen.dart` | 详情、阶段推进、评论、附件 |
@@ -192,3 +220,5 @@ flutter build apk --debug
 | `mobile/android/app/build.gradle.kts` | SDK 口径、版本号来源、签名（当前 debug） |
 | `mobile/android/app/src/main/AndroidManifest.xml` | 权限、明文 HTTP、应用名 |
 | `mobile/ios/Runner/Info.plist` | iOS 权限描述、本地网络、ATS、显示名 |
+| `tools/mobile_e2e/run.py` | 手机端 UI 回归入口（adb + uiautomator，真机/模拟器） |
+| `tools/mobile_e2e/README.md` | UI 回归用例清单、参数与新增用例方法 |

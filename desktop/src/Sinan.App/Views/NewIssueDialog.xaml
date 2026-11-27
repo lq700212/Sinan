@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:Kaleidoscope.UI.Views;assembly=Kaleidoscope.UI"
         Title="新建问题"
-        Subtitle="P7391 · 现场问题录入"
+        Subtitle="{Binding ProjectCode, StringFormat={}{0} · 现场问题录入}"
         TitleIconChar="＋"
         Width="820" Height="780"
         Resizeable="False"

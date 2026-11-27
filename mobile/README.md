@@ -1,6 +1,6 @@
 # 司南 · 现场端（Flutter）
 
-P7391 安装调试问题闭环系统的 Android 现场端。桌面端（`../desktop/`）是唯一主库，
+安装调试问题闭环系统的 Android 现场端，支持多个总项目并在其间切换。桌面端（`../desktop/`）是唯一主库，
 本端是**离线副本 + 待传队列**：现场先写本机 SQLite，联网后按 outbox 补传。
 
 ## 环境
@@ -13,7 +13,7 @@ P7391 安装调试问题闭环系统的 Android 现场端。桌面端（`../desk
 
 | 项 | 值 | 口径 |
 |---|---|---|
-| 手机端版本 | `0.0.3+3` | 与桌面端各自独立升版，只动第三位；唯一来源 `pubspec.yaml`，界面只读 `lib/app_info.dart` |
+| 手机端版本 | `0.0.5+5` | 与桌面端各自独立升版，只动第三位；唯一来源 `pubspec.yaml`，界面只读 `lib/app_info.dart` |
 | Android 最低 | API 24 / Android 7.0 | `minSdk`，Flutter 3.50 引擎下限，主流现场手机都能装 |
 | Android 目标 | API 36 / Android 16 | `targetSdk`，行为适配目标，**不是装机上限** |
 | Android 编译 | API 36 | `compileSdk`，与 Flutter 引擎一致 |
@@ -82,7 +82,7 @@ lib/
     ├── login_screen.dart      ← 工号登录（离线可用）
     ├── shell_screen.dart      ← 五槽底栏：待办 / 项目 / ＋ / 台账 / 同步
     ├── home_todo_screen.dart  ← 我的阶段任务、风险 Top3、扫码/拍照入口
-    ├── project_list_screen.dart ← 总项目 P7391 + 分项目卡 + 阶段填写率 + 最近照片
+    ├── project_list_screen.dart ← 当前总项目 + 切换入口 + 分项目卡 + 最近照片
     ├── subproject_screen.dart ← 分项目内按机台分组问题
     ├── issue_list_screen.dart ← 台账：搜索 / 筛选 / 倒挂逾期
     ├── issue_detail_screen.dart ← 详情、阶段推进、评论、真实附件 + 拍照
@@ -100,7 +100,9 @@ lib/
 - 阶段状态：`not_started` / `in_progress` / `done` / `na`；问题状态由四阶段推导。
 - 新建问题：责任阶段初始为 `in_progress`（选了阶段就代表正在做，即使责任人/日期未填），
   序号用 `L001` 占位，同步后由桌面主库重编号。
-- 单机台号归组：`P7391101–P7391199` → 01，`…2xx` → 02，`…3xx` → 03；位数异常留“待确认”。
+- 单机台号归组：`{项目号}101–{项目号}199` → 01，`…2xx` → 02，`…3xx` → 03；位数或前缀异常留“待确认”。
+- 多总项目：项目字典由桌面端下发，手机端只读；当前项目存 `sync_meta.current_project_id`，
+  台账/统计/新建/照片横条全部按当前项目过滤。
 - 演示照片为占位值（12 张 / 6 条），汇总卡片标注“演示”，不冒充真实附件。
 
 ## 当前边界

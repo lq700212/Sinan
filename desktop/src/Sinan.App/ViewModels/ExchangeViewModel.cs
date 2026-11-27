@@ -42,11 +42,29 @@ public sealed class ExchangeViewModel : ObservableObject
     private ScopeOption _scope;
     private bool _isExportMode;
     private List<ExportPreviewRow> _exportPreviewRows = new();
+    private readonly string _projectCode;
 
     public ExchangeViewModel(App app, INavigationService nav)
     {
         _app = app;
         _nav = nav;
+        // 项目号只用于"列映射说明"和冲突行显示的问题号前缀，必须跟随当前项目，
+        // 不能写死 P7391：切到 P7392 后导入指引仍说 P7391 会直接误导现场。
+        _projectCode = app.ProjectsContext.Current?.Code ?? "";
+        ColumnMappings = new[]
+        {
+            new ColumnMappingRow("A 序号", "序号", "原样保留，允许缺口，不重排"),
+            new ColumnMappingRow("B 机台号", "机台号", MachineCodeHint),
+            new ColumnMappingRow("—（派生）", "分项目号", "1xx→01 · 2xx→02 · 3xx→03"),
+            new ColumnMappingRow("C 存在问题", "问题标题", "必填"),
+            new ColumnMappingRow("D 解决措施", "解决措施", "可空"),
+            new ColumnMappingRow("E / F 方案", "方案确定 · 责任人 / 计划", "空白与“/”分开存"),
+            new ColumnMappingRow("G / H 设计", "设计下图 · 责任人 / 计划", "文字计划原样保留"),
+            new ColumnMappingRow("I / J 物料", "物料准备 · 责任人 / 计划", "空白与“/”分开存"),
+            new ColumnMappingRow("K / L 装配", "装配调试 · 责任人 / 计划", "责任人含“/”多人"),
+            new ColumnMappingRow("M 状态", "状态", "无法识别时按待分派"),
+            new ColumnMappingRow("N 完成情况", "完成情况", "原样保留")
+        };
 
         Strategies = new[]
         {
@@ -78,7 +96,7 @@ public sealed class ExchangeViewModel : ObservableObject
 
         // 每个范围的实时条数：设计稿每行都带"36 条 / 5 条"，这里按库内实况填，
         // 不照抄演示值；切范围时预览行与估算文案一起换（见 Scope setter）。
-        var allIssues = app.Issues.All();
+        var allIssues = app.Issues.All(app.ProjectsContext.CurrentId);
         foreach (var scope in Scopes)
         {
             scope.CountText = scope.Value switch
@@ -104,7 +122,7 @@ public sealed class ExchangeViewModel : ObservableObject
         GoStepCommand = new RelayCommand(p => GoStep(p));
         SetModeCommand = new RelayCommand(p => IsExportMode = p as string == "export");
 
-        LastImportDisplay = app.Projects.GetOverview().LastImportDisplay;
+        LastImportDisplay = app.Projects.GetOverview(app.ProjectsContext.CurrentId).LastImportDisplay;
         ExportDirDisplay = Path.Combine(app.Database.Paths.ArchiveDir, "exports");
         DbPathDisplay = app.Database.Paths.DbPath;
         AttachmentsDirDisplay = app.Database.Paths.AttachmentsDir;
@@ -187,7 +205,8 @@ public sealed class ExchangeViewModel : ObservableObject
         set
         {
             if (value == null || !SetProperty(ref _scope, value)) return;
-            _exportPreviewRows = BuildExportPreview(_app.Issues.All(), value.Value);
+            _exportPreviewRows = BuildExportPreview(
+                _app.Issues.All(_app.ProjectsContext.CurrentId), value.Value);
             OnPropertiesChanged(nameof(ExportEstimateText), nameof(ExportPreviewRows),
                 nameof(ExportPreviewCaption));
         }
@@ -351,22 +370,14 @@ public sealed class ExchangeViewModel : ObservableObject
     /// <summary>
     /// 列映射说明（设计稿 import 页「列映射」表）。这是系统固定口径，不随文件变化：
     /// 原表列 → 系统字段 → 处理规则。说明里不写"缺 7/19/28"这类演示数字，
-    /// 具体缺口以实际解析结果为准。
+    /// 具体缺口以实际解析结果为准。机台号提示按当前项目号生成。
     /// </summary>
-    public IReadOnlyList<ColumnMappingRow> ColumnMappings { get; } = new[]
-    {
-        new ColumnMappingRow("A 序号", "序号", "原样保留，允许缺口，不重排"),
-        new ColumnMappingRow("B 机台号", "机台号", "P7391xxx；异常值进“待确认”"),
-        new ColumnMappingRow("—（派生）", "分项目号", "1xx→01 · 2xx→02 · 3xx→03"),
-        new ColumnMappingRow("C 存在问题", "问题标题", "必填"),
-        new ColumnMappingRow("D 解决措施", "解决措施", "可空"),
-        new ColumnMappingRow("E / F 方案", "方案确定 · 责任人 / 计划", "空白与“/”分开存"),
-        new ColumnMappingRow("G / H 设计", "设计下图 · 责任人 / 计划", "文字计划原样保留"),
-        new ColumnMappingRow("I / J 物料", "物料准备 · 责任人 / 计划", "空白与“/”分开存"),
-        new ColumnMappingRow("K / L 装配", "装配调试 · 责任人 / 计划", "责任人含“/”多人"),
-        new ColumnMappingRow("M 状态", "状态", "无法识别时按待分派"),
-        new ColumnMappingRow("N 完成情况", "完成情况", "原样保留")
-    };
+    public IReadOnlyList<ColumnMappingRow> ColumnMappings { get; }
+
+    /// <summary>机台号规则提示：当前项目号 + 3 位序号。</summary>
+    private string MachineCodeHint => string.IsNullOrEmpty(_projectCode)
+        ? "项目号 + 3 位序号；异常值进“待确认”"
+        : $"{_projectCode}xxx；异常值进“待确认”";
 
     public ImportResult? ImportResult
     {
@@ -465,7 +476,8 @@ public sealed class ExchangeViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            var preview = await Task.Run(() => _app.Import.Preview(path));
+            var projectId = _app.ProjectsContext.CurrentId;
+            var preview = await Task.Run(() => _app.Import.Preview(path, projectId));
 
             Preview = preview;
             Rows.Clear();
@@ -539,14 +551,14 @@ public sealed class ExchangeViewModel : ObservableObject
     }
 
     /// <summary>
-    /// 问题号展示口径与详情页一致：`P7391-` + 三位序号。序号本身是原表文本，
+    /// 问题号展示口径与详情页一致：`项目号-` + 三位序号。序号本身是原表文本，
     /// 能解析成数字就补零，解析不了（"已下图"这类脏值）原样拼——绝不因格式化改原文。
     /// </summary>
-    private static string FormatIssueCode(string seqNo)
+    private string FormatIssueCode(string seqNo)
     {
         var seq = (seqNo ?? "").Trim();
-        if (seq.Length == 0) return "P7391-?";
-        return int.TryParse(seq, out var n) ? $"P7391-{n:D3}" : $"P7391-{seq}";
+        if (seq.Length == 0) return $"{_projectCode}-?";
+        return int.TryParse(seq, out var n) ? $"{_projectCode}-{n:D3}" : $"{_projectCode}-{seq}";
     }
 
     private async Task ApplyAsync()
@@ -619,7 +631,7 @@ public sealed class ExchangeViewModel : ObservableObject
             return;
         }
 
-        var project = _app.Projects.GetMain();
+        var project = _app.ProjectsContext.Current ?? _app.Projects.GetMain();
         if (project == null)
         {
             ErrorMessage = "数据库中没有项目。";
@@ -628,7 +640,7 @@ public sealed class ExchangeViewModel : ObservableObject
 
         // 先算这次要导多少条、有多少异常行，再弹确认框：
         // 弹窗里的"将包含"必须与真正写盘的清单一致，不能先弹空壳再算。
-        var all = _app.Issues.All();
+        var all = _app.Issues.All(project.Id);
         var scopeValue = Scope?.Value ?? "all";
         var scoped = scopeValue switch
         {

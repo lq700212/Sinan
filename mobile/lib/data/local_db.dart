@@ -17,6 +17,11 @@ class LocalDb {
 
   static final LocalDb instance = LocalDb._();
 
+  /// 首启演示总项目：与桌面端 SeedBootstrapper 的 id/code/名称保持一致，
+  /// 这样手机端先离线产生的问题，同步到桌面后仍落在同一个总项目里。
+  static const demoProjectId = 'PRJ-P7391';
+  static const demoProjectCode = 'P7391';
+
   Database? _db;
 
   Future<Database> get database async {
@@ -26,7 +31,7 @@ class LocalDb {
     final path = p.join(dir.path, 'sinan_mobile.db');
     final db = await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onConfigure: (d) => d.execute('PRAGMA foreign_keys = ON'),
       onCreate: _create,
       onUpgrade: _upgrade,
@@ -48,6 +53,7 @@ class LocalDb {
         seq_no TEXT NOT NULL,
         machine_code TEXT NOT NULL,
         subproject_code TEXT,
+        project_id TEXT NOT NULL DEFAULT '',
         title TEXT NOT NULL,
         solution TEXT NOT NULL DEFAULT '',
         status TEXT NOT NULL,
@@ -96,8 +102,39 @@ class LocalDb {
     ''');
     await db.execute('CREATE INDEX idx_issues_machine ON issues(machine_code)');
     await db.execute('CREATE INDEX idx_outbox_pending ON outbox(synced_at)');
+    await _createProjects(db);
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_issues_project ON issues(project_id)');
     await _createAttachments(db);
     await _createSyncTables(db);
+  }
+
+  /// v4 新增：总项目 / 分项目字典。手机端只读（桌面端主库下发），
+  /// 但必须本地落表才能在离线时展示项目列表与切换。
+  Future<void> _createProjects(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS projects(
+        id TEXT PRIMARY KEY,
+        code TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL DEFAULT '',
+        customer TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'active',
+        updated_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS subprojects(
+        id TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL,
+        code TEXT NOT NULL,
+        name TEXT NOT NULL DEFAULT '',
+        machine_range TEXT NOT NULL DEFAULT '',
+        sort_no INTEGER NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_subprojects_project ON subprojects(project_id)');
   }
 
   /// v2 新增：现场照片附件表（字段对齐共享 schema，去掉桌面端同步专用列）。
@@ -111,6 +148,76 @@ class LocalDb {
       await db.execute(
           'ALTER TABLE outbox ADD COLUMN base_version INTEGER NOT NULL DEFAULT 0');
       await _createSyncTables(db);
+    }
+    if (oldVersion < 4) {
+      // v4：多总项目。补项目字典表 + 给问题加 project_id。
+      // 升级前的数据只可能属于 P7391（多项目是 v4 才引入的），统一归演示项目。
+      await _createProjects(db);
+      await db.execute(
+          "ALTER TABLE issues ADD COLUMN project_id TEXT NOT NULL DEFAULT ''");
+      final now = DateTime.now().toIso8601String();
+      await _seedDemoProject(db, now);
+      await db.rawUpdate(
+          'UPDATE issues SET project_id = ? WHERE project_id = ?',
+          [demoProjectId, '']);
+      await db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_issues_project ON issues(project_id)');
+    }
+  }
+
+  /// 首启/升级时补演示总项目与三个分项目。
+  /// id / code / 名称 / 机台范围全部与桌面端 SeedBootstrapper 对齐，避免双端各一套。
+  Future<void> _seedDemoProject(DatabaseExecutor db, String now) async {
+    await db.insert(
+      'projects',
+      {
+        'id': demoProjectId,
+        'code': demoProjectCode,
+        'name': '$demoProjectCode 安装调试问题闭环',
+        'customer': '',
+        'status': 'active',
+        'updated_at': now,
+      },
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
+
+    const subs = [
+      (
+        id: 'SUB-P7391-01',
+        code: 'P7391-01',
+        name: '机台 1xx 段',
+        machineRange: 'P7391101 – P7391110',
+        sort: 1
+      ),
+      (
+        id: 'SUB-P7391-02',
+        code: 'P7391-02',
+        name: '机台 2xx 段',
+        machineRange: 'P7391201 – P7391208',
+        sort: 2
+      ),
+      (
+        id: 'SUB-P7391-03',
+        code: 'P7391-03',
+        name: '机台 3xx 段',
+        machineRange: 'P7391301 – P7391312',
+        sort: 3
+      ),
+    ];
+    for (final sub in subs) {
+      await db.insert(
+        'subprojects',
+        {
+          'id': sub.id,
+          'project_id': demoProjectId,
+          'code': sub.code,
+          'name': sub.name,
+          'machine_range': sub.machineRange,
+          'sort_no': sub.sort,
+          'updated_at': now,
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
     }
   }
 
@@ -169,6 +276,7 @@ class LocalDb {
     final raw = await rootBundle.loadString('assets/seed/issues.seed.json');
     final list = (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
     final now = DateTime.now().toIso8601String();
+    await _seedDemoProject(db, now);
     final batch = db.batch();
 
     for (final entry in list.asMap().entries) {
@@ -179,7 +287,9 @@ class LocalDb {
         'id': id,
         'seq_no': item['seq']?.toString() ?? '',
         'machine_code': machine,
-        'subproject_code': Rules.resolveSubproject(machine),
+        'subproject_code': Rules.resolveSubproject(machine,
+            projectCode: demoProjectCode),
+        'project_id': demoProjectId,
         'title': item['title'] ?? '',
         'solution': item['solution'] ?? '',
         'status': item['status'] ?? IssueStatuses.unassigned,

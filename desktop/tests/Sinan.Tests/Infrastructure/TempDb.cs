@@ -1,5 +1,6 @@
 using System.IO;
 using Microsoft.Data.Sqlite;
+using Sinan.App.Services;
 using Sinan.Core.Models;
 using Sinan.Data;
 using Sinan.Data.Excel;
@@ -20,6 +21,8 @@ public sealed class TempDb : IDisposable
     public UserRepository Users { get; }
     public IssueRepository Issues { get; }
     public ProjectRepository Projects { get; }
+    /// <summary>当前项目上下文：界面层与同步都从这里取 ProjectId（测试与真实启动同源）。</summary>
+    public ProjectContext Context { get; }
     public AttachmentRepository Attachments { get; }
     public ExcelImportService Import { get; }
     public ExcelExportService Export { get; }
@@ -35,6 +38,8 @@ public sealed class TempDb : IDisposable
         Users = new UserRepository(Db);
         Issues = new IssueRepository(Db);
         Projects = new ProjectRepository(Db, Issues);
+        Context = new ProjectContext(Db, Projects);
+        Context.Load();
         Attachments = new AttachmentRepository(Db);
         Import = new ExcelImportService(Db, Issues, Projects);
         Export = new ExcelExportService(Db, Issues, Projects, Attachments);

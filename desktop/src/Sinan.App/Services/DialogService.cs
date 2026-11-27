@@ -43,6 +43,15 @@ public interface IDialogService
     /// 返回 null 表示取消。
     /// </summary>
     ExportConfirmResult? ConfirmExport(ExportConfirmRequest request);
+
+    /// <summary>
+    /// 切换总项目（总览头卡"切换项目"）：列出全部项目与实时规模，点行即切换；
+    /// 底部可转去"新建总项目"。返回 null 表示取消。
+    /// </summary>
+    ProjectSwitchResult? PickProject(ProjectSwitchRequest request);
+
+    /// <summary>新建总项目：项目号/名称/客户，校验重复与格式后就地报错。返回 null 表示取消。</summary>
+    ProjectCreateResult? CreateProject(ProjectCreateRequest request);
 }
 
 public sealed class DialogService : IDialogService
@@ -128,6 +137,20 @@ public sealed class DialogService : IDialogService
     public ExportConfirmResult? ConfirmExport(ExportConfirmRequest request)
     {
         var dialog = new ExportConfirmDialog { Owner = Application.Current?.MainWindow };
+        dialog.Load(request);
+        return dialog.ShowDialog() == true ? dialog.Result : null;
+    }
+
+    public ProjectSwitchResult? PickProject(ProjectSwitchRequest request)
+    {
+        var dialog = new ProjectSwitchDialog { Owner = Application.Current?.MainWindow };
+        dialog.Load(request);
+        return dialog.ShowDialog() == true ? dialog.Result : null;
+    }
+
+    public ProjectCreateResult? CreateProject(ProjectCreateRequest request)
+    {
+        var dialog = new ProjectCreateDialog { Owner = Application.Current?.MainWindow };
         dialog.Load(request);
         return dialog.ShowDialog() == true ? dialog.Result : null;
     }

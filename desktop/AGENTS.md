@@ -33,8 +33,8 @@ desktop/
 
 ### 1.1 版本号（桌面端）
 
-- 唯一来源：`desktop/src/Directory.Build.props` 的 `<Version>0.0.7</Version>`。
-  改版本只改这一处；`Sinan.App` 通过程序集版本读取，界面由 `AppInfo` 显示 `v0.0.7`，
+- 唯一来源：`desktop/src/Directory.Build.props` 的 `<Version>0.0.8</Version>`。
+  改版本只改这一处；`Sinan.App` 通过程序集版本读取，界面由 `AppInfo` 显示 `v0.0.8`，
   不要在 XAML/代码里另写版本字符串。
 - 升级节奏遵循根总纲：**默认只升 patch**（`0.0.1 → 0.0.2 → 0.0.3 → 0.0.4`），
   `0.0.9` 之后是 `0.0.10`，不自动进位；只有用户明确要求才动 minor/major。
@@ -257,7 +257,7 @@ dotnet build desktop/Sinan.sln -c Debug
 # 运行（开发期）
 dotnet run --project desktop/src/Sinan.App/Sinan.App.csproj
 
-# 数据层/Excel/UI 渲染回归（当前 208 条）
+# 数据层/Excel/UI 渲染回归（当前 210 条）
 dotnet test desktop/tests/Sinan.Tests/Sinan.Tests.csproj -c Debug
 
 # 后台静默 UI 冒烟（截图 + 圆角自检，不抢焦点）
@@ -285,7 +285,7 @@ dotnet run --project tools/ui_smoke/UiSmoke.csproj -c Debug -- --launch --restar
       （有 WARN 就修）；
 - [ ] 改了 Excel 导入/导出：跑 6.1 的 8 条断言；
 - [ ] 改了界面：桌面 1440×900 与最小 1280×800 各看一次，四角放大目检；
-- [ ] `dotnet test` 全过（当前 208 条）；
+- [ ] `dotnet test` 全过（当前 210 条）；
 - [ ] 改了同步：桌面端 `SyncServer` 与 `shared/api/` 契约一致。
 
 ## 10. 常用文件导航（桌面端）

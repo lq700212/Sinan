@@ -10,6 +10,8 @@ public sealed class Issue
 {
     public string Id { get; set; } = "";
     public string ProjectId { get; set; } = "";
+    /// <summary>所属总项目号（P7391 / P7392…）；列表查询时 JOIN projects 填充，用于问题号显示。</summary>
+    public string ProjectCode { get; set; } = "";
     public string? SubprojectId { get; set; }
     public string MachineId { get; set; } = "";
     public string MachineCode { get; set; } = "";
@@ -95,6 +97,14 @@ public sealed class Issue
 
     /// <summary>台账 ID 列：序号补足三位（原表允许缺口，不重排）。</summary>
     public string DisplaySeqNo => (SeqNo ?? "").Trim().PadLeft(3, '0');
+
+    /// <summary>
+    /// 完整问题号：总项目号 + 三位序号（P7391-009）。
+    /// 多总项目后不再写死 P7391，所有界面/弹窗统一使用这个属性。
+    /// </summary>
+    public string DisplayCode => string.IsNullOrWhiteSpace(ProjectCode)
+        ? DisplaySeqNo
+        : $"{ProjectCode}-{DisplaySeqNo}";
 
     /// <summary>台账"设计 → 装配"第一行：空责任人显示"设计 /"，与设计稿的缺省写法一致。</summary>
     public string DesignOwnerDisplay =>

@@ -5,24 +5,30 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/attachment_store.dart';
 import '../data/issue_repository.dart';
+import '../data/local_db.dart';
+import '../data/project_repository.dart';
 import '../data/sync_client.dart';
 import '../models/attachment.dart';
 import '../models/issue.dart';
+import '../models/project.dart';
 
-/// 应用级状态：会话、主题、问题列表与统计。
-/// 只做编排，业务规则在 `models/rules.dart`，数据访问在 `IssueRepository`。
+/// 应用级状态：会话、主题、当前总项目、问题列表与统计。
+/// 只做编排，业务规则在 `models/rules.dart`，数据访问在 Repository。
 class AppState extends ChangeNotifier {
   AppState(this.repository,
-      {AttachmentStore? attachments, SyncClient? syncClient})
-      : attachments = attachments ?? AttachmentStore(),
+      {ProjectRepository? projects,
+      AttachmentStore? attachments,
+      SyncClient? syncClient})
+      : projects = projects ?? ProjectRepository(LocalDb.instance),
+        attachments = attachments ?? AttachmentStore(),
         syncClient = syncClient ?? SyncClient();
 
   final IssueRepository repository;
+  final ProjectRepository projects;
   final AttachmentStore attachments;
   final SyncClient syncClient;
 
   ThemeMode _themeMode = ThemeMode.light;
-  bool _loading = true;
   String? _loadError;
   bool _loggedIn = false;
   String _userName = '';
@@ -33,6 +39,10 @@ class AppState extends ChangeNotifier {
   IssueStats? _stats;
   int _pendingOutbox = 0;
   int _todayRecorded = 0;
+
+  List<Project> _projectList = const [];
+  List<ProjectSummary> _projectSummaries = const [];
+  Project? _currentProject;
 
   bool _syncBusy = false;
   String _syncStatus = '';
@@ -45,7 +55,6 @@ class AppState extends ChangeNotifier {
   List<SyncConflict> _syncConflicts = const [];
 
   ThemeMode get themeMode => _themeMode;
-  bool get loading => _loading;
   String? get loadError => _loadError;
   bool get loggedIn => _loggedIn;
   String get userName => _userName;
@@ -55,6 +64,19 @@ class AppState extends ChangeNotifier {
   IssueStats? get stats => _stats;
   int get pendingOutbox => _pendingOutbox;
   int get todayRecorded => _todayRecorded;
+
+  /// 全部总项目（离线副本）；切换弹层与设置页共用。
+  List<Project> get projectList => _projectList;
+
+  /// 切换弹层的实时规模行；`isCurrent` 由当前选择标记。
+  List<ProjectSummary> get projectSummaries => _projectSummaries;
+
+  /// 当前总项目：所有列表/统计/新建问题都跟随它。
+  Project? get currentProject => _currentProject;
+  String? get currentProjectId => _currentProject?.id;
+
+  /// 当前项目号；无项目时退回演示项目号，只用于文案兜底，不用于写库。
+  String get projectCode => _currentProject?.code ?? LocalDb.demoProjectCode;
 
   bool get syncBusy => _syncBusy;
   String get syncStatus => _syncStatus;
@@ -68,9 +90,9 @@ class AppState extends ChangeNotifier {
       _syncToken.isNotEmpty && _syncServerUrl.isNotEmpty;
 
   /// 首次启动与“重试”共用：读主题、建库、灌种子、拉统计。
-  /// 任何一步失败都不能让界面停在启动页，错误交给 `loadError` 由 UI 展示。
+  /// 不挡首屏——调用方已先渲染登录页，这里读完只负责 notifyListeners；
+  /// 任何一步失败都不留空白，错误交给 `loadError` 由 UI 展示。
   Future<void> init() async {
-    _loading = true;
     _loadError = null;
     notifyListeners();
     try {
@@ -78,21 +100,59 @@ class AppState extends ChangeNotifier {
       _themeMode =
           prefs.getString('theme') == 'dark' ? ThemeMode.dark : ThemeMode.light;
       await _loadSyncConfig();
+      await _loadProjects();
       await refresh();
       await _refreshConflicts();
     } catch (e) {
       _loadError = e.toString();
     }
-    _loading = false;
     notifyListeners();
   }
 
   Future<void> refresh() async {
-    _issues = await repository.all();
-    _stats = await repository.stats();
+    final projectId = _currentProject?.id;
+    // 没有项目就不展示全库：多项目后"全库"不等于任何人的当前工作。
+    _issues = projectId == null
+        ? const []
+        : await repository.all(projectId: projectId);
+    _stats =
+        projectId == null ? null : await repository.stats(projectId: projectId);
     _pendingOutbox = await repository.pendingOutbox();
     _todayRecorded = await repository.todayOutboxCount();
+    _projectSummaries =
+        await projects.summaries(currentId: _currentProject?.id);
     notifyListeners();
+  }
+
+  /// 加载项目字典并恢复上次选择。
+  /// 选择持久化在 `sync_meta.current_project_id`，重启回到上次项目；
+  /// 若记录的项目已不存在（例如桌面端归档），退回项目号最小的一个。
+  Future<void> _loadProjects() async {
+    _projectList = await projects.all();
+    final saved = await repository.readMeta('current_project_id') ?? '';
+    Project? selected;
+    for (final project in _projectList) {
+      if (project.id == saved) {
+        selected = project;
+        break;
+      }
+    }
+    _currentProject =
+        selected ?? (_projectList.isEmpty ? null : _projectList.first);
+    if (_currentProject != null) {
+      await repository.writeMeta('current_project_id', _currentProject!.id);
+    }
+    _projectSummaries =
+        await projects.summaries(currentId: _currentProject?.id);
+  }
+
+  /// 切换总项目：写持久化选择 → 重查列表与统计 → 通知所有页面重建。
+  /// 切换后各页面只保留当前项目数据，避免 P7392 页面还挂着 P7391 的缓存。
+  Future<void> switchProject(Project project) async {
+    if (_currentProject?.id == project.id) return;
+    _currentProject = project;
+    await repository.writeMeta('current_project_id', project.id);
+    await refresh();
   }
 
   /// 演示账号：engineer / 123456（张工，工程师）、admin / 123456（系统管理员）。
@@ -175,7 +235,13 @@ class AppState extends ChangeNotifier {
     String dueRaw = '',
     String? status,
   }) async {
+    final project = _currentProject;
+    if (project == null) {
+      throw StateError('当前没有总项目，请先在桌面端新建并同步到手机。');
+    }
     final issue = await repository.createIssue(
+      projectId: project.id,
+      projectCode: project.code,
       machineCode: machineCode,
       title: title,
       solution: solution,
@@ -402,11 +468,24 @@ class AppState extends ChangeNotifier {
           cursor: cursor,
         );
         for (final change in pull.changes) {
-          if (change.entity != 'issue') continue;
           final map = change.payload is Map
               ? (change.payload as Map).cast<String, dynamic>()
               : const <String, dynamic>{};
           if (map.isEmpty) continue;
+
+          // 项目字典先落库：桌面端新建总项目会发 project + subproject 两类变更，
+          // 手机端拿到后即可在项目页切换，不需要重新配对或全量重灌。
+          if (change.entity == 'project') {
+            await projects.applyServerProject(map);
+            downloaded++;
+            continue;
+          }
+          if (change.entity == 'subproject') {
+            await projects.applyServerSubproject(map);
+            downloaded++;
+            continue;
+          }
+          if (change.entity != 'issue') continue;
 
           if (await repository.hasPendingFor(change.entityId)) {
             // 本机还有未结算操作：不覆盖，交人工选择。
@@ -444,6 +523,9 @@ class AppState extends ChangeNotifier {
         _syncStatus = '部分完成：上行 $uploaded 条 · 失败 $failed 条'
             '${conflicts > 0 ? ' · 冲突 $conflicts 条' : ''}$reason';
       }
+      // 新项目/新问题都可能在下行里出现：先重载项目字典再刷新台账，
+      // 否则项目页看不到刚同步下来的 P7392。
+      await _loadProjects();
       await refresh();
       await _refreshConflicts();
       return failed == 0;

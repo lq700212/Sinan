@@ -26,9 +26,9 @@ public sealed class DashboardViewModel : ObservableObject
     {
         _app = app;
         _nav = nav;
-        _data = app.Projects.GetDashboard(app.Session.User ?? new User());
+        _data = app.Projects.GetDashboard(app.Session.User ?? new User(), app.ProjectsContext.CurrentId);
 
-        var allIssues = app.Issues.All();
+        var allIssues = app.Issues.All(app.ProjectsContext.CurrentId);
         var unassigned = allIssues.Where(i => i.SubprojectId == null).ToList();
         UnassignedIssueCount = unassigned.Count;
         UnassignedMachineCount = unassigned.Select(i => i.MachineId).Distinct().Count();
@@ -115,13 +115,14 @@ public sealed class DashboardViewModel : ObservableObject
                     Tag = "倒挂", Kind = "ng",
                     Title = $"{InvertedCount} 条计划时间倒挂",
                     Hint = string.Join(" / ", _data.Risks.Where(i => i.IsInverted)
-                        .Select(i => i.SubprojectCode?.Replace("P7391-", "") ?? "??").Distinct().Take(6)),
+                        .Select(i => SubprojectRules.Segment(i.SubprojectCode) is > 0 and var seg
+                            ? seg.ToString("D2") : "??").Distinct().Take(6)),
                     Action = "去校正", Command = GoIssuesCommand
                 });
 
             // 计划列写成"已下图"等非日期文本：设计稿第二条"文本"。
             // 只数原文等于"已下图"的计划单元格，与导入解析的 TextUtil 判据一致。
-            var textAnomalies = _app.Issues.All()
+            var textAnomalies = _app.Issues.All(_app.ProjectsContext.CurrentId)
                 .SelectMany(i => i.Stages)
                 .Count(s => (s.DueRaw ?? "").Trim() == "已下图");
             if (textAnomalies > 0)
@@ -129,7 +130,7 @@ public sealed class DashboardViewModel : ObservableObject
                 {
                     Tag = "文本", Kind = "warn",
                     Title = $"{textAnomalies} 处计划列写成“已下图”",
-                    Hint = string.Join(" / ", _app.Issues.All()
+                    Hint = string.Join(" / ", _app.Issues.All(_app.ProjectsContext.CurrentId)
                         .Where(i => i.Stages.Any(s => (s.DueRaw ?? "").Trim() == "已下图"))
                         .Select(i => i.SeqNo.PadLeft(3, '0')).Distinct().Take(6)),
                     Action = "去转换", Command = GoExchangeCommand
@@ -154,13 +155,13 @@ public sealed class DashboardViewModel : ObservableObject
                     Action = "定规则", Command = GoSettingsCommand
                 });
 
-            var unassigned = _app.Issues.All().Count(i => i.SubprojectId == null);
+            var unassigned = _app.Issues.All(_app.ProjectsContext.CurrentId).Count(i => i.SubprojectId == null);
             if (unassigned > 0)
                 rows.Add(new HealthRow
                 {
                     Tag = "归组", Kind = "warn",
                     Title = $"{unassigned} 条问题机台号未归入分项目",
-                    Hint = string.Join("、", _app.Issues.All()
+                    Hint = string.Join("、", _app.Issues.All(_app.ProjectsContext.CurrentId)
                         .Where(i => i.SubprojectId == null)
                         .Select(i => i.MachineCode).Distinct().Take(3)),
                     Action = "去归组", Command = GoIssuesCommand

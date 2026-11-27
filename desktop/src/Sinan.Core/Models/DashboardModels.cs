@@ -102,6 +102,8 @@ public sealed class MachineSummary
 public sealed class SubprojectDetail
 {
     public Subproject? Subproject { get; set; }
+    /// <summary>所属总项目号（P7391）：面包屑"P7391 总项目"用它，不再写死。</summary>
+    public string ProjectCode { get; set; } = "";
     public string Code { get; set; } = "";
     public string Name { get; set; } = "";
     public string MachineRange { get; set; } = "";
@@ -200,6 +202,8 @@ public sealed class ImportPreview
     public string FilePath { get; set; } = "";
     public string FileName { get; set; } = "";
     public string FileHash { get; set; } = "";
+    /// <summary>预览锁定的总项目 ID：Apply 必须写回同一项目，防止中途切换导致串项目。</summary>
+    public string ProjectId { get; set; } = "";
     public string ProjectCode { get; set; } = "";
     public int SourceRowCount { get; set; }
     public int Total { get; set; }

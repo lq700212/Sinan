@@ -13,9 +13,17 @@ class IssueRepository {
 
   final LocalDb _db;
 
-  Future<List<Issue>> all() async {
+  /// 全部问题；传 [projectId] 时只取当前总项目。
+  /// 多总项目后界面所有查询都必须带项目 ID，禁止再默认"全库等于当前项目"。
+  Future<List<Issue>> all({String? projectId}) async {
     final db = await _db.database;
-    final issueRows = await db.query('issues', orderBy: 'source_row ASC, seq_no ASC');
+    final scoped = projectId != null && projectId.isNotEmpty;
+    final issueRows = await db.query(
+      'issues',
+      where: scoped ? 'project_id = ?' : null,
+      whereArgs: scoped ? [projectId] : null,
+      orderBy: 'source_row ASC, seq_no ASC',
+    );
     if (issueRows.isEmpty) return const [];
 
     final stageRows = await db.query('issue_stages');
@@ -173,6 +181,8 @@ class IssueRepository {
   /// 序号用 `L001` 占位（local），同步到桌面端后由主库重新编号；
   /// 这样现场一眼能看出"这条是新记的"，也不会和原表 1~36 的序号抢号。
   Future<Issue> createIssue({
+    required String projectId,
+    required String projectCode,
     required String machineCode,
     required String title,
     String solution = '',
@@ -185,12 +195,17 @@ class IssueRepository {
     final headline = title.trim();
     if (machine.isEmpty) throw ArgumentError('机台号不能为空');
     if (headline.isEmpty) throw ArgumentError('问题描述不能为空');
+    if (projectId.trim().isEmpty) throw ArgumentError('项目 ID 不能为空');
+    if (projectCode.trim().isEmpty) throw ArgumentError('项目号不能为空');
 
     final db = await _db.database;
     final now = DateTime.now().toIso8601String();
     final id = 'local-${DateTime.now().microsecondsSinceEpoch}';
+    // 占位序号按项目各自递增：P7391 的 L001 和 P7392 的 L001 互不影响，
+    // 桌面主库接收后仍会按项目重新编号。
     final localCount = Sqflite.firstIntValue(await db.rawQuery(
-          "SELECT COUNT(*) FROM issues WHERE id LIKE 'local-%'",
+          "SELECT COUNT(*) FROM issues WHERE id LIKE 'local-%' AND project_id = ?",
+          [projectId],
         )) ??
         0;
     final seqNo = 'L${(localCount + 1).toString().padLeft(3, '0')}';
@@ -214,7 +229,9 @@ class IssueRepository {
         'id': id,
         'seq_no': seqNo,
         'machine_code': machine,
-        'subproject_code': Rules.resolveSubproject(machine),
+        'subproject_code':
+            Rules.resolveSubproject(machine, projectCode: projectCode),
+        'project_id': projectId,
         'title': headline,
         'solution': solution.trim(),
         'status': finalStatus,
@@ -238,6 +255,7 @@ class IssueRepository {
         });
       }
       await _enqueue(txn, 'issue', id, 'create', {
+        'project_id': projectId,
         'seq_no': seqNo,
         'machine_code': machine,
         'title': headline,
@@ -311,23 +329,36 @@ class IssueRepository {
     return rows.map(_toAttachment).toList();
   }
 
-  /// 项目总览的"最近现场照片"横条：跨问题取最新几张。
-  Future<List<IssueAttachment>> recentAttachments({int limit = 6}) async {
+  /// 项目总览的"最近现场照片"横条：跨问题取最新几张；传项目 ID 时只取当前项目。
+  Future<List<IssueAttachment>> recentAttachments(
+      {int limit = 6, String? projectId}) async {
     final db = await _db.database;
-    final rows = await db.query('attachments',
-        orderBy: 'created_at DESC', limit: limit);
+    final scoped = projectId != null && projectId.isNotEmpty;
+    final rows = scoped
+        ? await db.rawQuery('''
+            SELECT a.* FROM attachments a
+            JOIN issues i ON i.id = a.issue_id
+            WHERE i.project_id = ?
+            ORDER BY a.created_at DESC
+            LIMIT ?
+          ''', [projectId, limit])
+        : await db.query('attachments',
+            orderBy: 'created_at DESC', limit: limit);
     return rows.map(_toAttachment).toList();
   }
 
   /// 机台聚合：扫码页"最近机台"与总览共用，避免各页面各查一遍。
-  Future<List<MachineSummary>> machines() async {
-    final issues = await all();
+  Future<List<MachineSummary>> machines({String? projectId}) async {
+    final issues = await all(projectId: projectId);
     final db = await _db.database;
     // 最近更新日取 issues.updated_at 的最大值；Issue 模型不带该字段，
     // 单独查一次比给整条记录扩列更省，机台页只需要一个「最近 MM-DD」。
+    final scoped = projectId != null && projectId.isNotEmpty;
     final lastRows = await db.rawQuery(
       'SELECT machine_code, MAX(updated_at) AS last FROM issues '
+      '${scoped ? 'WHERE project_id = ? ' : ''}'
       'GROUP BY machine_code',
+      scoped ? [projectId] : null,
     );
     final lastMap = <String, String>{
       for (final r in lastRows)
@@ -524,6 +555,33 @@ class IssueRepository {
     }
 
     final db = await _db.database;
+    final machine = json['machineCode'] as String? ?? '';
+    final projectCode = json['projectCode'] as String? ?? '';
+    final effectiveProjectCode = projectCode.isNotEmpty
+        ? projectCode
+        : Rules.projectCodeOfMachine(machine);
+
+    // 老 change_log（多项目改造前写入）没有 projectId，按机台号前缀回推；
+    // 推不出来才退回演示项目，避免把新项目的问题静默归错。
+    var projectId = json['projectId'] as String? ?? '';
+    if (projectId.isEmpty && effectiveProjectCode.isNotEmpty) {
+      final rows = await db.query('projects',
+          columns: ['id'],
+          where: 'code = ?',
+          whereArgs: [effectiveProjectCode],
+          limit: 1);
+      if (rows.isNotEmpty) projectId = rows.first['id'] as String? ?? '';
+    }
+    if (projectId.isEmpty) projectId = LocalDb.demoProjectId;
+
+    var subprojectCode = json['subprojectCode'] as String?;
+    if (subprojectCode == null || subprojectCode.isEmpty) {
+      subprojectCode = Rules.resolveSubproject(machine,
+          projectCode: effectiveProjectCode.isEmpty
+              ? LocalDb.demoProjectCode
+              : effectiveProjectCode);
+    }
+
     final attachments = json['attachments'] as List?;
     final photoCount =
         (json['attachmentCount'] as int?) ?? (attachments?.length ?? 0);
@@ -535,8 +593,9 @@ class IssueRepository {
         {
           'id': id,
           'seq_no': json['seqNo'] as String? ?? '',
-          'machine_code': json['machineCode'] as String? ?? '',
-          'subproject_code': json['subprojectCode'] as String?,
+          'machine_code': machine,
+          'subproject_code': subprojectCode,
+          'project_id': projectId,
           'title': json['title'] as String? ?? '',
           'solution': json['solution'] as String? ?? '',
           'status': json['status'] as String? ?? IssueStatuses.unassigned,
@@ -675,8 +734,8 @@ class IssueRepository {
     return text.isEmpty ? StageState.notStarted.code : text;
   }
 
-  Future<IssueStats> stats() async {
-    final issues = await all();
+  Future<IssueStats> stats({String? projectId}) async {
+    final issues = await all(projectId: projectId);
     var closed = 0;
     var inverted = 0;
     var overdue = 0;
@@ -694,6 +753,25 @@ class IssueRepository {
 
     final machines = issues.map((i) => i.machineCode).toSet().length;
     final subprojects = <String, SubprojectSummary>{};
+
+    // 分项目卡片以项目字典为准（与桌面端 GetOverview → BuildCards 同口径）：
+    // 桌面端新建总项目时已建好 01/02/03 三段，手机端即使还没有任何问题，
+    // 这三个分组也要显示成 0 台 / 0 条，不能因为"没数据"就从页面上消失。
+    if (projectId != null && projectId.isNotEmpty) {
+      final db = await _db.database;
+      final rows = await db.query(
+        'subprojects',
+        where: 'project_id = ?',
+        whereArgs: [projectId],
+        orderBy: 'sort_no, code',
+      );
+      for (final row in rows) {
+        final code = (row['code'] as String? ?? '').trim();
+        if (code.isEmpty) continue;
+        subprojects[code] = SubprojectSummary(code: code);
+      }
+    }
+
     for (final issue in issues) {
       final code = issue.subprojectCode ?? '待确认';
       final item = subprojects.putIfAbsent(

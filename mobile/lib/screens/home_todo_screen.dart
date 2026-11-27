@@ -145,7 +145,12 @@ class HomeTodoScreen extends StatelessWidget {
               onTap: onOpenSync,
               child: Row(
                 children: [
-                  Icon(Icons.cloud_off_outlined, size: 17, color: p.accent),
+                  Icon(
+                      state.syncConfigured
+                          ? Icons.cloud_done_outlined
+                          : Icons.cloud_off_outlined,
+                      size: 17,
+                      color: p.accent),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -158,7 +163,9 @@ class HomeTodoScreen extends StatelessWidget {
                                 color: p.fg)),
                         const SizedBox(height: 2),
                         Text(
-                          '未同步 · 桌面端服务未启用；'
+                          // 同步能力已实现：按真实配对与上次同步时间显示，
+                          // 不再写死"桌面端服务未启用"（那会让用户以为功能没做）。
+                          '${state.syncConfigured ? (state.syncLastAt.isEmpty ? '已配对 · 尚未同步' : '已配对 · 上次同步 ${_syncTimeText(state.syncLastAt)}') : '未配对 · 到同步中心填写桌面端地址'}；'
                           '本机缓存 ${state.issues.length} 条 · ${state.pendingOutbox} 条待传',
                           style: TextStyle(fontSize: 10, height: 1.45, color: p.faint),
                         ),
@@ -180,8 +187,17 @@ class HomeTodoScreen extends StatelessWidget {
     );
   }
 
-  Widget _greeting(BuildContext context, SinanPalette p, int openCount) {
-    final now = DateTime.now();
+  /// 上次同步时间只显示"月-日 时:分"；落库是 UTC ISO，展示转本地。
+  static String _syncTimeText(String iso) {
+    final time = DateTime.tryParse(iso);
+    if (time == null) return iso;
+    final local = time.toLocal();
+    return '${local.month}-${local.day} '
+        '${local.hour.toString().padLeft(2, '0')}:'
+        '${local.minute.toString().padLeft(2, '0')}';
+  }
+
+  Widget _greeting(BuildContext context, SinanPalette p, int openCount) {    final now = DateTime.now();
     final greeting = now.hour < 12
         ? '早上好'
         : now.hour < 18
@@ -200,7 +216,7 @@ class HomeTodoScreen extends StatelessWidget {
                       color: p.fg)),
               const SizedBox(height: 2),
               Text(
-                'P7391 · ${_projectCount(state.stats)} 个分项目'
+                '${state.projectCode} · ${_projectCount(state.stats)} 个分项目'
                 '${_hasPendingGroup(state.stats) ? ' + 1 待确认' : ''} · '
                 '${now.month} 月 ${now.day} 日 · $openCount 条未闭环',
                 style: TextStyle(fontSize: 10.5, color: p.faint),
@@ -225,7 +241,7 @@ class HomeTodoScreen extends StatelessWidget {
         children: [
           _chip(
             p,
-            'P7391 总览',
+            '${state.projectCode} 总览',
             active: true,
             onTap: onOpenProjects,
           ),

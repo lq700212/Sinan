@@ -32,9 +32,210 @@ public sealed class ProjectRepository
     {
         using var connection = _database.Open();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT * FROM projects ORDER BY created_at LIMIT 1";
+        command.CommandText = "SELECT * FROM projects ORDER BY created_at, code LIMIT 1";
         using var reader = command.ExecuteReader();
         return reader.Read() ? MapProject(reader) : null;
+    }
+
+    /// <summary>全部总项目（顶部项目切换器与设置页用），按创建时间排序。</summary>
+    public List<Project> ListProjects()
+    {
+        using var connection = _database.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT * FROM projects ORDER BY created_at, code";
+        var list = new List<Project>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read()) list.Add(MapProject(reader));
+        return list;
+    }
+
+    public Project? Get(string? projectId)
+    {
+        if (string.IsNullOrWhiteSpace(projectId)) return null;
+        using var connection = _database.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT * FROM projects WHERE id=$id";
+        command.Parameters.AddWithValue("$id", projectId);
+        using var reader = command.ExecuteReader();
+        return reader.Read() ? MapProject(reader) : null;
+    }
+
+    /// <summary>
+    /// 切换总项目弹窗的数据：每个项目带实时规模统计。
+    /// 统计只数当前项目，避免把别的项目问题算进来。
+    /// </summary>
+    public List<ProjectSummary> ListSummaries(string? currentProjectId = null)
+    {
+        var projects = ListProjects();
+        var summaries = new List<ProjectSummary>();
+        foreach (var project in projects)
+        {
+            var issues = _issues.All(project.Id);
+            summaries.Add(new ProjectSummary
+            {
+                Project = project,
+                SubprojectCount = ListSubprojects(project.Id).Count,
+                MachineCount = CountMachines(project.Id),
+                IssueCount = issues.Count,
+                InvertedCount = issues.Count(i => i.IsInverted),
+                IsCurrent = string.Equals(project.Id, currentProjectId, StringComparison.Ordinal)
+            });
+        }
+        return summaries;
+    }
+
+    /// <summary>
+    /// 新建总项目：校验项目号 → 建项目 → 自动建 01/02/03 三个分项目 → 写同步增量。
+    /// 机台与问题留给 Excel 导入或现场新建，不在这里造演示数据。
+    /// </summary>
+    public Project CreateProject(string code, string name, string customer, User user)
+    {
+        var normalizedCode = TextUtil.Normalize(code).ToUpperInvariant();
+        if (!TextUtil.IsProjectCode(normalizedCode))
+            throw new InvalidOperationException("项目号格式应为 P + 4 位数字，例如 P7392。");
+        var projectName = TextUtil.Normalize(name);
+        if (projectName.Length == 0)
+            throw new InvalidOperationException("项目名称不能为空。");
+
+        var now = AppTime.UtcNowIso();
+        using var connection = _database.Open();
+        using var transaction = connection.BeginTransaction();
+
+        using (var exists = connection.CreateCommand())
+        {
+            exists.Transaction = transaction;
+            exists.CommandText = "SELECT COUNT(*) FROM projects WHERE code=$code";
+            exists.Parameters.AddWithValue("$code", normalizedCode);
+            if (Convert.ToInt32(exists.ExecuteScalar()) > 0)
+                throw new InvalidOperationException($"项目号 {normalizedCode} 已存在，请换一个。");
+        }
+
+        var project = new Project
+        {
+            Id = "PRJ-" + normalizedCode,
+            Code = normalizedCode,
+            Name = projectName,
+            Customer = TextUtil.Normalize(customer),
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+            Version = 1
+        };
+
+        using (var command = connection.CreateCommand())
+        {
+            command.Transaction = transaction;
+            command.CommandText = """
+                INSERT INTO projects(id, code, name, customer, status, created_at, updated_at, version)
+                VALUES ($id, $code, $name, $customer, 'active', $now, $now, 1)
+                """;
+            command.Parameters.AddWithValue("$id", project.Id);
+            command.Parameters.AddWithValue("$code", project.Code);
+            command.Parameters.AddWithValue("$name", project.Name);
+            command.Parameters.AddWithValue("$customer", project.Customer);
+            command.Parameters.AddWithValue("$now", now);
+            command.ExecuteNonQuery();
+        }
+
+        var subprojects = new List<Subproject>();
+        for (var segment = 1; segment <= 3; segment++)
+        {
+            var subCode = SubprojectRules.Code(project.Code, segment);
+            var sub = new Subproject
+            {
+                Id = $"SUB-{subCode}",
+                ProjectId = project.Id,
+                Code = subCode,
+                Name = SubprojectRules.DisplayName(subCode),
+                MachineRange = SubprojectRules.MachineRange(project.Code, segment),
+                Status = "active",
+                SortNo = segment,
+                CreatedAt = now,
+                UpdatedAt = now,
+                Version = 1
+            };
+            subprojects.Add(sub);
+
+            using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = """
+                INSERT INTO subprojects(id, project_id, code, name, machine_range, status, sort_no, created_at, updated_at, version)
+                VALUES ($id, $project, $code, $name, $range, 'active', $sort, $now, $now, 1)
+                """;
+            command.Parameters.AddWithValue("$id", sub.Id);
+            command.Parameters.AddWithValue("$project", project.Id);
+            command.Parameters.AddWithValue("$code", sub.Code);
+            command.Parameters.AddWithValue("$name", sub.Name);
+            command.Parameters.AddWithValue("$range", sub.MachineRange);
+            command.Parameters.AddWithValue("$sort", sub.SortNo);
+            command.Parameters.AddWithValue("$now", now);
+            command.ExecuteNonQuery();
+        }
+
+        transaction.Commit();
+
+        // 同步增量：手机端靠这两类实体建立项目列表，不需要重新配对。
+        WriteProjectChange(project, subprojects);
+        return project;
+    }
+
+    /// <summary>项目/分项目写 change_log，手机端 pull 后落 projects 表。</summary>
+    private void WriteProjectChange(Project project, List<Subproject> subprojects)
+    {
+        try
+        {
+            var json = new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            };
+            using var connection = _database.Open();
+            using var transaction = connection.BeginTransaction();
+            var now = AppTime.UtcNowIso();
+
+            using (var command = connection.CreateCommand())
+            {
+                command.Transaction = transaction;
+                command.CommandText = """
+                    INSERT INTO change_log(entity, entity_id, op, payload, device_id, created_at)
+                    VALUES ('project', $id, 'upsert', $payload, 'desktop', $now)
+                    """;
+                command.Parameters.AddWithValue("$id", project.Id);
+                command.Parameters.AddWithValue("$payload",
+                    System.Text.Json.JsonSerializer.Serialize(project, json));
+                command.Parameters.AddWithValue("$now", now);
+                command.ExecuteNonQuery();
+            }
+
+            foreach (var sub in subprojects)
+            {
+                using var command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = """
+                    INSERT INTO change_log(entity, entity_id, op, payload, device_id, created_at)
+                    VALUES ('subproject', $id, 'upsert', $payload, 'desktop', $now)
+                    """;
+                command.Parameters.AddWithValue("$id", sub.Id);
+                command.Parameters.AddWithValue("$payload",
+                    System.Text.Json.JsonSerializer.Serialize(sub, json));
+                command.Parameters.AddWithValue("$now", now);
+                command.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+        }
+        catch
+        {
+            // 增量日志失败不能阻断新建项目：下次配对/全量同步仍能拿到项目。
+        }
+    }
+
+    private int CountMachines(string projectId)
+    {
+        using var connection = _database.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM machines WHERE project_id=$project";
+        command.Parameters.AddWithValue("$project", projectId);
+        return Convert.ToInt32(command.ExecuteScalar());
     }
 
     public List<Subproject> ListSubprojects(string projectId)
@@ -78,10 +279,10 @@ public sealed class ProjectRepository
     }
 
     /// <summary>总览页：项目卡片、阶段填写率、照片分桶、待确认汇总。</summary>
-    public ProjectOverview GetOverview()
+    public ProjectOverview GetOverview(string? projectId = null)
     {
-        var project = GetMain() ?? new Project { Code = "P7391", Name = "P7391 安装调试问题闭环" };
-        var issues = _issues.All();
+        var project = Get(projectId) ?? GetMain() ?? new Project { Code = "P7391", Name = "P7391 安装调试问题闭环" };
+        var issues = _issues.All(project.Id);
         var subs = ListSubprojects(project.Id);
         var cards = BuildCards(issues, subs, project.Id);
 
@@ -100,14 +301,15 @@ public sealed class ProjectRepository
             Cards = cards,
             StageFills = BuildStageFills(issues),
             PhotoBuckets = BuildPhotoBuckets(issues, subs),
-            LastImportDisplay = LastImportDisplay()
+            LastImportDisplay = LastImportDisplay(project.Id)
         };
     }
 
     /// <summary>工作台：今日待办、风险清单、最近更新。</summary>
-    public DashboardData GetDashboard(User user)
+    public DashboardData GetDashboard(User user, string? projectId = null)
     {
-        var issues = _issues.All();
+        var project = Get(projectId) ?? GetMain();
+        var issues = _issues.All(project?.Id);
         var loads = BuildOwnerLoads(issues);
         var name = user.Name?.Trim() ?? "";
 
@@ -150,10 +352,10 @@ public sealed class ProjectRepository
     }
 
     /// <summary>统计报表：阶段完成率、责任人负载、分项目对比、照片覆盖。</summary>
-    public ReportData GetReport()
+    public ReportData GetReport(string? projectId = null)
     {
-        var project = GetMain() ?? new Project { Code = "P7391" };
-        var issues = _issues.All();
+        var project = Get(projectId) ?? GetMain() ?? new Project { Code = "P7391" };
+        var issues = _issues.All(project.Id);
         var subs = ListSubprojects(project.Id);
 
         // 计划时间分布：只吃语义日期，文字计划（如"已下图"）单独计数，不混进日期轴。
@@ -231,9 +433,9 @@ public sealed class ProjectRepository
     }
 
     /// <summary>分项目详情：机台清单及其问题/倒挂/照片汇总。</summary>
-    public SubprojectDetail? GetSubprojectDetail(string? subprojectCode)
+    public SubprojectDetail? GetSubprojectDetail(string? subprojectCode, string? projectId = null)
     {
-        var project = GetMain();
+        var project = Get(projectId) ?? GetMain();
         if (project == null) return null;
 
         var isUnassigned = string.IsNullOrWhiteSpace(subprojectCode) ||
@@ -244,7 +446,7 @@ public sealed class ProjectRepository
         if (!isUnassigned && sub == null) return null;
 
         var machines = ListMachines(project.Id, sub?.Id, isUnassigned);
-        var issues = _issues.All().Where(i =>
+        var issues = _issues.All(project.Id).Where(i =>
             isUnassigned ? i.SubprojectId == null : i.SubprojectId == sub!.Id).ToList();
         var byMachine = issues.GroupBy(i => i.MachineId).ToDictionary(g => g.Key, g => g.ToList());
 
@@ -275,6 +477,7 @@ public sealed class ProjectRepository
         return new SubprojectDetail
         {
             Subproject = sub,
+            ProjectCode = project.Code,
             Code = sub?.Code ?? UnassignedCode,
             Name = sub?.Name ?? "待确认归属",
             MachineRange = sub?.MachineRange ?? "机台号格式异常，需人工确认",
@@ -467,11 +670,16 @@ public sealed class ProjectRepository
         return Convert.ToInt32(command.ExecuteScalar());
     }
 
-    private string LastImportDisplay()
+    private string LastImportDisplay(string projectId)
     {
         using var connection = _database.Open();
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT created_at FROM import_batches ORDER BY created_at DESC LIMIT 1";
+        command.CommandText = """
+            SELECT created_at FROM import_batches
+            WHERE project_id=$project
+            ORDER BY created_at DESC LIMIT 1
+            """;
+        command.Parameters.AddWithValue("$project", projectId);
         var value = command.ExecuteScalar() as string;
         if (string.IsNullOrWhiteSpace(value))
             value = Database.ReadMeta(connection, "seeded_at");
@@ -508,7 +716,10 @@ public sealed class ProjectRepository
         if (normalized.Length == 0)
             throw new InvalidOperationException("机台号不能为空。");
 
-        var subprojectCode = SubprojectRules.Resolve(normalized);
+        // 分项目归属按所属项目的机台号前缀判定：P7392xxx → P7392-01/02/03。
+        var project = Get(projectId)
+            ?? throw new InvalidOperationException("项目不存在，无法建档机台。");
+        var subprojectCode = SubprojectRules.Resolve(normalized, project.Code);
         string? subprojectId = null;
         if (subprojectCode != null)
         {
@@ -527,7 +738,7 @@ public sealed class ProjectRepository
             SubprojectId = subprojectId,
             Code = normalized,
             Name = normalized,
-            SeqNo = TextUtil.MachineSeq(normalized),
+            SeqNo = TextUtil.MachineSeq(normalized, project.Code),
             Status = "active",
             CreatedAt = now,
             UpdatedAt = now

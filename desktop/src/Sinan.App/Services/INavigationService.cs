@@ -22,6 +22,12 @@ public interface INavigationService
     /// </summary>
     void NavigateToSubproject(string? subprojectCode);
 
+    /// <summary>
+    /// 打开"切换总项目"弹窗（总览头卡入口）：列出现有项目 + 新建项目。
+    /// 由主壳统一执行，页面只负责给一个可点区域。
+    /// </summary>
+    void OpenProjectSwitch();
+
     /// <summary>返回上一页；栈空时回工作台。</summary>
     void Back();
 

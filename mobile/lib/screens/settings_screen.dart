@@ -167,7 +167,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    '内置 36 条虚构种子（P7391 系列，照片数为演示占位值）；'
+                    '内置 36 条虚构种子（演示项目，照片数为演示占位值）；'
                     '本机新建的现场记录只存在这台手机，联网后按 outbox 队列补传。',
                     style:
                         TextStyle(fontSize: 10.5, height: 1.5, color: p.faint),
@@ -209,7 +209,7 @@ class SettingsScreen extends StatelessWidget {
                                     fontSize: 13.5,
                                     fontWeight: FontWeight.w700,
                                     color: p.fg)),
-                            Text('P7391 安装调试问题闭环系统 · 现场端',
+                            Text('安装调试问题闭环系统 · 现场端',
                                 style: TextStyle(
                                     fontSize: 10.5, color: p.faint)),
                           ],

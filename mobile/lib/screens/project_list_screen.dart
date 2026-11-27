@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../data/issue_repository.dart';
 import '../models/attachment.dart';
 import '../models/issue.dart';
+import '../models/project.dart';
 import '../state/app_state.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
@@ -31,13 +32,29 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
   }
 
   Future<void> _loadPhotos() async {
-    final list = await widget.state.repository.recentAttachments(limit: 6);
+    final list = await widget.state.repository.recentAttachments(
+        limit: 6, projectId: widget.state.currentProjectId);
     final resolved = <({IssueAttachment attachment, String? path})>[];
     for (final a in list) {
       resolved.add((attachment: a, path: await widget.state.attachments.absolutePath(a.storedPath)));
     }
     if (!mounted) return;
     setState(() => _photos = resolved);
+  }
+
+  /// 切换总项目：点一行即切，切完重载本项目的现场照片。
+  /// 新项目由桌面端创建并同步下发，手机端不在这里造项目。
+  Future<void> _openProjectSwitch() async {
+    final selected = await showModalBottomSheet<Project>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ProjectSwitchSheet(state: widget.state),
+    );
+    if (selected == null) return;
+    await widget.state.switchProject(selected);
+    if (!mounted) return;
+    await _loadPhotos();
   }
 
   @override
@@ -98,6 +115,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
   }
 
   Widget _hero(SinanPalette p, IssueStats stats) {
+    final project = widget.state.currentProject;
     return GlassCard(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       child: Column(
@@ -111,7 +129,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                   gradient: p.primaryGradient,
                   borderRadius: BorderRadius.circular(7),
                 ),
-                child: Text('P7391',
+                child: Text(widget.state.projectCode,
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
@@ -119,11 +137,32 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                         fontFeatures: const [FontFeature.tabularFigures()])),
               ),
               const Spacer(),
-              const SinanChip(text: '进行中', tone: 'ok', dense: true),
+              // 项目切换入口：与桌面端同一位置口径，放在状态 Chip 左侧。
+              TextButton.icon(
+                onPressed: _openProjectSwitch,
+                icon: Icon(Icons.swap_horiz, size: 14, color: p.primary),
+                label: Text('切换',
+                    style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: p.primary)),
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(0, 26),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+              const SizedBox(width: 4),
+              SinanChip(
+                  text: project?.statusLabel ?? '进行中',
+                  tone: 'ok',
+                  dense: true),
             ],
           ),
           const SizedBox(height: 8),
-          Text('安装调试问题闭环',
+          Text(project?.shortName ?? '安装调试问题闭环',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                   fontSize: 15, fontWeight: FontWeight.w700, color: p.fg)),
           const SizedBox(height: 2),
@@ -165,6 +204,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
         for (final s in stats.subprojects)
           _SubprojectTile(
             summary: s,
+            projectCode: widget.state.projectCode,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => SubprojectScreen(
@@ -284,17 +324,22 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
   }
 
   Widget _syncStrip(SinanPalette p) {
+    final paired = widget.state.syncConfigured;
     return GlassCard(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       radius: 14,
       child: Row(
         children: [
-          Icon(Icons.cloud_off_outlined, size: 16, color: p.accent),
+          Icon(paired ? Icons.cloud_done_outlined : Icons.cloud_off_outlined,
+              size: 16, color: p.accent),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
+              // 同步服务已随桌面端启动：这里只说本机缓存/待传与配对状态，
+              // 不再写"同步服务未启用"（未配对时给出去同步中心填写地址的指引）。
               '本机缓存 ${widget.state.issues.length} 条 · '
-              '${widget.state.pendingOutbox} 条待传 · 同步服务未启用',
+              '${widget.state.pendingOutbox} 条待传 · '
+              '${paired ? '已配对 ${widget.state.syncServerUrl}' : '未配对，到同步中心填写桌面端地址'}',
               style: TextStyle(fontSize: 10.5, color: p.muted),
             ),
           ),
@@ -347,9 +392,14 @@ class _HeroMetric extends StatelessWidget {
 }
 
 class _SubprojectTile extends StatelessWidget {
-  const _SubprojectTile({required this.summary, required this.onTap});
+  const _SubprojectTile({
+    required this.summary,
+    required this.projectCode,
+    required this.onTap,
+  });
 
   final SubprojectSummary summary;
+  final String projectCode;
   final VoidCallback onTap;
 
   @override
@@ -366,7 +416,7 @@ class _SubprojectTile extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(pending ? 'P7391-??' : summary.code,
+                child: Text(pending ? '$projectCode-??' : summary.code,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -393,6 +443,177 @@ class _SubprojectTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 10, color: p.muted)),
         ],
+      ),
+    );
+  }
+}
+
+/// 总项目切换弹层：点一行即切换，规模数字来自 AppState 的实时缓存。
+/// 手机端不在这里新建项目——桌面端是主库，新建后靠同步下发。
+class _ProjectSwitchSheet extends StatelessWidget {
+  const _ProjectSwitchSheet({required this.state});
+
+  final AppState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final summaries = state.projectSummaries;
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+        decoration: BoxDecoration(
+          color: p.panel,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: p.cardBorder),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 8, 0),
+              child: Row(
+                children: [
+                  Icon(Icons.swap_horiz, size: 18, color: p.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text('切换总项目',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: p.fg)),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    tooltip: '关闭',
+                    icon: Icon(Icons.close, size: 18, color: p.muted),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('点一行即切换；待办、台账、统计全部跟随新项目。',
+                    style: TextStyle(fontSize: 10.5, color: p.faint)),
+              ),
+            ),
+            if (summaries.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 16, color: p.faint),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text('本机还没有项目，先与桌面端同步一次。',
+                          style: TextStyle(fontSize: 10.5, color: p.muted)),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.5),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 6),
+                  itemCount: summaries.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 6),
+                  itemBuilder: (context, i) => _ProjectSwitchRow(
+                    summary: summaries[i],
+                    onTap: () =>
+                        Navigator.of(context).pop(summaries[i].project),
+                  ),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: Row(
+                children: [
+                  Icon(Icons.desktop_windows_outlined,
+                      size: 14, color: p.faint),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text('新项目在桌面端创建，同步后出现在这里。',
+                        style: TextStyle(fontSize: 10, color: p.faint)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProjectSwitchRow extends StatelessWidget {
+  const _ProjectSwitchRow({required this.summary, required this.onTap});
+
+  final ProjectSummary summary;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final project = summary.project;
+    return Material(
+      color: summary.isCurrent ? p.primaryDim : p.well,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  gradient: p.primaryGradient,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(project.code,
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: p.onPrimary,
+                        fontFeatures: const [FontFeature.tabularFigures()])),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(project.shortName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: p.fg)),
+                    const SizedBox(height: 3),
+                    Text(summary.metricText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 10, color: p.muted)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              if (summary.isCurrent)
+                const SinanChip(text: '当前', tone: 'ok', dense: true)
+              else
+                Icon(Icons.chevron_right, size: 18, color: p.faint),
+            ],
+          ),
+        ),
       ),
     );
   }

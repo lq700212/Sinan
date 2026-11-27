@@ -29,10 +29,11 @@ public sealed class IssueRepository
     {
         using var connection = _database.Open();
         var sql = """
-            SELECT i.*, m.code AS machine_code, sp.code AS subproject_code
+            SELECT i.*, m.code AS machine_code, sp.code AS subproject_code, p.code AS project_code
             FROM issues i
             JOIN machines m ON m.id = i.machine_id
             LEFT JOIN subprojects sp ON sp.id = i.subproject_id
+            LEFT JOIN projects p ON p.id = i.project_id
             WHERE i.deleted_at IS NULL
             """;
         var conditions = new List<string>();
@@ -82,16 +83,30 @@ public sealed class IssueRepository
             .ToList();
     }
 
-    public List<Issue> All()
+    /// <summary>
+    /// 全部在册问题；传 projectId 时只取该项目。
+    /// 多总项目后所有页面都必须带项目 ID，禁止再取全库（否则统计会串项目）。
+    /// </summary>
+    public List<Issue> All(string? projectId = null)
     {
         using var connection = _database.Open();
+        var conditions = new List<string>();
+        void Param(SqliteParameterCollection p)
+        {
+            if (!string.IsNullOrWhiteSpace(projectId))
+            {
+                conditions.Add("i.project_id=$project");
+                p.AddWithValue("$project", projectId);
+            }
+        }
         return LoadIssues(connection, null, """
-            SELECT i.*, m.code AS machine_code, sp.code AS subproject_code
+            SELECT i.*, m.code AS machine_code, sp.code AS subproject_code, p.code AS project_code
             FROM issues i
             JOIN machines m ON m.id = i.machine_id
             LEFT JOIN subprojects sp ON sp.id = i.subproject_id
+            LEFT JOIN projects p ON p.id = i.project_id
             WHERE i.deleted_at IS NULL
-            """, new List<string>(), null, 0)
+            """, conditions, Param, 0)
             .OrderBy(i => i.SourceRow ?? int.MaxValue)
             .ToList();
     }
@@ -100,10 +115,11 @@ public sealed class IssueRepository
     {
         using var connection = _database.Open();
         var issues = LoadIssues(connection, null, """
-            SELECT i.*, m.code AS machine_code, sp.code AS subproject_code
+            SELECT i.*, m.code AS machine_code, sp.code AS subproject_code, p.code AS project_code
             FROM issues i
             JOIN machines m ON m.id = i.machine_id
             LEFT JOIN subprojects sp ON sp.id = i.subproject_id
+            LEFT JOIN projects p ON p.id = i.project_id
             WHERE i.id=$id AND i.deleted_at IS NULL
             """, new List<string> { "i.id=$id" },
             p => p.AddWithValue("$id", id), 1);
@@ -186,10 +202,11 @@ public sealed class IssueRepository
         using var transaction = connection.BeginTransaction();
 
         var issue = LoadIssues(connection, transaction, """
-            SELECT i.*, m.code AS machine_code, sp.code AS subproject_code
+            SELECT i.*, m.code AS machine_code, sp.code AS subproject_code, p.code AS project_code
             FROM issues i
             JOIN machines m ON m.id = i.machine_id
             LEFT JOIN subprojects sp ON sp.id = i.subproject_id
+            LEFT JOIN projects p ON p.id = i.project_id
             WHERE i.id=$id AND i.deleted_at IS NULL
             """, new List<string> { "i.id=$id" },
             p => p.AddWithValue("$id", issueId), 1).FirstOrDefault()
@@ -298,10 +315,11 @@ public sealed class IssueRepository
         using var transaction = connection.BeginTransaction();
 
         var issue = LoadIssues(connection, transaction, """
-            SELECT i.*, m.code AS machine_code, sp.code AS subproject_code
+            SELECT i.*, m.code AS machine_code, sp.code AS subproject_code, p.code AS project_code
             FROM issues i
             JOIN machines m ON m.id = i.machine_id
             LEFT JOIN subprojects sp ON sp.id = i.subproject_id
+            LEFT JOIN projects p ON p.id = i.project_id
             WHERE i.id=$id AND i.deleted_at IS NULL
             """, new List<string> { "i.id=$id" },
             p => p.AddWithValue("$id", draft.Id), 1).FirstOrDefault()
@@ -421,9 +439,10 @@ public sealed class IssueRepository
         using var connection = _database.Open();
         using var transaction = connection.BeginTransaction();
         var before = LoadIssues(connection, transaction, """
-            SELECT i.*, m.code AS machine_code, sp.code AS subproject_code
+            SELECT i.*, m.code AS machine_code, sp.code AS subproject_code, p.code AS project_code
             FROM issues i JOIN machines m ON m.id=i.machine_id
             LEFT JOIN subprojects sp ON sp.id=i.subproject_id
+            LEFT JOIN projects p ON p.id=i.project_id
             WHERE i.id=$id AND i.deleted_at IS NULL
             """, new List<string> { "i.id=$id" }, p => p.AddWithValue("$id", issueId), 1)
             .FirstOrDefault() ?? throw new InvalidOperationException("问题不存在或已删除。");
@@ -475,9 +494,10 @@ public sealed class IssueRepository
         using var connection = _database.Open();
         using var transaction = connection.BeginTransaction();
         var before = LoadIssues(connection, transaction, """
-            SELECT i.*, m.code AS machine_code, sp.code AS subproject_code
+            SELECT i.*, m.code AS machine_code, sp.code AS subproject_code, p.code AS project_code
             FROM issues i JOIN machines m ON m.id=i.machine_id
             LEFT JOIN subprojects sp ON sp.id=i.subproject_id
+            LEFT JOIN projects p ON p.id=i.project_id
             WHERE i.id=$id AND i.deleted_at IS NULL
             """, new List<string> { "i.id=$id" }, p => p.AddWithValue("$id", issueId), 1)
             .FirstOrDefault() ?? throw new InvalidOperationException("问题不存在或已删除。");
@@ -611,6 +631,7 @@ public sealed class IssueRepository
     {
         Id = reader.Str("id"),
         ProjectId = reader.Str("project_id"),
+        ProjectCode = reader.StrOrNull("project_code") ?? "",
         SubprojectId = reader.StrOrNull("subproject_id"),
         MachineId = reader.Str("machine_id"),
         MachineCode = reader.Str("machine_code"),

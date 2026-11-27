@@ -38,15 +38,18 @@ class _MachineSelectScreenState extends State<MachineSelectScreen> {
   }
 
   Future<void> _load() async {
-    final list = await widget.state.repository.machines();
+    final list = await widget.state.repository
+        .machines(projectId: widget.state.currentProjectId);
     if (!mounted) return;
     setState(() => _machines = list);
   }
 
   void _confirm(String value) {
     final machine = value.trim().toUpperCase();
-    if (!Rules.isMachineCode(machine)) {
-      setState(() => _error = '机台号格式应为 P7391 + 3 位序号，例如 P7391106。');
+    final projectCode = widget.state.projectCode;
+    if (!Rules.isMachineCode(machine, projectCode: projectCode)) {
+      setState(() =>
+          _error = '机台号格式应为 $projectCode + 3 位序号，例如 ${projectCode}106。');
       return;
     }
     Navigator.of(context).pop(machine);
@@ -74,10 +77,11 @@ class _MachineSelectScreenState extends State<MachineSelectScreen> {
                             controller: _machine,
                             textCapitalization: TextCapitalization.characters,
                             onSubmitted: _confirm,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: '手动输入机台号',
-                              hintText: 'P7391106',
-                              prefixIcon: Icon(Icons.keyboard_alt_outlined, size: 18),
+                              hintText: '${widget.state.projectCode}106',
+                              prefixIcon:
+                                  const Icon(Icons.keyboard_alt_outlined, size: 18),
                               isDense: true,
                             ),
                           ),

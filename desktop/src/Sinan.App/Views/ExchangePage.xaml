@@ -738,7 +738,7 @@
                                             <TextBlock FontSize="11" Margin="0,5,0,0" TextWrapping="Wrap"
                                                        LineHeight="17"
                                                        Foreground="{DynamicResource Brush.Muted}"
-                                                       Text="按机台号百位段归入 P7391-01 / 02 / 03；无法匹配的机台号导入后进“待确认”。"/>
+                                                       Text="按机台号百位段归入当前项目的 01 / 02 / 03；无法匹配的机台号导入后进“待确认”。"/>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -1428,7 +1428,7 @@
                             <Run Text="按 ID 匹配已有行 → 更新四阶段与状态；原表有、系统无 → 新增；系统有、原表无 → 保留并在报告里列出，不擅自删除。"/>
                             <LineBreak/>
                             <Run Text="照片规则：" FontWeight="Bold"/>
-                            <Run Text="图片不写进 Excel 单元格，导出 ZIP（photos/P7391-xxx/）+ manifest.csv（问题号、文件名、拍摄时间、SHA256）。"/>
+                            <Run Text="图片不写进 Excel 单元格，导出 ZIP（photos/问题号/）+ manifest.csv（问题号、文件名、拍摄时间、SHA256）。"/>
                         </TextBlock>
                     </Border>
                 </Grid>

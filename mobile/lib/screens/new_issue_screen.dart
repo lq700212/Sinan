@@ -105,8 +105,11 @@ class _NewIssueScreenState extends State<NewIssueScreen> {
       setState(() => _error = '请先选择机台。');
       return;
     }
-    if (!Rules.isMachineCode(machine)) {
-      setState(() => _error = '机台号格式应为 P7391 + 3 位序号，例如 P7391106。');
+    if (!Rules.isMachineCode(machine,
+        projectCode: widget.state.projectCode)) {
+      setState(() =>
+          _error = '机台号格式应为 ${widget.state.projectCode} + 3 位序号，'
+              '例如 ${widget.state.projectCode}106。');
       return;
     }
     if (title.isEmpty) {

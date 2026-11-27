@@ -39,12 +39,12 @@ public sealed class SubprojectViewModel : ObservableObject
     {
         _nav = nav;
 
-        _data = app.Projects.GetSubprojectDetail(subprojectCode)
+        _data = app.Projects.GetSubprojectDetail(subprojectCode, app.ProjectsContext.CurrentId)
                 ?? throw new InvalidOperationException($"分项目不存在：{subprojectCode}");
 
         // 一次全表快照 + 分组，切设备时零查询。
         // 排序口径与台账默认一致：倒挂优先 → 源表序号，两处看到同一顺序。
-        _issuesByMachine = app.Issues.All()
+        _issuesByMachine = app.Issues.All(app.ProjectsContext.CurrentId)
             .GroupBy(i => i.MachineId)
             .ToDictionary(
                 g => g.Key,
@@ -61,6 +61,7 @@ public sealed class SubprojectViewModel : ObservableObject
         SelectedMachine = Machines.FirstOrDefault(m => m.IssueCount > 0) ?? Machines.FirstOrDefault();
     }
 
+    public string ProjectCode => _data.ProjectCode;
     public string Code => _data.Code;
     public string Name => _data.Name;
     public string MachineRange => _data.MachineRange;
@@ -206,7 +207,7 @@ public sealed class SubprojectViewModel : ObservableObject
         return new SubprojectIssueCard
         {
             Id = issue.Id,
-            CodeText = $"P7391-{issue.DisplaySeqNo}",
+            CodeText = issue.DisplayCode,
             Title = issue.Title,
             SolutionLine = string.IsNullOrWhiteSpace(issue.Solution) ? "解决措施：—" : $"解决措施：{issue.Solution}",
             OwnerText = owner,

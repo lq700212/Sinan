@@ -5,7 +5,7 @@
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:vm="clr-namespace:Sinan.App.ViewModels"
         xmlns:views="clr-namespace:Sinan.App.Views"
-        Title="司南 · P7391 安装调试问题闭环系统"
+        Title="司南 · 安装调试问题闭环系统"
         Icon="/Sinan;component/Assets/app.ico"
         Width="1440" Height="900" MinWidth="1280" MinHeight="800"
         WindowStartupLocation="CenterScreen"
@@ -272,7 +272,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <TextBlock FontSize="10" Foreground="{DynamicResource Brush.Faint}">
-                            <Run Text="演示数据 P7391 · "/><Run Text="{Binding IssueTotal, Mode=OneWay}"/><Run Text=" 条问题 / "/><Run Text="{Binding MachineCount, Mode=OneWay}"/><Run Text=" 台机台 · 照片为演示占位"/>
+                            <Run Text="演示数据 "/><Run Text="{Binding ProjectCode, Mode=OneWay}"/><Run Text=" · "/><Run Text="{Binding IssueTotal, Mode=OneWay}"/><Run Text=" 条问题 / "/><Run Text="{Binding MachineCount, Mode=OneWay}"/><Run Text=" 台机台 · 照片为演示占位"/>
                         </TextBlock>
                     </StackPanel>
                 </Grid>

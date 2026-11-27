@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 
 import '../app_info.dart';
@@ -57,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _brandMark(p),
+                    _brandMark(),
                     const SizedBox(height: 16),
                     Text(
                       '司南',
@@ -70,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'P7391 · 现场问题闭环',
+                      '现场问题闭环',
                       style: TextStyle(fontSize: 12.5, color: p.muted, letterSpacing: 1),
                     ),
                     const SizedBox(height: 26),
@@ -88,12 +90,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           Text('离线优先，数据先存本机，联网后再同步。',
                               style: TextStyle(fontSize: 11.5, color: p.faint)),
                           const SizedBox(height: 18),
-                          TextField(
-                            controller: _account,
-                            textInputAction: TextInputAction.next,
-                            decoration: const InputDecoration(
-                              labelText: '账号',
-                              prefixIcon: Icon(Icons.person_outline, size: 18),
+                          // 账号框不显示“账号”标签：值已预填 engineer，左侧人形图标足够表意。
+                          // 仍保留读屏用的语义标签，删除的只是视觉文本。
+                          Semantics(
+                            label: '账号',
+                            child: TextField(
+                              controller: _account,
+                              textInputAction: TextInputAction.next,
+                              decoration: const InputDecoration(
+                                prefixIcon: Icon(Icons.person_outline, size: 18),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -201,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    Text('${AppInfo.label} · 仅限 P7391 调试组',
+                    Text('${AppInfo.label} · 仅限现场调试组',
                         style: TextStyle(fontSize: 10.5, color: p.faint)),
                   ],
                 ),
@@ -231,30 +237,78 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _brandMark(SinanPalette p) {
-    return Container(
-      width: 64,
-      height: 64,
-      decoration: BoxDecoration(
-        gradient: p.primaryGradient,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: p.primary.withValues(alpha: 0.35),
-            blurRadius: 22,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      alignment: Alignment.center,
-      child: const Text(
-        '司',
-        style: TextStyle(
-          fontSize: 30,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-        ),
-      ),
+  /// 品牌图标：与系统启动画面（Android 12 splash）显示的应用图标一致——
+  /// 橙色地盘圆环 + 白色司南磁勺（`docs/branding/logo-2-ladle.svg`，
+  /// 背景色取 `android/res/values/colors.xml` 的 `ic_launcher_background`）。
+  /// 用矢量复刻而不是位图，60px 与高分辨率下都清晰。
+  Widget _brandMark() {
+    return const SizedBox(
+      width: 60,
+      height: 60,
+      child: CustomPaint(painter: _LadleMarkPainter()),
     );
   }
+}
+
+/// 绘制司南磁勺图标（128×128 设计坐标，等比缩放到目标尺寸）。
+/// 几何与 `logo-2-ladle.svg` 逐点对应，唯一的差异是把 SVG 的圆角方块地盘
+/// 改成圆形——即启动画面里系统的圆形裁剪效果。
+class _LadleMarkPainter extends CustomPainter {
+  const _LadleMarkPainter();
+
+  static const double _design = 128; // SVG viewBox 边长
+  static const Color _plate = Color(0xFFC5540A); // 与 ic_launcher_background 同色
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width / _design;
+    final center = Offset(size.width / 2, size.height / 2);
+    final white = Paint()
+      ..color = Colors.white
+      ..isAntiAlias = true;
+
+    // 地盘：实心圆
+    canvas.drawCircle(
+      center,
+      64 * s,
+      Paint()
+        ..color = _plate
+        ..isAntiAlias = true,
+    );
+
+    // 地盘圆环：SVG 为白色 50% 透明、线宽 4、半径 42
+    canvas.drawCircle(
+      center,
+      42 * s,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4 * s
+        ..color = Colors.white.withValues(alpha: 0.5)
+        ..isAntiAlias = true,
+    );
+
+    // 磁勺：绕中心逆时针 38°，与 SVG 的 rotate(-38 64 64) 一致
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(-38 * math.pi / 180);
+    canvas.translate(-center.dx, -center.dy);
+
+    // 勺头
+    canvas.drawCircle(Offset(64 * s, 45 * s), 14 * s, white);
+
+    // 勺柄：上宽下尖的多边形
+    final stem = Path()
+      ..moveTo(58 * s, 52 * s)
+      ..lineTo(70 * s, 52 * s)
+      ..lineTo(66 * s, 92 * s)
+      ..lineTo(64 * s, 99 * s)
+      ..lineTo(62 * s, 92 * s)
+      ..close();
+    canvas.drawPath(stem, white);
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _LadleMarkPainter oldDelegate) => false;
 }

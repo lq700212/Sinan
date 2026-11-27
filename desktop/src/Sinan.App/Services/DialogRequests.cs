@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Sinan.Core.Models;
 
 namespace Sinan.App.Services;
 
@@ -196,4 +197,37 @@ public sealed class ExportConfirmResult
 
     /// <summary>导出完成后是否打开文件夹。</summary>
     public bool OpenFolderAfterExport { get; set; } = true;
+}
+
+/// <summary>
+/// 切换总项目弹窗的请求（总览头卡"切换项目"）。
+/// 项目行与实时规模统计由 ProjectRepository.ListSummaries 生成，
+/// 弹窗只负责展示与选择，不自己查库。
+/// </summary>
+public sealed class ProjectSwitchRequest
+{
+    public List<ProjectSummary> Projects { get; set; } = new();
+    public string CurrentProjectId { get; set; } = "";
+}
+
+/// <summary>切换弹窗的结果：选中一个已有项目，或转去新建。</summary>
+public sealed class ProjectSwitchResult
+{
+    public string SelectedProjectId { get; set; } = "";
+    public bool CreateNew { get; set; }
+}
+
+/// <summary>新建总项目弹窗的请求；建议项目号与已有项目号由调用方查库后带入。</summary>
+public sealed class ProjectCreateRequest
+{
+    public string SuggestedCode { get; set; } = "";
+    public List<string> ExistingCodes { get; set; } = new();
+}
+
+/// <summary>新建总项目弹窗的结果；字段校验在弹窗内就地完成。</summary>
+public sealed class ProjectCreateResult
+{
+    public string Code { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Customer { get; set; } = "";
 }
