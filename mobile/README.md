@@ -13,7 +13,7 @@
 
 | 项 | 值 | 口径 |
 |---|---|---|
-| 手机端版本 | `0.0.5+5` | 与桌面端各自独立升版，只动第三位；唯一来源 `pubspec.yaml`，界面只读 `lib/app_info.dart` |
+| 手机端版本 | `0.0.6+6` | 与桌面端各自独立升版，只动第三位；唯一来源 `pubspec.yaml`，界面只读 `lib/app_info.dart` |
 | Android 最低 | API 24 / Android 7.0 | `minSdk`，Flutter 3.50 引擎下限，主流现场手机都能装 |
 | Android 目标 | API 36 / Android 16 | `targetSdk`，行为适配目标，**不是装机上限** |
 | Android 编译 | API 36 | `compileSdk`，与 Flutter 引擎一致 |
@@ -39,7 +39,12 @@ $env:PUB_HOSTED_URL = 'https://pub.flutter-io.cn'
 flutter pub get
 flutter test          # 纯规则回归，22 条
 flutter analyze       # 应为 0 issue
+
+# 开发调试包（体积大，不用于分发）
 flutter build apk --debug
+
+# 现场发布包：按 CPU 架构拆分，只带一套原生库
+flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64
 ```
 
 `image_picker` 必须用官方源安装：镜像缺 `image_picker_android`，会解析失败。
@@ -48,6 +53,26 @@ flutter build apk --debug
 Gradle 已配置腾讯云镜像，Maven 已配置阿里云镜像，见
 `android/gradle/wrapper/gradle-wrapper.properties` 与 `android/settings.gradle.kts`。
 iOS 工程保留但本机无法构建（需 macOS）。
+
+### 包体积口径（v0.0.6 起）
+
+| 产物 | 体积 | 说明 |
+|---|---|---|
+| `app-debug.apk` | 约 86 MB | 开发调试用：三套 ABI + JIT 引擎 + 调试符号，**不要拿去现场装**（优化前 184MB） |
+| `app-release.apk` | 约 24.6 MB | 通用发布包：仍含三套 ABI，只用于归档/兜底（单独执行 `flutter build apk --release`） |
+| `app-arm64-v8a-release.apk` | 约 8.8 MB | **现场首选**：Android 7+ 的主流 64 位手机 |
+| `app-armeabi-v7a-release.apk` | 约 8.5 MB | 32 位老机型兜底 |
+
+体积来自三处收紧，改构建配置前先读 `android/app/build.gradle.kts` 里的注释：
+
+- `--split-per-abi`：每个 APK 只带一套 `libflutter.so` / `libapp.so`，不再三套全塞；
+- `jniLibs.useLegacyPackaging = true`：APK 内 `.so` 压缩存储（安装时系统解压），
+  压缩后原生库体积约减半；
+- `androidResources.localeFilters = ["zh", "en"]`：裁掉 AndroidX 自带的几十种语言资源。
+
+`flutter build apk --split-per-abi` 会按 ABI 自动给 `versionCode` 加偏移
+（arm64 为 `2000 + 版本号`，armv7 为 `1000 + 版本号`），这是 Flutter 的正常行为，
+`versionName` 仍是 `pubspec.yaml` 里的值。
 
 ## 图标
 

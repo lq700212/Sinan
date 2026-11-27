@@ -234,7 +234,7 @@ Sinan/
 | --- | --- |
 | 桌面端 | .NET 10 + WPF（`net10.0-windows`），MVVM，自写最小 `ObservableObject` / `RelayCommand` |
 | 手机端 | Flutter + Dart 3.14，MVVM，`sqflite` + `shared_preferences`（Android 可构建，iOS 仅设计支持） |
-| 手机端兼容 | Android 7.0+（`minSdk` 24 / `targetSdk` 36）、iOS 15.0+；手机端版本 v0.0.5 |
+| 手机端兼容 | Android 7.0+（`minSdk` 24 / `targetSdk` 36）、iOS 15.0+；手机端版本 v0.0.6 |
 | 数据库 | SQLite（WAL，单文件），`Microsoft.Data.Sqlite` 10.0；15 张表 |
 | Excel | NPOI 2.7.3，同时支持 `.xls`（BIFF8）与 `.xlsx` |
 | 复用库 | `Kaleidoscope.UI`：窗基类、标题栏、胶囊圆角控件、圆角自检 |
@@ -272,10 +272,16 @@ cd mobile
 flutter pub get
 flutter test          # 规则回归 22 条
 flutter analyze       # 应为 0 issue
+
+# 开发调试包（约 184MB，不用于分发）
 flutter build apk --debug
+
+# 现场发布包（按 ABI 拆分，arm64 约 8.8MB / armv7 约 8.5MB）
+flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64
 ```
 
-产物：`mobile/build/app/outputs/flutter-apk/app-debug.apk`。
+产物：调试包 `mobile/build/app/outputs/flutter-apk/app-debug.apk`；
+发布包 `app-arm64-v8a-release.apk`（现场首选）与 `app-armeabi-v7a-release.apk`（32 位兜底）。
 Android 构建走国内镜像：Gradle 腾讯云、Maven 阿里云（已写入
 `mobile/android/gradle/wrapper/gradle-wrapper.properties` 与 `settings.gradle.kts`）。
 Flutter 资源与 pub 包建议设置 `FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn`、

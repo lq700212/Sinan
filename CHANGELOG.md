@@ -1,5 +1,41 @@
 # 变更记录
 
+## 开发期（2026-11-27）手机端包体积优化（手机 v0.0.6）
+
+### 问题
+- 现场反馈 App 安装包太大：`app-debug.apk` 达 184MB，通用 release 包也有 53.8MB。
+  拆包后确认体积几乎全在 `lib/`：三套 ABI（arm64 / armv7 / x86_64）各带一份
+  `libflutter.so` + `libapp.so`，且 Flutter 默认以未压缩方式存 `.so`。
+- 业务代码和资源不是大头：`classes.dex` 0.9MB、`res` 0.3MB、种子 JSON 35KB，
+  Material / Cupertino 图标字体已被 tree-shake 到不足 9KB。
+
+### 手机端
+- `android/app/build.gradle.kts` 增加 `packaging.jniLibs.useLegacyPackaging = true`：
+  APK 内 `.so` 压缩存储，安装时由系统解压；运行时行为不变，APK 传输体积约减半。
+- 增加 `androidResources.localeFilters = ["zh", "en"]`：裁掉 AndroidX / image_picker
+  自带的几十种语言字符串资源，只保留中文与英文兜底。
+- 移除未使用的 `cupertino_icons` 依赖；`main.dart` 不再注册
+  `GlobalCupertinoLocalizations`（现场端只用 Material 组件，MaterialApp 仍自动带
+  `DefaultCupertinoLocalizations` 兜底），避免 Cupertino 全量语言表进入 `libapp.so`。
+- 版本 `0.0.5+5 → 0.0.6+6`：`pubspec.yaml` 与 `lib/app_info.dart` 同步。
+
+### 构建口径（现场发布）
+```powershell
+flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64
+```
+
+### 验证
+- `flutter analyze` 0 issue；`flutter test` 22 条全过。
+- 体积对比（同一台机器、同一 Flutter 3.50）：
+  - 优化前 debug：184MB；优化后 debug：85.7MB（`.so` 压缩生效）；
+  - 优化前通用 release：53.8MB；优化后通用 release：24.6MB（-54%）；
+  - 优化后 arm64 分包：8.8MB（-84%）；armv7 分包：8.5MB。
+- `aapt dump badging` 反查 arm64 包：`versionName=0.0.6`、`sdkVersion 24`、
+  `targetSdkVersion 36`、`INTERNET`、`native-code: arm64-v8a` 均正确；
+  split 包的 `versionCode=2006` 是 Flutter 按 ABI 自动加的偏移（2000 + 6），属正常。
+- `zipalign -c -P 16 -v 4` 通过（16KB 页对齐）。
+- 本机无 Android 设备在线，未做真机安装回归；仅完成构建与静态校验。
+
 ## 开发期（2026-11-27）手机端去掉启动加载页（手机 v0.0.5）
 
 ### 问题

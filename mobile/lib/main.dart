@@ -1,5 +1,4 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter_localizations/flutter_localizations.dart'
     show GlobalWidgetsLocalizations;
 
@@ -40,10 +39,13 @@ class SinanApp extends StatelessWidget {
           themeMode: state.themeMode,
           locale: const Locale('zh', 'CN'),
           supportedLocales: const [Locale('zh', 'CN')],
+          // 现场端只构建 Android，界面全部是 Material 组件：
+          // 不再注册 GlobalCupertinoLocalizations，避免把 Cupertino 的全量语言
+          // 字符串打进 libapp.so（MaterialApp 仍会自动带 DefaultCupertinoLocalizations
+          // 作为兜底，不影响任何现有控件）。中文文案由 GlobalMaterialLocalizations 提供。
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
           ],
           builder: (context, child) {
             // 固定系统字号缩放上限，避免现场大字体把布局挤爆。

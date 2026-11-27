@@ -38,6 +38,24 @@ android {
         versionName = flutter.versionName
     }
 
+    // 现场端只提供中文界面（英文仅作 Material 组件兜底），
+    // 但 AndroidX / image_picker 等依赖自带几十种语言的字符串资源。
+    // 裁剪到 zh + en，release 包里不再携带用不到的语言，减小 APK。
+    // AGP 9 的公开 DSL 是 androidResources.localeFilters（旧 resourceConfigurations 已废弃）。
+    androidResources {
+        localeFilters += listOf("zh", "en")
+    }
+
+    packaging {
+        // Flutter 默认把 libflutter.so / libapp.so 以“未压缩”方式存进 APK
+        // （启动时直接 mmap，省一次解压）。现场端主要靠 U 盘/微信分发 APK，
+        // 传输体积比首次启动快几十毫秒更重要，因此改为压缩存储：
+        // APK 内 .so 压掉约一半，安装时由系统解压，运行时行为不变。
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

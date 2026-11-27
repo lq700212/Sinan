@@ -52,7 +52,7 @@ mobile/
 ## 3. 版本与平台兼容（改清单前必读）
 
 **版本号（与桌面端各自独立）**：`pubspec.yaml` 的 `version` 是唯一来源，界面只读
-`lib/app_info.dart`。当前 `0.0.5+5`（`+5` 是 build number，Android `versionCode` /
+`lib/app_info.dart`。当前 `0.0.6+6`（`+6` 是 build number，Android `versionCode` /
 iOS `CFBundleVersion`）。
 
 - **默认只升 patch**：`0.0.1 → 0.0.2 → 0.0.3`，永远只动第三位；`0.0.9` 之后是
@@ -143,8 +143,21 @@ cd mobile
 flutter pub get
 flutter analyze       # 应为 0 issue
 flutter test          # 纯规则回归，当前 22 条
+
+# 开发调试包（体积大，不用于分发）
 flutter build apk --debug
+
+# 现场发布包：按 CPU 架构拆分，只带一套原生库
+flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64
 ```
+
+**包体积口径**（v0.0.6 起）：debug 约 86MB（三套 ABI + JIT + 调试符号，禁止现场分发；
+优化前 184MB）；通用 release 约 24.6MB；`--split-per-abi` 后 arm64 约 8.8MB、armv7 约 8.5MB。
+体积由三处配置共同保证，改 `android/app/build.gradle.kts` 前先读注释：
+`--split-per-abi`（单 ABI）、`jniLibs.useLegacyPackaging = true`（压缩 `.so`）、
+`androidResources.localeFilters = ["zh", "en"]`（裁语言资源）。
+split 包的 `versionCode` 会按 ABI 加偏移（arm64 `2000+版本号`、armv7 `1000+版本号`），
+`versionName` 不变，`aapt` 反查时不要误判为版本号错误。
 
 - `image_picker` 必须用官方源安装：镜像缺 `image_picker_android`，会解析失败；
   `flutter pub get` 前去掉 `PUB_HOSTED_URL` / `FLUTTER_STORAGE_BASE_URL` 即可。
@@ -184,6 +197,7 @@ python tools/mobile_e2e/run.py --cold --module smoke  # 冷启动必须停在登
 在根目录通用清单之外，逐条确认：
 
 - [ ] 改过 Dart：`flutter analyze` 0 issue、`flutter test` 全过（当前 22 条）、APK 生成；
+- [ ] 发布包用 `--split-per-abi` 构建，arm64 体积不超过 10MB；不得把 debug 包当交付物；
 - [ ] 改过界面：`python tools/mobile_e2e/run.py --module <受影响模块>` 全 PASS
       （或说明无法跑的原因，例如设备不在线）；
 - [ ] 改过版本号：`pubspec.yaml`、`lib/app_info.dart` 两处一致，且 `aapt` 反查的
