@@ -12,10 +12,15 @@
   语法级校验，并在交付说明里写明"待 macOS 验证"。
 - **不做**：Excel 导入/导出（`.xls/.xlsx` 由桌面端处理）、MES 对接、审批流、客户门户、外网穿透。
 - **同步已实现，待现场联调**：桌面端内嵌 Kestrel 配对服务（端口 5180，仅局域网），
-  手机端「同步中心」用 6 位一次性码配对，按 outbox 上行、按游标下行；冲突必须人工选择。
+  手机端「同步中心」扫桌面端配对二维码（手输地址 + 6 位一次性码兜底），
+  按 outbox 上行、按游标下行；冲突必须人工选择。
   界面只显示真实结果，**不得伪造**"同步成功 / 已连接"。
-- **扫码尚未接入**：当前用"手输机台号 + 最近机台"替代，界面明确写"相机扫码待真机接入"，
-  不伪造扫码成功。
+- **两种扫码都已接入**（`mobile_scanner`）：
+  1. 配对码：同步中心扫桌面端顶栏手机图标 / 设置页弹出的二维码，载荷契约见
+     `shared/api/sync-api.md` 4.1，扫到后自动填地址与 6 位码并走同一条 `AppState.pair` 链路；
+  2. 机台码：选机台页顶部取景框进入 `MachineScanScreen`，从条码/二维码原文用
+     `Rules.extractMachineCode` 提取 `{项目号}+3 位序号`，带回新建页。
+     没有标签时仍可手输或选最近机台；非本项目的码只提示、不误填。
 - 登录态**不持久化**：每次冷启动都要输工号密码（共享现场设备的默认口径）；密码框不预填，
   debug 包同样如此。
 
@@ -44,7 +49,7 @@ mobile/
 │  ├─ widgets/               ← 玻璃卡片、Chip、阶段点、KPI、空状态、照片缩略图
 │  └─ screens/               ← 登录 / 五槽主壳 / 项目 / 分项目 / 台账 / 详情 / 新建 / 机台 / 同步 / 设置 / 看图
 ├─ assets/seed/              ← 与桌面端同一份 36 条种子
-├─ test/                     ← 纯规则回归（当前 22 条）
+├─ test/                     ← 纯规则回归（当前 29 条）
 ├─ android/                  ← Flutter Android 宿主壳
 └─ ios/                      ← 仅设计支持，本机无法构建
 ```
@@ -52,7 +57,7 @@ mobile/
 ## 3. 版本与平台兼容（改清单前必读）
 
 **版本号（与桌面端各自独立）**：`pubspec.yaml` 的 `version` 是唯一来源，界面只读
-`lib/app_info.dart`。当前 `0.0.6+6`（`+6` 是 build number，Android `versionCode` /
+`lib/app_info.dart`。当前 `0.0.8+8`（`+8` 是 build number，Android `versionCode` /
 iOS `CFBundleVersion`）。
 
 - **默认只升 patch**：`0.0.1 → 0.0.2 → 0.0.3`，永远只动第三位；`0.0.9` 之后是
@@ -79,6 +84,15 @@ iOS `CFBundleVersion`）。
 - **清单权限**（`android/app/src/main/AndroidManifest.xml`）：
   `INTERNET` 必须在 main（release 包不带 debug/profile 清单）；
   `usesCleartextTraffic="true"` 是因为同步服务是局域网 `http://<IP>:5180`，无 TLS。
+  `CAMERA`（`required=false`）供 image_picker 拍照与 mobile_scanner 扫码，首次使用时请求运行时权限；
+  `<queries>` 里必须声明 `IMAGE_CAPTURE` / `GET_CONTENT` / `PICK_IMAGES`，否则 Android 11+
+  包可见性会让 image_picker 误判"没有相机/相册"，现场表现就是点了没反应。
+- **启动模式**：`MainActivity` 固定 `launchMode="singleTask"` + 默认 `taskAffinity`，
+  不要改回 Flutter 模板的 `singleTop + taskAffinity=""`。空亲和性会在 Launcher /
+  通知重入时新建任务，最近任务里出现多张司南卡片（每张一套 Flutter 页面栈）；
+  单 Activity 架构下 `singleTask` 只影响 Android 任务，不会动 Flutter 内部页面栈。
+- **登录大小写**：工号不区分大小写（桌面 SQL `COLLATE NOCASE`、手机 `toLowerCase()`），
+  密码必须逐字一致；两端口径必须同时改。
 - **iOS `Info.plist`** 必须保留 `NSCameraUsageDescription`、`NSPhotoLibraryUsageDescription`
   （缺了调用相机/相册会被系统杀进程）、`NSLocalNetworkUsageDescription` 与
   `NSAppTransportSecurity.NSAllowsLocalNetworking`（局域网同步）。桌面显示名是「司南」。
@@ -98,6 +112,11 @@ iOS `CFBundleVersion`）。
   `models/rules.dart`，并在 `test/rules_test.dart` 覆盖；页面里不许再写一套。
 - **错误就地展开**：表单校验、保存失败在字段/按钮附近提示，不弹二级窗、不吞异常。
 - **颜色只用 Token**：`theme/tokens.dart` 是唯一色值来源；明暗两套都要能看。
+- **圆角容器只用 `SinanSurface`**：`widgets/surface.dart` 是唯一圆角/阴影/裁剪入口，
+  阴影只允许 `SinanShadow` 四档（none / card / floating / glow）；页面禁止手写
+  `BoxDecoration(boxShadow: ...)`，也不要再写 `ClipRRect(radius - 1)` 套外层圆角——
+  内外不同心会在圆角处露白，看起来像"凸起一个小包"。`GlassCard` / `SinanChip` /
+  `ThinBar` 已全部组合基类，新卡片直接复用它们或 `SinanSurface`。
 
 ## 5. 页面与交互
 
@@ -142,7 +161,7 @@ $env:PUB_HOSTED_URL = 'https://pub.flutter-io.cn'
 cd mobile
 flutter pub get
 flutter analyze       # 应为 0 issue
-flutter test          # 纯规则回归，当前 22 条
+flutter test          # 纯规则回归，当前 29 条
 
 # 开发调试包（体积大，不用于分发）
 flutter build apk --debug
@@ -196,7 +215,7 @@ python tools/mobile_e2e/run.py --cold --module smoke  # 冷启动必须停在登
 
 在根目录通用清单之外，逐条确认：
 
-- [ ] 改过 Dart：`flutter analyze` 0 issue、`flutter test` 全过（当前 22 条）、APK 生成；
+- [ ] 改过 Dart：`flutter analyze` 0 issue、`flutter test` 全过（当前 29 条）、APK 生成；
 - [ ] 发布包用 `--split-per-abi` 构建，arm64 体积不超过 10MB；不得把 debug 包当交付物；
 - [ ] 改过界面：`python tools/mobile_e2e/run.py --module <受影响模块>` 全 PASS
       （或说明无法跑的原因，例如设备不在线）；
@@ -216,6 +235,7 @@ python tools/mobile_e2e/run.py --cold --module smoke  # 冷启动必须停在登
 | `mobile/lib/main.dart` | 应用根：主题、语言、登录态（error / 登录 / 主壳），无全屏启动页 |
 | `mobile/lib/app_info.dart` | 版本号唯一来源（与 `pubspec.yaml` 一致） |
 | `mobile/lib/theme/tokens.dart` | `SinanPalette` 明/暗 Token（唯一色值来源） |
+| `mobile/lib/widgets/surface.dart` | 统一圆角容器 `SinanSurface` + 阴影四档 `SinanShadow`（唯一圆角/阴影入口） |
 | `mobile/lib/theme/app_theme.dart` | `ThemeData` 组装 |
 | `mobile/lib/models/rules.dart` | 日期解析、状态推导、倒挂/逾期、归组、我的待办 |
 | `mobile/lib/models/issue.dart` | 问题 / 阶段 / 状态 / 统计模型 |

@@ -2,4 +2,9 @@
 <resources>
     <!-- 与 app.ico 图标边缘同色，用于自适应图标背景层 -->
     <color name="ic_launcher_background">#C5540A</color>
+
+    <!-- 启动画面底色：与 Flutter 浅色主题背景 Brush.Bg 同色（#FBF6EE）。
+         之前用 ?android:colorBackground，深色模式下就是纯黑，现场看到"黑屏"。
+         夜间取 values-night/colors.xml 的 #1C140D（深棕），不跟系统纯黑。 -->
+    <color name="splash_background">#FBF6EE</color>
 </resources>

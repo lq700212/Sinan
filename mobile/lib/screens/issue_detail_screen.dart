@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../data/attachment_store.dart';
 import '../data/issue_repository.dart';
 import '../models/attachment.dart';
 import '../models/issue.dart';
@@ -70,15 +71,28 @@ class _IssueDetailScreenState extends State<IssueDetailScreen> {
   }
 
   /// 拍照 / 相册选图后立即挂到当前问题，并刷新总数与网格。
+  /// 失败必须给 SnackBar：不接异常时现场只看到"点了没反应"。
   Future<void> _addPhoto({required bool fromCamera}) async {
-    final saved =
-        await widget.state.addPhoto(widget.issueId, fromCamera: fromCamera);
-    if (saved == null || !mounted) return;
-    await _load();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('照片已存本机，联网后补传。')),
-    );
+    try {
+      final saved =
+          await widget.state.addPhoto(widget.issueId, fromCamera: fromCamera);
+      if (saved == null || !mounted) return;
+      await _load();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('照片已存本机，联网后补传。')),
+      );
+    } on AttachmentException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('拍照失败：$e')));
+    }
   }
 
   Future<void> _showPhotoSheet() async {

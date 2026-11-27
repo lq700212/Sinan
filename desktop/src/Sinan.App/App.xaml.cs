@@ -30,6 +30,10 @@ public partial class App : Application
     public ExcelExportService Export { get; private set; } = null!;
     public SyncRepository? Sync { get; private set; }
     public SyncServer? SyncServer { get; private set; }
+
+    /// <summary>配对二维码会话：设置页与顶栏弹窗共用同一个未使用配对码。</summary>
+    public PairingSession Pairing { get; private set; } = null!;
+
     public Session Session { get; } = new();
     public IDialogService Dialogs { get; private set; } = new DialogService();
 
@@ -68,6 +72,7 @@ public partial class App : Application
             // 启动失败不阻断主程序，设置页如实显示"未运行 + 原因"。
             SyncServer = new SyncServer(Sync, Attachments);
             SyncServer.Start();
+            Pairing = new PairingSession(this);
 
             // 演示附件（12 张 / 6 条）只登记元数据并标记 is_demo=1；
             // 界面显示"演示"角标，导出 ZIP 只写说明不塞假图。

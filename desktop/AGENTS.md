@@ -33,8 +33,8 @@ desktop/
 
 ### 1.1 版本号（桌面端）
 
-- 唯一来源：`desktop/src/Directory.Build.props` 的 `<Version>0.0.8</Version>`。
-  改版本只改这一处；`Sinan.App` 通过程序集版本读取，界面由 `AppInfo` 显示 `v0.0.8`，
+- 唯一来源：`desktop/src/Directory.Build.props` 的 `<Version>0.0.9</Version>`。
+  改版本只改这一处；`Sinan.App` 通过程序集版本读取，界面由 `AppInfo` 显示 `v0.0.9`，
   不要在 XAML/代码里另写版本字符串。
 - 升级节奏遵循根总纲：**默认只升 patch**（`0.0.1 → 0.0.2 → 0.0.3 → 0.0.4`），
   `0.0.9` 之后是 `0.0.10`，不自动进位；只有用户明确要求才动 minor/major。
@@ -306,6 +306,8 @@ dotnet run --project tools/ui_smoke/UiSmoke.csproj -c Debug -- --launch --restar
 | `desktop/ThirdParty/Kaleidoscope/Kaleidoscope.UI/Views/KxCapsuleBorder.cs` | 胶囊圆角控件（一行标签，自动半高） |
 | `desktop/ThirdParty/Kaleidoscope/Kaleidoscope.UI/Views/KxRadiusAudit.cs` | 圆角体检器（椭圆化圆角运行时报告） |
 | `desktop/src/Sinan.App/Services/SyncServer.cs` | 局域网同步服务（配对/增量/附件） |
+| `desktop/src/Sinan.App/Services/PairingSession.cs` | 配对二维码唯一会话（设置页与顶栏弹窗共用同一未使用码） |
+| `desktop/src/Sinan.App/Views/PairQrDialog.xaml` | 顶栏手机图标弹出的配对二维码（白底，含 6 位码与倒计时） |
 | `desktop/tests/Sinan.Tests/Ui/UiRenderTests.cs` | 离屏渲染回归：6 页 × 明暗双主题 + 登录窗 + 6 弹窗，不建可见窗口 |
 | `desktop/src/Sinan.Data/Excel/` | 导入解析、导出渲染、往返校验 |
 | `tools/ui_smoke/Program.cs` | 后台静默 UI 冒烟：登录 → 逐页/弹窗截图 → 圆角自检；`--write-test` 走新建→删除全链路 |

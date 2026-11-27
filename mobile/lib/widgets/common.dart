@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../models/issue.dart';
 import '../theme/tokens.dart';
+import 'surface.dart';
 
 /// 页面底层柔光斑：琥珀 / 深青 / 暖橙三团，替代桌面端 XAML 的 RadialGradientBrush。
 /// 玻璃态只作用于内容卡片，侧栏/底栏保持不透明，避免整屏糊成一片。
@@ -61,7 +62,10 @@ class _Glow extends StatelessWidget {
   }
 }
 
-/// 玻璃卡片：半透明渐变底 + 1px 亮边 + 顶缘高光 + 暖色柔影。
+/// 玻璃卡片：半透明渐变底 + 1px 亮边 + 顶缘高光 + 贴地柔影。
+///
+/// 绘制细节全部下沉到 [SinanSurface]：阴影只走预设、子元素按同一半径裁剪。
+/// 页面只认这个组件，不再自己写 `BoxDecoration + boxShadow`。
 class GlassCard extends StatelessWidget {
   const GlassCard({
     super.key,
@@ -83,63 +87,17 @@ class GlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final content = Container(
+    return SinanSurface(
       margin: margin,
-      decoration: BoxDecoration(
-        color: inset ? p.well : null,
-        gradient: inset ? null : p.cardGradient,
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: p.cardBorder),
-        boxShadow: [
-          BoxShadow(
-            color: p.isDark
-                ? Colors.black.withValues(alpha: 0.28)
-                : const Color(0xFF8A5A2B).withValues(alpha: 0.08),
-            blurRadius: 22,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius - 1),
-        child: Stack(
-          children: [
-             // 顶缘内高光：设计稿是玻璃反光，不是一条实心白线。
-             // 用中间亮、两端透明的水平渐变，并在暗色下压到 0.22——
-             // 暗色底上 0.5 白会变成刺眼的横杠，和"玻璃"完全相反。
-             if (!inset)
-               Positioned(
-                 left: 12,
-                 right: 12,
-                 top: 0,
-                 child: Container(
-                   height: 1,
-                   decoration: BoxDecoration(
-                     gradient: LinearGradient(
-                       colors: [
-                         Colors.transparent,
-                         p.glassHi
-                             .withValues(alpha: p.isDark ? 0.22 : 0.9),
-                         Colors.transparent,
-                       ],
-                     ),
-                   ),
-                 ),
-               ),
-            Padding(padding: padding, child: child),
-          ],
-        ),
-      ),
-    );
-
-    if (onTap == null) return content;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(radius),
-        onTap: onTap,
-        child: content,
-      ),
+      radius: radius,
+      color: inset ? p.well : null,
+      gradient: inset ? null : p.cardGradient,
+      border: Border.all(color: p.cardBorder),
+      shadow: inset ? SinanShadow.none : SinanShadow.card,
+      padding: padding,
+      topHighlight: !inset,
+      onTap: onTap,
+      child: child,
     );
   }
 }
@@ -170,15 +128,14 @@ class SinanChip extends StatelessWidget {
       'primary' => (p.primary, p.primaryDim),
       _ => (p.info, p.infoSoft),
     };
-    return Container(
+    return SinanSurface(
+      radius: 99,
+      color: bg,
+      border: Border.all(color: fg.withValues(alpha: 0.35)),
+      shadow: SinanShadow.none,
       padding: EdgeInsets.symmetric(
         horizontal: dense ? 7 : 9,
         vertical: dense ? 2.5 : 4,
-      ),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(color: fg.withValues(alpha: 0.35)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -360,21 +317,22 @@ class ThinBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     final value = fraction.isNaN ? 0.0 : fraction.clamp(0.0, 1.0);
-    return Container(
+    return SizedBox(
       height: height,
-      decoration: BoxDecoration(
+      child: SinanSurface(
+        radius: 99,
         color: p.well,
-        borderRadius: BorderRadius.circular(99),
-      ),
-      child: FractionallySizedBox(
-        alignment: Alignment.centerLeft,
-        widthFactor: value,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [color ?? p.primary, color ?? p.primary2],
+        shadow: SinanShadow.none,
+        child: FractionallySizedBox(
+          alignment: Alignment.centerLeft,
+          widthFactor: value,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color ?? p.primary, color ?? p.primary2],
+              ),
+              borderRadius: BorderRadius.circular(99),
             ),
-            borderRadius: BorderRadius.circular(99),
           ),
         ),
       ),
@@ -400,12 +358,14 @@ class SectionTitle extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
+        SizedBox(
           width: 4,
           height: 16,
-          decoration: BoxDecoration(
+          child: SinanSurface(
+            radius: 2,
             gradient: p.primaryGradient,
-            borderRadius: BorderRadius.circular(2),
+            shadow: SinanShadow.none,
+            child: const SizedBox.shrink(),
           ),
         ),
         const SizedBox(width: 8),
@@ -487,13 +447,12 @@ class DemoBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return Container(
+    return SinanSurface(
+      radius: 4,
+      color: p.warnSoft,
+      border: Border.all(color: p.warn.withValues(alpha: 0.3)),
+      shadow: SinanShadow.none,
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-      decoration: BoxDecoration(
-        color: p.warnSoft,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: p.warn.withValues(alpha: 0.3)),
-      ),
       child: Text(
         text,
         style: TextStyle(fontSize: 9.5, color: p.warn, fontWeight: FontWeight.w600),

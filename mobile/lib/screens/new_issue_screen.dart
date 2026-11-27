@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:material_ui/material_ui.dart';
 
+import '../data/attachment_store.dart';
 import '../models/issue.dart';
 import '../models/rules.dart';
 import '../state/app_state.dart';
@@ -89,12 +90,20 @@ class _NewIssueScreenState extends State<NewIssueScreen> {
       setState(() => _error = '现场照片最多 $_maxPhotos 张。');
       return;
     }
-    final path = await widget.state.attachments.pickTemp(fromCamera: fromCamera);
-    if (path == null || !mounted) return;
-    setState(() {
-      _photos.add(path);
-      _error = null;
-    });
+    try {
+      final path =
+          await widget.state.attachments.pickTemp(fromCamera: fromCamera);
+      if (path == null || !mounted) return;
+      setState(() {
+        _photos.add(path);
+        _error = null;
+      });
+    } on AttachmentException catch (e) {
+      // 相机/相册失败必须落到表单上；不接异常的话现场就是"点了没反应"。
+      if (mounted) setState(() => _error = e.message);
+    } catch (e) {
+      if (mounted) setState(() => _error = '拍照失败：$e');
+    }
   }
 
   Future<void> _save() async {

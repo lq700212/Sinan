@@ -90,16 +90,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           Text('离线优先，数据先存本机，联网后再同步。',
                               style: TextStyle(fontSize: 11.5, color: p.faint)),
                           const SizedBox(height: 18),
-                          // 账号框不显示“账号”标签：值已预填 engineer，左侧人形图标足够表意。
-                          // 仍保留读屏用的语义标签，删除的只是视觉文本。
-                          Semantics(
-                            label: '账号',
-                            child: TextField(
-                              controller: _account,
-                              textInputAction: TextInputAction.next,
-                              decoration: const InputDecoration(
-                                prefixIcon: Icon(Icons.person_outline, size: 18),
-                              ),
+                          // 账号框与密码框统一用浮动标签：空框时"账号"显示在框内，
+                          // 聚焦或有值后上浮到边框缺口；读屏语义由 labelText 提供，
+                          // 不再额外包 Semantics，避免重复朗读。
+                          TextField(
+                            controller: _account,
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                              labelText: '账号',
+                              prefixIcon: Icon(Icons.person_outline, size: 18),
                             ),
                           ),
                           const SizedBox(height: 12),

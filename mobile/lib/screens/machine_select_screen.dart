@@ -5,11 +5,13 @@ import '../models/rules.dart';
 import '../state/app_state.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
+import '../widgets/surface.dart';
+import 'machine_scan_screen.dart';
 
 /// 选机台（设计稿 m-scan）。
 ///
-/// 本机没有接入相机扫码组件，**不画一个假取景框冒充能扫**：
-/// 手输 + 最近机台是当前真实可用的路径，扫码位明确标注"待接入"。
+/// 扫码已接入：点顶部取景框调用相机，识别机台标签上的条码/二维码，
+/// 提取 `{项目号}+3 位序号` 后直接带回；手输与最近机台保留为兜底。
 /// 返回选中的机台号，由调用方决定是新建还是筛选台账。
 class MachineSelectScreen extends StatefulWidget {
   const MachineSelectScreen({super.key, required this.state});
@@ -53,6 +55,19 @@ class _MachineSelectScreenState extends State<MachineSelectScreen> {
       return;
     }
     Navigator.of(context).pop(machine);
+  }
+
+  /// 打开相机扫机台码；扫到合法机台号直接走 [_confirm] 的同一出口，
+  /// 保证扫码与手输的校验、返回值完全一致。
+  Future<void> _scan() async {
+    final code = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => MachineScanScreen(projectCode: widget.state.projectCode),
+      ),
+    );
+    if (code == null || !mounted) return;
+    _machine.text = code;
+    _confirm(code);
   }
 
   @override
@@ -142,12 +157,12 @@ class _MachineSelectScreenState extends State<MachineSelectScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('扫码选机台',
+                Text('扫码或手输机台号',
                     style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
                         color: p.fg)),
-                Text('扫码待接入 · 可手输或选最近机台',
+                Text('扫机台标签 · 也可手输或选最近机台',
                     style: TextStyle(fontSize: 10.5, color: p.faint)),
               ],
             ),
@@ -159,65 +174,77 @@ class _MachineSelectScreenState extends State<MachineSelectScreen> {
   }
 
   Widget _scanHint(SinanPalette p) {
-    return Container(
+    final background =
+        p.isDark ? const Color(0xFF0B1218) : const Color(0xFF121A21);
+    // 取景框整块可点：背景 / 边框 / 裁剪统一交给 SinanSurface，
+    // 不再手写「外框 18 + ClipRRect 17」，避免内外圆角不同心露白。
+    return SizedBox(
       height: 132,
-      decoration: BoxDecoration(
-        color: p.isDark ? const Color(0xFF0B1218) : const Color(0xFF121A21),
-        borderRadius: BorderRadius.circular(18),
+      child: SinanSurface(
+        radius: 18,
+        color: background,
         border: Border.all(color: p.cardBorder),
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // 取景框四角只做"这里将来是扫码位"的视觉占位，中心明确写未接入。
-          for (final align in [
-            Alignment.topLeft,
-            Alignment.topRight,
-            Alignment.bottomLeft,
-            Alignment.bottomRight,
-          ])
-            Align(
-              alignment: align,
-              child: Container(
-                width: 22,
-                height: 22,
-                margin: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: align.y < 0
-                        ? const BorderSide(color: Colors.white70, width: 2)
-                        : BorderSide.none,
-                    bottom: align.y > 0
-                        ? const BorderSide(color: Colors.white70, width: 2)
-                        : BorderSide.none,
-                    left: align.x < 0
-                        ? const BorderSide(color: Colors.white70, width: 2)
-                        : BorderSide.none,
-                    right: align.x > 0
-                        ? const BorderSide(color: Colors.white70, width: 2)
-                        : BorderSide.none,
+        shadow: SinanShadow.none,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _scan,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // 取景框四角是视觉引导；点击整块都能打开相机。
+                for (final align in [
+                  Alignment.topLeft,
+                  Alignment.topRight,
+                  Alignment.bottomLeft,
+                  Alignment.bottomRight,
+                ])
+                  Align(
+                    alignment: align,
+                    child: Container(
+                      width: 22,
+                      height: 22,
+                      margin: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: align.y < 0
+                              ? const BorderSide(color: Colors.white70, width: 2)
+                              : BorderSide.none,
+                          bottom: align.y > 0
+                              ? const BorderSide(color: Colors.white70, width: 2)
+                              : BorderSide.none,
+                          left: align.x < 0
+                              ? const BorderSide(color: Colors.white70, width: 2)
+                              : BorderSide.none,
+                          right: align.x > 0
+                              ? const BorderSide(color: Colors.white70, width: 2)
+                              : BorderSide.none,
+                        ),
+                      ),
+                    ),
                   ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.qr_code_scanner,
+                        size: 28, color: Colors.white70),
+                    const SizedBox(height: 8),
+                    const Text('点击打开相机扫码',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white)),
+                    const SizedBox(height: 3),
+                    Text('对准机台标签的条码/二维码，或手输机台号',
+                        style: TextStyle(
+                            fontSize: 9.5,
+                            color: Colors.white.withValues(alpha: 0.66))),
+                  ],
                 ),
-              ),
+              ],
             ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.qr_code_scanner, size: 28, color: Colors.white70),
-              const SizedBox(height: 8),
-              const Text('相机扫码待真机接入',
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white)),
-              const SizedBox(height: 3),
-              Text('当前请手输机台号，或点下方最近机台',
-                  style: TextStyle(
-                      fontSize: 9.5,
-                      color: Colors.white.withValues(alpha: 0.66))),
-            ],
           ),
-        ],
+        ),
       ),
     );
   }

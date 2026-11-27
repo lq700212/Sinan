@@ -3,6 +3,14 @@
          INTERNET 必须放在 main：debug/profile 清单只在开发期合并，release 包不会带上。 -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- 拍照（image_picker）：
+         - CAMERA 声明后插件会在首次拍照时请求运行时权限；不声明则 Android 11+
+           可能因包可见性/权限口径直接返回 no_available_camera（现场表现就是"点了没反应"）。
+         - required=false：没有相机的设备仍可安装，改用相册选图。
+         扫码（mobile_scanner）同样依赖 CAMERA，权限由插件清单合并，这里一并声明。 -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+
     <application
         android:label="司南"
         android:name="${applicationName}"
@@ -11,11 +19,20 @@
         <!-- usesCleartextTraffic：Android 9（API 28）起默认禁止明文 HTTP，
              而桌面端同步服务是局域网内的 http://<IP>:5180。
              只在现场局域网使用，未接外网；后续若上 TLS 再收回此开关。 -->
+        <!-- 启动模式：singleTask + 默认 taskAffinity。
+             - Flutter 模板默认是 singleTop + taskAffinity=""，空亲和性是为防
+               Android 9 及以下的 StrandHogg 任务劫持；代价是 Launcher / 通知
+               重入时系统找不到可复用任务，会再开一个任务，最近任务里就出现
+               多张司南卡片（每个卡片一套 Flutter 页面栈）。
+             - 本 App 只有一个 MainActivity，所有页面都在 Flutter Navigator 内；
+               改 singleTask 后全局只保留一个实例，任何入口重入都走 onNewIntent
+               并复用原任务，不会出现"切后台回来好几个页面"。
+             - targetSdk 36 且仅内网现场使用，StrandHogg 风险远低于多实例造成的
+               现场误操作；若将来做外网/深链再评估恢复空 affinity。 -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop"
-            android:taskAffinity=""
+            android:launchMode="singleTask"
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
@@ -48,6 +65,22 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+
+        <!-- Android 11+ 包可见性：不声明 IMAGE_CAPTURE，image_picker 内部
+             resolveActivity() 会以为"没有相机"，直接返回 no_available_camera。
+             现场"点拍照没反应"的根因就是这条缺失（异常被上层吞掉，界面无提示）。 -->
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE"/>
+        </intent>
+        <!-- 相册选图：系统相册/文件选择器同样要能被看到。 -->
+        <intent>
+            <action android:name="android.intent.action.GET_CONTENT"/>
+            <data android:mimeType="image/*"/>
+        </intent>
+        <intent>
+            <action android:name="android.provider.action.PICK_IMAGES"/>
+            <data android:mimeType="image/*"/>
         </intent>
     </queries>
 </manifest>

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Sinan.App.Mvvm;
 using Sinan.App.Services;
@@ -23,7 +24,6 @@ public sealed class SettingsViewModel : ObservableObject
 {
     private readonly App _app;
     private readonly DispatcherTimer _syncTimer;
-    private PairCodeInfo? _pairCode;
 
     public SettingsViewModel(App app, INavigationService nav)
     {
@@ -166,23 +166,30 @@ public sealed class SettingsViewModel : ObservableObject
         : $"{Devices.Count(d => d.Active)} 台已配对 · {OnlineDeviceCount} 台在线";
 
     /// <summary>当前有效的 6 位配对码；未生成时显示占位，不伪造二维码。</summary>
-    public string PairCodeDisplay => _pairCode?.Code ?? "------";
+    public string PairCodeDisplay => HasPairCode ? _app.Pairing.Code : "------";
 
-    public bool HasPairCode => _pairCode != null;
+    public bool HasPairCode => _app.Pairing?.HasCode == true;
+
+    /// <summary>二维码位图：与顶栏弹窗共用同一个未使用码，不各自生成。</summary>
+    public ImageSource? PairQrImage => _app.Pairing?.QrImage;
 
     public string PairCodeExpiry
     {
         get
         {
-            if (_pairCode == null) return "点击生成一次性配对码 · 10 分钟有效";
-            var left = _pairCode.ExpiresAt - DateTimeOffset.UtcNow;
+            var expires = _app.Pairing?.ExpiresAt;
+            if (expires == null) return "点击生成配对二维码 · 10 分钟有效";
+            var left = expires.Value - DateTimeOffset.UtcNow;
             if (left <= TimeSpan.Zero) return "已过期，请重新生成";
             return $"剩余 {left.Minutes:00}:{left.Seconds:00} · 仅可使用一次";
         }
     }
 
-    /// <summary>手机端填写的服务器地址示例：取第一个可用监听地址，没有就留空。</summary>
-    public string PairAddressHint => _app.SyncServer?.Urls.FirstOrDefault() ?? "";
+    /// <summary>手机端填写的服务器地址示例：优先取二维码里那个地址，没有就取第一个监听地址。</summary>
+    public string PairAddressHint =>
+        _app.Pairing?.ServerUrl is { Length: > 0 } paired
+            ? paired
+            : _app.SyncServer?.Urls.FirstOrDefault() ?? "";
 
     public RelayCommand GeneratePairCodeCommand { get; }
     public RelayCommand RemoveDeviceCommand { get; }
@@ -262,16 +269,14 @@ public sealed class SettingsViewModel : ObservableObject
             return;
         }
 
-        try
+        if (_app.Pairing.Ensure(forceNew: true) == null)
         {
-            _pairCode = _app.Sync!.CreatePairCode();
-            RefreshSyncState();
+            _app.Dialogs.Alert("无法生成二维码",
+                "同步服务正在运行，但没有找到可用的局域网 IPv4 地址。\n请确认电脑已连接现场局域网后重试。");
+            return;
         }
-        catch (Exception ex)
-        {
-            AppLog.Error("生成配对码失败", ex);
-            _app.Dialogs.Alert("生成失败", $"无法生成配对码：{ex.Message}");
-        }
+
+        RefreshSyncState();
     }
 
     private void RemoveDevice(object? parameter)
@@ -302,8 +307,9 @@ public sealed class SettingsViewModel : ObservableObject
     /// </summary>
     public void RefreshSyncState()
     {
-        if (_pairCode != null && _pairCode.ExpiresAt <= DateTimeOffset.UtcNow)
-            _pairCode = null;
+        // 过期即清：继续展示一张已失效的二维码，现场会反复扫、反复报"配对码不存在"。
+        if (_app.Pairing is { HasCode: false })
+            _app.Pairing.Clear();
 
         List<DeviceInfo> devices;
         try
@@ -324,7 +330,7 @@ public sealed class SettingsViewModel : ObservableObject
             nameof(SyncStatusText), nameof(SyncPortDisplay), nameof(IsSyncRunning),
             nameof(Devices), nameof(HasDevices), nameof(OnlineDeviceCount),
             nameof(DeviceSummary), nameof(PairCodeDisplay), nameof(HasPairCode),
-            nameof(PairCodeExpiry), nameof(PairAddressHint));
+            nameof(PairQrImage), nameof(PairCodeExpiry), nameof(PairAddressHint));
     }
 }
 

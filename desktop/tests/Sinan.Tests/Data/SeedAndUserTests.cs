@@ -90,6 +90,24 @@ public class SeedAndUserTests
         Assert.Null(db.Users.Authenticate(no, pwd));
     }
 
+    [Theory]
+    [InlineData("Engineer")]
+    [InlineData("ENGINEER")]
+    [InlineData("eNgInEeR")]
+    [InlineData("  Admin  ")]
+    public void 工号不区分大小写_密码逐字一致(string no)
+    {
+        using var db = new TempDb();
+        var user = db.Users.Authenticate(no, "123456");
+        Assert.NotNull(user);
+        // 返回的是库里的标准工号，不是用户输入的大小写变体。
+        Assert.Equal(no.Trim().ToLowerInvariant(), user!.EmployeeNo);
+
+        // 密码不做 Trim、不折叠大小写：多一个空格也必须失败。
+        Assert.Null(db.Users.Authenticate(no, "123456 "));
+        Assert.Null(db.Users.Authenticate(no, " 123456"));
+    }
+
     [Fact]
     public void 停用账号_不能登录_历史记录仍保留()
     {

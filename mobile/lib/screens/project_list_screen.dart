@@ -8,6 +8,7 @@ import '../state/app_state.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
 import '../widgets/photo_tile.dart';
+import '../widgets/surface.dart';
 import 'photo_viewer_screen.dart';
 import 'subproject_screen.dart';
 
@@ -461,13 +462,12 @@ class _ProjectSwitchSheet extends StatelessWidget {
     final summaries = state.projectSummaries;
     return SafeArea(
       top: false,
-      child: Container(
+      child: SinanSurface(
         margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-        decoration: BoxDecoration(
-          color: p.panel,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: p.cardBorder),
-        ),
+        radius: 20,
+        color: p.panel,
+        border: Border.all(color: p.cardBorder),
+        shadow: SinanShadow.none,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

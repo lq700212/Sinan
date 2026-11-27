@@ -153,6 +153,17 @@
                                 Command="{Binding NewIssueCommand}"
                                 shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
 
+                        <!-- 手机扫码配对：直接弹二维码，省去"设置 → 找配对卡片 → 生成"三步。
+                             图标用 Segoe MDL2 Assets 的 Mobile（E8EA），比 emoji 稳（不受彩色字体影响）。 -->
+                        <Button Style="{StaticResource Btn.Icon}" Margin="4,0,0,0"
+                                ToolTip="手机扫码配对"
+                                AutomationProperties.Name="手机扫码配对"
+                                AutomationProperties.AutomationId="PairPhoneButton"
+                                Command="{Binding ShowPairQrCommand}"
+                                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                            <TextBlock Text="&#xE8EA;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+                        </Button>
+
                         <Button Content="⟳" Style="{StaticResource Btn.Icon}" FontSize="14"
                                 Margin="4,0,0,0" ToolTip="刷新当前页"
                                 AutomationProperties.AutomationId="RefreshButton"

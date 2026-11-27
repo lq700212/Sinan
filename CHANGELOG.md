@@ -1,5 +1,111 @@
 # 变更记录
 
+## 开发期（2026-11-27）圆角容器基类 + README 截图更新（桌面 v0.0.9 / 手机 v0.0.8）
+
+### 问题
+- 手机端多张卡片在圆角处出现"凸起的小包"：`GlassCard` 把 `boxShadow` 与半透明渐变
+  画在同一个 `BoxDecoration`，阴影紧贴圆角形成深色弧带；外层圆角与内层
+  `ClipRRect(radius - 1)` 不同心，亮边被衬成月牙形亮斑。
+- 机台取景框、切换总项目面板、同步冲突/队列条目、设置页主题按钮等
+  仍各自手写圆角容器，阴影与裁剪各写一套，修一处不能覆盖其他页面。
+
+### 手机端
+- 新增 `widgets/surface.dart`：
+  - `SinanShadow` 四档：`none` / `card` / `floating` / `glow`；浅色阴影 `#8A5A2B`
+    alpha 0.05、blur 8、offset (0,2)，深色 black alpha 0.18、blur 10，
+    页面不再手写 `BoxShadow`。
+  - `SinanSurface`：用 `Container(clipBehavior: Clip.antiAlias)` 一次画背景/渐变/边框/
+    阴影，并按同一个 `radius` 裁子元素；`margin` 放最外层，避免水波纹与阴影外扩。
+  - `topHighlight` 只在直边段（左右各让出 `radius`）绘制，避开圆角，消除月牙形亮斑。
+- `GlassCard` / `SinanChip` / `ThinBar` / `SectionTitle` 色条 / `DemoBadge` 全部改为组合
+  `SinanSurface`；`shell_screen` 品牌方块与中间 `+` 按钮改用 `SinanSurface(glow)`，
+  底栏全宽阴影保留。
+- 页面级手写容器迁移：机台取景框、切换总项目面板、同步冲突卡片、同步队列条目、
+  设置页主题按钮；登录卡片与各页卡片由 `GlassCard` 自动受益。
+- 版本 `0.0.7+7 → 0.0.8+8`。
+
+### 文档
+- README 重新截图：桌面 16 张（新增手机扫码配对弹窗）、手机 10 张
+  （新增扫码选机台、设置、待办暗色），替换全部旧图；`docs/images/` 与
+  `docs/images/mobile/` 同步。
+- `tools/ui_smoke` 修正登录截图时机：等控件树就绪后再截，避免拿到未渲染的黑帧。
+
+### 验证
+- 手机端 `flutter analyze` 0 issue、`flutter test` 29 条全过、
+  `flutter build apk --debug` 成功；模拟器（1080×2400）逐页目检登录/待办/项目/
+  台账/详情/新建/同步/机台扫码/设置，明暗两套圆角均无亮弧、无深色弧带。
+- 桌面端 `dotnet build` 0 warning 0 error、`dotnet test` 214 条全过；
+  `tools/ui_smoke` 圆角自检 108 行 0 警告，16 张截图重新生成。
+- 真机（Xiaomi 2201122C）仍受 MIUI 输入注入限制，拍照/扫码/大写登录待人工点按确认。
+
+## 开发期（2026-11-27）扫码配对 + 机台扫码 + 拍照与启动修复（桌面 v0.0.9 / 手机 v0.0.7）
+
+### 问题
+- 双端配对靠手输桌面端 IP + 6 位码，现场容易输错，换网络后更难。
+- 手机端点拍照没反应：`image_picker` 抛出的 `PlatformException` 被上层吞掉，
+  Android 清单又缺 `CAMERA` 与 `IMAGE_CAPTURE` 包可见性声明。
+- 手机冷启动先闪一块纯黑（`launch_background` 用 `?android:colorBackground`，
+  夜间模式解析为黑色，与浅色登录页不一致）。
+- 「扫码选机台」顶部只是"待接入"占位，点击无反应。
+- 登录页账号框没有浮动标签，与密码框不一致。
+
+### 共享契约
+- `shared/api/sync-api.md` 4.1 新增配对二维码载荷：
+  `sinan://pair?v=1&url=<URL 编码的桌面端地址>&code=<6 位码>`；不承载 token，
+  手输地址 + 码保留为兜底。
+
+### 桌面端
+- 新增 `QRCoder 1.9.0`（`PngByteQRCode`，纯托管 PNG，不依赖 GDI+）。
+- 新增 `PairQrPayload` / `PairQrCode` / `PairingSession`：配对码只有一份未使用会话，
+  设置页与顶栏弹窗共用，避免两处各自生成导致先显示的码立即失效。
+- 顶栏新增手机图标（Segoe MDL2 `E8EA`，`PairPhoneButton`），点击直接弹出配对二维码；
+  同步服务未运行时给出可读说明，不弹空窗。
+- 「系统设置 → 移动端配对」卡片右侧改为白底二维码 + 6 位码 + 剩余有效期；
+  未生成时显示占位态。二维码过期不自动续期，提示"重新生成"，
+  防止手机已扫但未确认时换码失效。
+- 登录工号不区分大小写（`WHERE employee_no=$no COLLATE NOCASE`），密码仍逐字一致；
+  错误提示同步改为"密码区分大小写"。
+- 版本 `0.0.8 → 0.0.9`。
+
+### 手机端
+- 新增 `mobile_scanner 7.5.0`；新增 `PairQrPayload.parse` 与 `PairScanScreen`：
+  只扫 QR，非司南码不退出、底部给可读提示；相机权限被拒/启动失败有整屏说明与重试。
+- 「同步中心」未配对态新增「扫描二维码配对」主按钮，扫到后自动填入地址与码，
+  复用同一条 `AppState.pair` 链路（ping → `/api/pair` → 立即同步），手输入口保留。
+- 新增机台扫码：`Rules.extractMachineCode` 从条码/二维码原文提取
+  `{项目号}+3 位序号`（支持 Code128/39/93、QR、DataMatrix 等），
+  `MachineScanScreen` 扫到后直接带回新建页；「扫码选机台」顶部取景框改为可点击，
+  文案从"待真机接入"改为"点击打开相机扫码"。
+- 拍照异常不再静默：`AttachmentStore.pickTemp` 把 `PlatformException` /
+  `MissingPluginException` 翻成可执行的中文提示（权限被拒 / 无可用相机），
+  新建页与详情页都接住并显示。
+- `AndroidManifest.xml` 增加 `CAMERA`（`required=false`）与 `<queries>` 的
+  `IMAGE_CAPTURE` / `GET_CONTENT` / `PICK_IMAGES`，修复 Android 11+ 包可见性导致的
+  "点了没反应"。
+- 启动底色固定品牌浅色 `#FBF6EE`（与 Flutter 首帧背景一致）；新增
+  `values-v31` / `values-night-v31` 的 `windowSplashScreenBackground`，
+  Android 12+ 不再按系统深色取纯黑。
+- 登录页账号框补 `labelText: '账号'`，与密码框统一浮动标签：空框时提示在框内，
+  聚焦/有值后上浮到边框缺口；读屏语义由 `labelText` 提供，去掉重复的 `Semantics`。
+- 启动模式从 Flutter 模板的 `singleTop + taskAffinity=""` 改为 `singleTask` + 默认亲和性：
+  空亲和性会在 Launcher / 通知重入时新建任务，最近任务出现多张司南卡片
+  （每张一套 Flutter 页面栈）；`singleTask` 保证全局只有一个 MainActivity 实例，
+  重入走 `onNewIntent` 并复用原任务。
+- 登录工号不区分大小写（`toLowerCase()`），密码仍逐字一致。
+- 版本 `0.0.6+6 → 0.0.7+7`（`pubspec.yaml` 与 `lib/app_info.dart` 同步）。
+
+### 验证
+- 桌面端 `dotnet build` 0 error / 0 warning；`dotnet test` 214 条全过
+  （新增工号大小写 4 条）；实机截图目检顶栏二维码弹窗与设置页二维码卡片
+  （白底、码值、倒计时正常）。
+- 手机端 `flutter analyze` 0 issue；`flutter test` 29 条全过
+  （新增二维码载荷 5 条、机台号提取 2 条）；`flutter build apk --debug` 成功；
+  `aapt dump badging` 反查 `versionName=0.0.7`、`versionCode=7`、`CAMERA` 权限生效；
+  merged manifest 确认 `launchMode=singleTask` 且无 `taskAffinity`。
+- 真机（Xiaomi 2201122C）：启动截图已为品牌浅色、不再黑屏；
+  登录页账号浮动标签与机台扫码入口已安装待人工点按确认（MIUI 拦截 adb 输入注入，
+  无法自动点击拍照/扫码按钮）。
+
 ## 开发期（2026-11-27）手机端包体积优化（手机 v0.0.6）
 
 ### 问题

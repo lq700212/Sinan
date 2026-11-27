@@ -206,13 +206,16 @@ internal static class Program
         var window = AutomationElement.FromHandle(hwnd)
                      ?? throw new InvalidOperationException("登录窗 UIA 根不可用。");
 
-        // 登录页品牌位（56×56 磁勺）只能在这个窗口期目检：登录成功后窗口即销毁。
-        Console.WriteLine($"[shot] {Shoot(hwnd, Path.Combine(options.ShotsDir, "00-login.png"))}");
-
         // 登录窗句柄出现不代表控件树已构建完毕：UIA 首次查询可能早于 WPF 完成模板套用，
         // 直接 FindById 会偶发"找不到元素"。这里给 6 秒重试窗口，每 200ms 重取一次根。
         var employee = WaitForById(hwnd, "EmployeeNoBox", 6);
         var password = WaitForById(hwnd, "PasswordInput", 6);
+
+        // 登录页品牌位（56×56 磁勺）只能在这个窗口期目检：登录成功后窗口即销毁。
+        // 截图必须放在控件树就绪之后，否则 PrintWindow 拿到的是尚未渲染的黑帧；
+        // 再等 400ms 让首帧渐变与阴影完成合成。
+        Thread.Sleep(400);
+        Console.WriteLine($"[shot] {Shoot(hwnd, Path.Combine(options.ShotsDir, "00-login.png"))}");
 
         ((ValuePattern)employee.GetCurrentPattern(ValuePattern.Pattern)).SetValue(options.EmployeeNo);
         Console.WriteLine($"[login] employee = {options.EmployeeNo}");
@@ -502,6 +505,11 @@ internal static class Program
                 Thread.Sleep(500);
             }
         }
+
+        // 顶栏手机图标 → 配对二维码弹窗（扫码配对的唯一入口）。
+        // 同步服务未运行时该命令只弹一个 Alert，标题不匹配会自动跳过并打印可见窗口，
+        // 不会中断其余截图；正常启动流程里 SyncServer 已在监听。
+        ShootDialog(process, mainHwnd, "PairPhoneButton", "手机扫码配对", "16-dialog-pair.png", options);
     }
 
     private static void ShootDialog(

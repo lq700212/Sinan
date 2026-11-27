@@ -1,9 +1,12 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../data/issue_repository.dart';
+import '../models/pair_payload.dart';
 import '../state/app_state.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
+import '../widgets/surface.dart';
+import 'pair_scan_screen.dart';
 
 /// 同步中心（设计稿 m-sync）。
 ///
@@ -81,6 +84,20 @@ class _SyncScreenState extends State<SyncScreen> {
       _serverUrl.text = widget.state.syncServerUrl;
     }
     _showStatus();
+  }
+
+  /// 扫码配对：二维码里已带桌面端地址与 6 位码，扫到后直接走同一条
+  /// [AppState.pair] 链路（ping 校验 → /api/pair 换 token → 立即同步），
+  /// 不另写一套配对逻辑；扫码只是把"手输两个字段"换成"扫一次"。
+  Future<void> _scanPair() async {
+    final payload = await Navigator.of(context).push<PairQrPayload>(
+      MaterialPageRoute(builder: (_) => const PairScanScreen()),
+    );
+    if (payload == null || !mounted) return;
+
+    _serverUrl.text = payload.serverUrl;
+    _pairCode.text = payload.code;
+    await _pair();
   }
 
   Future<void> _syncNow() async {
@@ -199,12 +216,35 @@ class _SyncScreenState extends State<SyncScreen> {
           Text(
             paired
                 ? '${state.syncDeviceName} · ${state.syncServerUrl}'
-                : '在桌面端「系统设置 → 移动端配对」生成 6 位码，'
-                    '手机与桌面端连同一局域网。',
+                : '点桌面端顶栏的手机图标（或「系统设置 → 移动端配对」）弹出二维码，'
+                    '手机与桌面端连同一局域网后扫码即可。',
             style: TextStyle(fontSize: 10.5, height: 1.5, color: p.muted),
           ),
           const SizedBox(height: 9),
           if (!paired) ...[
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: state.syncBusy ? null : _scanPair,
+                icon: const Icon(Icons.qr_code_scanner, size: 18),
+                label: const Text('扫描二维码配对'),
+                style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(44)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(child: Divider(color: p.cardBorder)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text('或手动填写',
+                      style: TextStyle(fontSize: 10, color: p.faint)),
+                ),
+                Expanded(child: Divider(color: p.cardBorder)),
+              ],
+            ),
+            const SizedBox(height: 8),
             TextField(
               controller: _serverUrl,
               keyboardType: TextInputType.url,
@@ -334,14 +374,13 @@ class _SyncScreenState extends State<SyncScreen> {
           ),
           const SizedBox(height: 6),
           for (final conflict in state.syncConflicts) ...[
-            Container(
+            SinanSurface(
               margin: const EdgeInsets.only(bottom: 7),
+              radius: 11,
+              color: p.warnSoft,
+              border: Border.all(color: p.cardBorder),
+              shadow: SinanShadow.none,
               padding: const EdgeInsets.fromLTRB(9, 8, 9, 8),
-              decoration: BoxDecoration(
-                color: p.warnSoft,
-                borderRadius: BorderRadius.circular(11),
-                border: Border.all(color: p.cardBorder),
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -556,14 +595,13 @@ class _OperationTile extends StatelessWidget {
     final title = op.issueTitle.isEmpty
         ? op.entityId
         : '${op.machineCode} · ${op.issueTitle}';
-    return Container(
+    return SinanSurface(
       margin: const EdgeInsets.only(bottom: 6),
+      radius: 11,
+      color: p.well,
+      border: Border.all(color: p.cardBorder),
+      shadow: SinanShadow.none,
       padding: const EdgeInsets.fromLTRB(9, 8, 9, 8),
-      decoration: BoxDecoration(
-        color: p.well,
-        borderRadius: BorderRadius.circular(11),
-        border: Border.all(color: p.cardBorder),
-      ),
       child: Row(
         children: [
           Icon(

@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/services.dart'
+    show MissingPluginException, PlatformException;
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -32,15 +34,48 @@ class AttachmentStore {
 
   /// 只取图不落应用目录：新建问题时还没有 issueId，先拿系统缓存路径，
   /// 保存问题后再 `persist` 到 `attachments/{issueId}/`。
+  ///
+  /// 异常统一翻成 [AttachmentException]：image_picker 抛的是 PlatformException，
+  /// 上层若只写 `await pickImage(...)` 而不接，现场看到的就是"点了拍照没反应"。
+  /// 这里把常见 code 翻成能照着做的中文，页面直接展示。
   Future<String?> pickTemp({required bool fromCamera}) async {
-    final picked = await _picker.pickImage(
-      source: fromCamera ? ImageSource.camera : ImageSource.gallery,
-      maxWidth: 1600,
-      maxHeight: 1600,
-      imageQuality: 82,
-      preferredCameraDevice: CameraDevice.rear,
-    );
-    return picked?.path;
+    try {
+      final picked = await _picker.pickImage(
+        source: fromCamera ? ImageSource.camera : ImageSource.gallery,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 82,
+        preferredCameraDevice: CameraDevice.rear,
+      );
+      return picked?.path;
+    } on PlatformException catch (e) {
+      throw AttachmentException(_friendlyMessage(e, fromCamera: fromCamera));
+    } on MissingPluginException {
+      throw const AttachmentException(
+        '拍照组件没有正确加载，请重新安装 App；若仍失败请把机型反馈给开发。',
+      );
+    }
+  }
+
+  /// 把 image_picker 的错误码翻成现场能执行的提示。
+  /// 常见码：camera_access_denied / photo_access_denied / no_available_camera。
+  static String _friendlyMessage(PlatformException e,
+      {required bool fromCamera}) {
+    switch (e.code) {
+      case 'camera_access_denied':
+        return '相机权限被拒绝。请到 系统设置 → 应用 → 司南 → 权限，'
+            '允许使用相机后重试。';
+      case 'photo_access_denied':
+        return '相册权限被拒绝。请到系统设置里允许「司南」访问照片后重试。';
+      case 'no_available_camera':
+        return '没有找到可用的相机。请确认设备相机能正常打开，'
+            '或改用相册选图。';
+      default:
+        final detail = (e.message == null || e.message!.isEmpty)
+            ? e.code
+            : e.message!;
+        return fromCamera ? '打开相机失败：$detail' : '打开相册失败：$detail';
+    }
   }
 
   /// 把任意本地图片复制进应用目录，返回相对路径与文件信息。
@@ -92,4 +127,14 @@ class PickedAttachment {
   final String storedPath;
   final int size;
   final String absolutePath;
+}
+
+/// 取图失败：message 是给现场看的完整句子，页面直接显示，不再套一层"未知错误"。
+class AttachmentException implements Exception {
+  const AttachmentException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }

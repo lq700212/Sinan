@@ -156,9 +156,10 @@ class AppState extends ChangeNotifier {
   }
 
   /// 演示账号：engineer / 123456（张工，工程师）、admin / 123456（系统管理员）。
+  /// 工号不区分大小写（现场常输 Engineer / ENGINEER）；密码必须逐字一致。
   /// MVP 只在页面层做门禁，不做真实鉴权。
   bool login(String account, String password) {
-    final name = account.trim();
+    final name = account.trim().toLowerCase();
     if (password != '123456') return false;
     if (name == 'engineer') {
       _userAccount = 'engineer';

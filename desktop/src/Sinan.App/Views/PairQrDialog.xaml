@@ -1,0 +1,106 @@
+<ui:ChromeDialogWindow x:Class="Sinan.App.Views.PairQrDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:Kaleidoscope.UI.Views;assembly=Kaleidoscope.UI"
+        Title="手机扫码配对"
+        Subtitle="手机端「同步中心 → 扫码配对」"
+        TitleIconChar="▣"
+        Width="430" Height="620"
+        Resizeable="False"
+        CaptionHeight="40"
+        WindowStartupLocation="CenterOwner"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
+        FontFamily="{DynamicResource Font.Ui}"
+        FontSize="{DynamicResource Text.Size.Body}"
+        Foreground="{DynamicResource Brush.Fg}">
+
+    <!-- 页面级转换器：BoolToVisibility 只在 SettingsPage 里定义过，不是全局资源。
+         弹窗单独声明一份，避免依赖某个页面的资源字典。 -->
+    <ui:ChromeDialogWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+    </ui:ChromeDialogWindow.Resources>
+
+    <!--
+      ============================================================================
+      手机扫码配对（顶栏手机图标直接打开；设置页「移动端配对」展示同一张码）
+      二维码载荷契约见 shared/api/sync-api.md 第 4.1 节：
+        sinan://pair?v=1&url=...&code=...
+      二维码只承载地址与一次性配对码，不含 token；token 仍由 /api/pair 下发。
+      过期不自动续期：手机可能已经扫了还没确认，自动换码会让刚扫到的码失效。
+      ============================================================================
+    -->
+
+    <Grid Margin="24,14,24,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="用手机扫描下方二维码，自动完成地址与配对码填写"
+                   Style="{StaticResource T.Tiny}" FontSize="10.5" TextWrapping="Wrap"
+                   Margin="2,0,0,8"/>
+
+        <!-- 二维码：必须黑码白底，这里不跟主题走（暗色主题下白底仍保持纯白，否则扫不出） -->
+        <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="12"
+                HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Grid>
+                <Image Source="{Binding QrImage}" Stretch="None"
+                       RenderOptions.BitmapScalingMode="NearestNeighbor"
+                       AutomationProperties.AutomationId="PairQrImage"/>
+                <Border Background="#E6FFFFFF" CornerRadius="8"
+                        Visibility="{Binding IsExpired, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{Binding ExpiredText}" FontSize="12" FontWeight="SemiBold"
+                               Foreground="#B42318" TextAlignment="Center" TextWrapping="Wrap"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               MaxWidth="180"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- 地址 + 配对码：扫码失败时按这里手输兜底 -->
+        <Border Grid.Row="2" Background="{DynamicResource Brush.CardWell}"
+                BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                CornerRadius="10" Padding="12,9" Margin="0,10,0,0">
+            <StackPanel>
+                <Grid>
+                    <TextBlock Text="桌面端地址" FontSize="10.5"
+                               Foreground="{DynamicResource Brush.Muted}"/>
+                    <TextBlock Text="{Binding ServerUrl}" FontFamily="{DynamicResource Font.Mono}"
+                               FontSize="11.5" HorizontalAlignment="Right"
+                               TextTrimming="CharacterEllipsis" MaxWidth="220"
+                               ToolTip="{Binding ServerUrl}"/>
+                </Grid>
+                <Grid Margin="0,6,0,0">
+                    <TextBlock Text="6 位配对码" FontSize="10.5"
+                               Foreground="{DynamicResource Brush.Muted}"/>
+                    <TextBlock Text="{Binding Code}" FontFamily="{DynamicResource Font.Mono}"
+                               FontSize="15" FontWeight="Bold"
+                               Foreground="{DynamicResource Brush.Primary}"
+                               HorizontalAlignment="Right"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <TextBlock Grid.Row="3" Text="{Binding RemainingText}" FontSize="10.5"
+                   Foreground="{DynamicResource Brush.Muted}"
+                   TextAlignment="Center" Margin="0,10,0,0"/>
+
+        <Grid Grid.Row="4" Margin="0,14,0,0">
+            <TextBlock Text="手机与电脑需在同一局域网" Style="{StaticResource T.Tiny}" FontSize="10"
+                       VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="重新生成" Style="{StaticResource Btn.Ghost}" Height="34" Width="96"
+                        AutomationProperties.AutomationId="PairQrRegenerateButton"
+                        Command="{Binding RegenerateCommand}"/>
+                <Button Content="完成" Style="{StaticResource Btn.Primary}" Height="34" Width="88"
+                        Margin="10,0,0,0"
+                        AutomationProperties.AutomationId="PairQrCloseButton"
+                        Click="OnCloseClick"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</ui:ChromeDialogWindow>

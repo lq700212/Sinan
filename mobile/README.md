@@ -13,7 +13,7 @@
 
 | 项 | 值 | 口径 |
 |---|---|---|
-| 手机端版本 | `0.0.6+6` | 与桌面端各自独立升版，只动第三位；唯一来源 `pubspec.yaml`，界面只读 `lib/app_info.dart` |
+| 手机端版本 | `0.0.8+8` | 与桌面端各自独立升版，只动第三位；唯一来源 `pubspec.yaml`，界面只读 `lib/app_info.dart` |
 | Android 最低 | API 24 / Android 7.0 | `minSdk`，Flutter 3.50 引擎下限，主流现场手机都能装 |
 | Android 目标 | API 36 / Android 16 | `targetSdk`，行为适配目标，**不是装机上限** |
 | Android 编译 | API 36 | `compileSdk`，与 Flutter 引擎一致 |
@@ -112,8 +112,10 @@ lib/
     ├── issue_list_screen.dart ← 台账：搜索 / 筛选 / 倒挂逾期
     ├── issue_detail_screen.dart ← 详情、阶段推进、评论、真实附件 + 拍照
     ├── new_issue_screen.dart  ← 新建问题（离线落库 + 进 outbox）
-    ├── machine_select_screen.dart ← 手输机台 + 最近机台（扫码待真机接入）
-    ├── sync_screen.dart       ← 配对 / 立即同步 / 冲突二选一 / 待传队列
+    ├── machine_select_screen.dart ← 扫码 / 手输机台 + 最近机台
+    ├── machine_scan_screen.dart ← 扫机台标签条码/二维码，提取机台号
+    ├── pair_scan_screen.dart  ← 扫桌面端配对二维码
+    ├── sync_screen.dart       ← 扫码配对 / 立即同步 / 冲突二选一 / 待传队列
     ├── photo_viewer_screen.dart ← 全屏看大图（左右切换 + 双指缩放）
     └── settings_screen.dart   ← 主题、账号、版本信息
 ```
@@ -133,11 +135,12 @@ lib/
 ## 当前边界
 
 - 移动端暂不直接解析 Excel（`.xls/.xlsx` 由桌面端处理）。
-- 局域网同步已实现、待现场联调：与桌面端同一 WiFi，在「同步中心」填桌面端地址
-  （如 `http://192.168.0.89:5180`）和 6 位一次性配对码，之后按 outbox 上行、按游标下行；
-  冲突必须人工选择「保留手机 / 保留桌面」，界面只显示真实结果，不伪造连接成功。
-- 拍照/相册已接入 `image_picker`（长边 1600px、质量 82）；相机扫码待真机接入，
-  当前用“手输机台号 + 最近机台”替代，界面上明确写“相机扫码待真机接入”。
+- 局域网同步已实现、待现场联调：与桌面端同一 WiFi，在「同步中心」扫桌面端
+  顶栏手机图标弹出的配对二维码（也可手输地址 `http://192.168.0.89:5180` 和
+  6 位一次性码），之后按 outbox 上行、按游标下行；冲突必须人工选择
+  「保留手机 / 保留桌面」，界面只显示真实结果，不伪造连接成功。
+- 拍照/相册已接入 `image_picker`（长边 1600px、质量 82）；选机台可扫机台标签的
+  条码/二维码，识别 `{项目号}+3 位序号` 后直接带回，没有标签仍可手输。
 - 附件存本机 `attachments/{issueId}/{uuid}.jpg`，同步时按 outbox 逐张上传；
   桌面端按 `attachmentId` 幂等归档。
 - 登录态不持久化：每次冷启动都要输工号密码（共享现场设备的默认口径）。

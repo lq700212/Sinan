@@ -205,6 +205,23 @@ class Rules {
         .hasMatch(machineCode.trim().toUpperCase());
   }
 
+  /// 从扫码原文里提取机台号（机台标签的条码/二维码可能带前后缀）。
+  ///
+  /// 例：`P7391106`、`MACHINE:P7391106`、`http://x/P7391106` 都取 `P7391106`。
+  /// 前后加字母数字边界：`P73911061` 不截成 `P7391106`，避免把未知标签
+  /// 误认成某台设备；提取不到返回 null，由页面提示"不是机台码"。
+  static String? extractMachineCode(String raw,
+      {String projectCode = defaultProjectCode}) {
+    final prefix = projectCode.trim().toUpperCase();
+    if (!isProjectCode(prefix)) return null;
+    final text = raw.trim().toUpperCase();
+    if (text.isEmpty) return null;
+    final pattern = RegExp(
+      '(?<![A-Z0-9])${RegExp.escape(prefix)}\\d{3}(?:-\\d+)?(?![0-9])',
+    );
+    return pattern.firstMatch(text)?.group(0);
+  }
+
   /// 按项目号取机台序号：P7392106 → 106。
   /// 多一位的笔误（P73913118 → 3118）照样取数，供"待确认"排序；
   /// 是否合法由 [isMachineCode] 单独判定，不混在序号提取里。

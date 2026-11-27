@@ -524,9 +524,11 @@
                 </Border>
 
                 <!-- ========== 移动端配对 ==========
-                     2026-11-26 起真实可用：桌面端内嵌 SyncServer（端口 5180），
-                     手机用 6 位一次性配对码换 token，之后按 outbox 增量补传。
-                     不画假二维码：当前发的是 6 位数字码，手机端手输；二维码后续再接。 -->
+                     2026-11-26 起真实可用：桌面端内嵌 SyncServer（端口 5180）。
+                     2026-11-27 起改为扫码配对：二维码载荷 sinan://pair?v=1&url=...&code=...
+                     （契约 shared/api/sync-api.md 4.1），手机端「同步中心 → 扫码配对」直接扫；
+                     手输地址 + 6 位码作为兜底保留。
+                     二维码与顶栏手机图标共用 PairingSession 的同一个未使用码，不各自生成。 -->
                 <Border x:Name="SectionMobile" Style="{StaticResource Card}" Padding="0" Margin="0,12,0,0">
                     <StackPanel>
                         <Border Style="{StaticResource Set.CardHead}">
@@ -564,9 +566,9 @@
                                            FontSize="10.5" Margin="0,5,0,0" TextWrapping="Wrap"/>
                                 <TextBlock Style="{StaticResource T.Tiny}" FontSize="10.5" Margin="0,7,0,0"
                                            TextWrapping="Wrap" LineHeight="16"
-                                           Text="手机与桌面端连同一局域网：在手机端「同步中心」填写上面的地址和配对码即可。配对后手机可离线记录，回到局域网按队列补传；桌面端是主库，冲突由手机端人工选择，不静默覆盖。"/>
+                                           Text="手机与桌面端连同一局域网：在手机端「同步中心 → 扫码配对」扫描右侧二维码即可。配对后手机可离线记录，回到局域网按队列补传；桌面端是主库，冲突由手机端人工选择，不静默覆盖。"/>
                                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                    <Button Content="生成配对码" Style="{StaticResource Btn.Primary}"
+                                    <Button Content="生成配对二维码" Style="{StaticResource Btn.Primary}"
                                             Height="28" FontSize="11" Padding="12,0"
                                             Command="{Binding GeneratePairCodeCommand}"/>
                                     <Button Content="刷新状态" Style="{StaticResource Btn.Ghost}"
@@ -575,23 +577,47 @@
                                 </StackPanel>
                             </StackPanel>
 
-                            <!-- 6 位配对码：真实生成，10 分钟一次性；未生成时给占位，不冒充二维码 -->
-                            <Border Grid.Column="1" Width="150" MinHeight="112" CornerRadius="10"
+                            <!-- 配对二维码：与顶栏手机图标共用同一个未使用码；
+                                 未生成时给占位，不画假二维码。白底是扫码硬要求，不跟主题走。 -->
+                            <Border Grid.Column="1" Width="182" CornerRadius="10"
                                     Background="{DynamicResource Brush.CardWell}"
                                     BorderBrush="{DynamicResource Brush.Border}"
                                     BorderThickness="1" VerticalAlignment="Top" Padding="10,9">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="{Binding PairCodeDisplay}" FontFamily="Consolas"
-                                               FontSize="22" FontWeight="Bold"
-                                               Foreground="{DynamicResource Brush.Primary}"
-                                               HorizontalAlignment="Center"/>
-                                    <TextBlock Text="{Binding PairCodeExpiry}" FontSize="10"
-                                               Foreground="{DynamicResource Brush.Muted}"
-                                               TextAlignment="Center" TextWrapping="Wrap" Margin="0,5,0,0"/>
-                                    <TextBlock Text="手机端「同步中心 → 配对」输入此码" FontSize="9.5"
-                                               Foreground="{DynamicResource Brush.Faint}"
-                                               TextAlignment="Center" TextWrapping="Wrap" Margin="0,6,0,0"/>
-                                </StackPanel>
+                                <Grid>
+                                    <StackPanel HorizontalAlignment="Center"
+                                                Visibility="{Binding HasPairCode, Converter={StaticResource BoolToVisibility}}">
+                                        <Border Background="White" CornerRadius="8" Padding="6"
+                                                HorizontalAlignment="Center">
+                                            <Image Source="{Binding PairQrImage}" Width="146" Height="146"
+                                                   Stretch="Uniform"
+                                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                                   AutomationProperties.AutomationId="SettingsPairQrImage"/>
+                                        </Border>
+                                        <TextBlock Text="{Binding PairCodeDisplay}" FontFamily="Consolas"
+                                                   FontSize="14" FontWeight="Bold"
+                                                   Foreground="{DynamicResource Brush.Primary}"
+                                                   HorizontalAlignment="Center" Margin="0,7,0,0"/>
+                                        <TextBlock Text="{Binding PairCodeExpiry}" FontSize="10"
+                                                   Foreground="{DynamicResource Brush.Muted}"
+                                                   TextAlignment="Center" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                        <TextBlock Text="手机端「同步中心 → 扫码配对」" FontSize="9.5"
+                                                   Foreground="{DynamicResource Brush.Faint}"
+                                                   TextAlignment="Center" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                                    </StackPanel>
+
+                                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                Visibility="{Binding HasPairCode, Converter={StaticResource InverseBoolToVisibility}}">
+                                        <TextBlock Text="▣" FontSize="30"
+                                                   Foreground="{DynamicResource Brush.Faint}"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock Text="点击左侧「生成配对二维码」" FontSize="10"
+                                                   Foreground="{DynamicResource Brush.Muted}"
+                                                   TextAlignment="Center" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                        <TextBlock Text="10 分钟有效 · 仅可使用一次" FontSize="9.5"
+                                                   Foreground="{DynamicResource Brush.Faint}"
+                                                   TextAlignment="Center" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Grid>
                             </Border>
                         </Grid>
 

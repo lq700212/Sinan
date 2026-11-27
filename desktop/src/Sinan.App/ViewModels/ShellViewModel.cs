@@ -76,6 +76,7 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
         NewIssueCommand = new RelayCommand(() => NewIssueRequested?.Invoke(this, EventArgs.Empty));
         OpenProjectSwitchCommand = new RelayCommand(OpenProjectSwitch);
         BackCommand = new RelayCommand(Back);
+        ShowPairQrCommand = new RelayCommand(ShowPairQr);
 
         // 设置页也能切主题：主题变化后顶栏图标同步（静态事件生命周期=应用，无需退订）。
         // 设置页自己的"当前主题/切换到…"文案也在这里一并刷新——该 VM 被 _cache 缓存复用，
@@ -167,6 +168,9 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
     public RelayCommand NewIssueCommand { get; }
     public RelayCommand OpenProjectSwitchCommand { get; }
     public RelayCommand BackCommand { get; }
+
+    /// <summary>顶栏手机图标：直接弹出扫码配对二维码（服务未运行时如实提示）。</summary>
+    public RelayCommand ShowPairQrCommand { get; }
 
     private readonly Stack<string> _history = new();
 
@@ -300,6 +304,23 @@ public sealed class ShellViewModel : ObservableObject, INavigationService
             Title = title;
             Subtitle = subtitle;
         }
+    }
+
+    /// <summary>
+    /// 顶栏手机图标：先确认同步服务真的在跑，再打开扫码配对弹窗。
+    /// 服务没起来时二维码一定是扫不通的，这里直接说清原因，不让用户对着一张废码反复试。
+    /// </summary>
+    private void ShowPairQr()
+    {
+        var server = _app.SyncServer;
+        if (server is not { IsRunning: true })
+        {
+            _app.Dialogs.Alert("配对服务未运行",
+                $"{server?.StatusText ?? "同步服务未装配"}\n\n请检查端口 {SyncServer.Port} 是否被占用，或重新启动司南。");
+            return;
+        }
+
+        _app.Dialogs.ShowPairQr();
     }
 
     /// <summary>

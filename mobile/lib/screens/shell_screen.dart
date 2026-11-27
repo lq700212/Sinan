@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../state/app_state.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
+import '../widgets/surface.dart';
 import 'home_todo_screen.dart';
 import 'issue_list_screen.dart';
 import 'new_issue_screen.dart';
@@ -152,26 +153,21 @@ class _ShellScreenState extends State<ShellScreen> {
       padding: const EdgeInsets.fromLTRB(16, 8, 10, 6),
       child: Row(
         children: [
-          Container(
+          SizedBox(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(
+            child: SinanSurface(
+              radius: 12,
               gradient: p.primaryGradient,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: p.primary.withValues(alpha: 0.28),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              shadow: SinanShadow.glow,
+              child: Center(
+                child: Text('司',
+                    style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: p.onPrimary)),
+              ),
             ),
-            alignment: Alignment.center,
-            child: Text('司',
-                style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: p.onPrimary)),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -268,6 +264,8 @@ class _ShellScreenState extends State<ShellScreen> {
   }
 
   Widget _bottomBar(SinanPalette p) {
+    // 底栏是全宽直角容器，不参与圆角卡片的阴影口径；这里向上投影 16px
+    // 只为与内容区分层，是页面里唯一保留手写 BoxShadow 的地方。
     return Container(
       decoration: BoxDecoration(
         color: p.panel,
@@ -326,21 +324,17 @@ class _ShellScreenState extends State<ShellScreen> {
       child: Center(
         child: GestureDetector(
           onTap: _openNew,
-          child: Container(
+          child: SizedBox(
             width: 48,
             height: 48,
-            decoration: BoxDecoration(
+            child: SinanSurface(
+              radius: 99,
               gradient: p.primaryGradient,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: p.primary.withValues(alpha: 0.4),
-                  blurRadius: 14,
-                  offset: const Offset(0, 5),
-                ),
-              ],
+              shadow: SinanShadow.glow,
+              child: Center(
+                child: Icon(Icons.add, size: 26, color: p.onPrimary),
+              ),
             ),
-            child: Icon(Icons.add, size: 26, color: p.onPrimary),
           ),
         ),
       ),

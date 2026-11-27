@@ -30,4 +30,8 @@
          不会自动成为 WPF Resource，缺这一行 Window.Icon 运行时会加载失败。 -->
     <Resource Include="Assets\app.ico" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="QRCoder" Version="1.9.0" />
+  </ItemGroup>
 </Project>

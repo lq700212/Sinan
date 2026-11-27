@@ -9,7 +9,7 @@
 ![Flutter](https://img.shields.io/badge/Flutter-Dart%203.14-02569B?logo=flutter&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?logo=sqlite&logoColor=white)
 ![Excel](https://img.shields.io/badge/Excel-.xls%20%2B%20.xlsx-217346?logo=microsoftexcel&logoColor=white)
-![Version](https://img.shields.io/badge/version-v0.0.8-D97706)
+![Version](https://img.shields.io/badge/version-v0.0.9-D97706)
 
 </div>
 
@@ -29,7 +29,7 @@
 
 | 端 | 面向谁 | 技术栈 | 当前状态 |
 | --- | --- | --- | --- |
-| **桌面端** | 办公室：排期、追踪、Excel 导入导出 | WPF · .NET 10 · SQLite 主库 | 可用：9 个业务页面 + 6 个弹窗 |
+| **桌面端** | 办公室：排期、追踪、Excel 导入导出 | WPF · .NET 10 · SQLite 主库 | 可用：9 个业务页面 + 7 个弹窗 |
 | **手机端（现场端）** | 现场：拍照记录、推进阶段、离线待传 | Flutter · Android 7.0+ | Android 可构建可用；iOS 仅设计支持 |
 
 两端共用同一份数据模型与种子数据，桌面端是唯一主库，手机端是离线副本 + 待传队列。
@@ -58,6 +58,10 @@
 | --- | --- |
 | ![](docs/images/12_dialog_new.png) | ![](docs/images/13_dialog_export.png) |
 
+| 手机扫码配对（弹窗） | |
+| --- | --- |
+| ![](docs/images/16_dialog_pair.png) | |
+
 | 登录 | 系统设置 |
 | --- | --- |
 | ![](docs/images/01_login.png) | ![](docs/images/11_settings.png) |
@@ -82,6 +86,11 @@
   <img src="docs/images/mobile/06_detail.png" width="200" alt="问题详情">
   <img src="docs/images/mobile/07_new.png" width="200" alt="新建问题">
   <img src="docs/images/mobile/05_sync.png" width="200" alt="本机待传">
+  <img src="docs/images/mobile/08_machine_scan.png" width="200" alt="扫码选机台">
+</p>
+<p align="center">
+  <img src="docs/images/mobile/09_settings.png" width="200" alt="系统设置">
+  <img src="docs/images/mobile/10_todo_dark.png" width="200" alt="我的待办 · 暗色">
 </p>
 
 > 手机端截图为 Android 模拟器渲染（1080×2400），账号与数据均为演示值；iOS 构建需 macOS，暂无实机截图。
@@ -136,9 +145,10 @@
 
 按"我负责的阶段 + 倒挂 + 逾期"排序，打开手机先看今天该做什么，不用在 36 条全量台账里翻。
 
-**机台选择与手输**
+**机台选择与扫码**
 
-当前用"手输机台号 + 全部机台列表"快速定位；相机扫码待真机接入，界面明确标注，不伪造扫码成功。
+机台标签上的条码/二维码可直接扫：识别 `{项目号}+3 位序号` 后带回新建页；
+没有标签时用"手输机台号 + 全部机台列表"兜底。扫到非本项目的码只提示、不误填。
 
 **明暗双主题**
 
@@ -234,7 +244,7 @@ Sinan/
 | --- | --- |
 | 桌面端 | .NET 10 + WPF（`net10.0-windows`），MVVM，自写最小 `ObservableObject` / `RelayCommand` |
 | 手机端 | Flutter + Dart 3.14，MVVM，`sqflite` + `shared_preferences`（Android 可构建，iOS 仅设计支持） |
-| 手机端兼容 | Android 7.0+（`minSdk` 24 / `targetSdk` 36）、iOS 15.0+；手机端版本 v0.0.6 |
+| 手机端兼容 | Android 7.0+（`minSdk` 24 / `targetSdk` 36）、iOS 15.0+；手机端版本 v0.0.8 |
 | 数据库 | SQLite（WAL，单文件），`Microsoft.Data.Sqlite` 10.0；15 张表 |
 | Excel | NPOI 2.7.3，同时支持 `.xls`（BIFF8）与 `.xlsx` |
 | 复用库 | `Kaleidoscope.UI`：窗基类、标题栏、胶囊圆角控件、圆角自检 |
@@ -324,20 +334,21 @@ python tools/mobile_e2e/run.py --cold --module smoke  # 冷启动必须停在登
 - [x] 桌面端工程骨架：`Sinan.Core` / `Sinan.Data` / `Sinan.App`，`Kaleidoscope.UI` 子模块接入
 - [x] 数据层：SQLite DDL（15 张表）、脱敏种子（36 条 / 31 台）、仓储、统计口径
 - [x] 桌面端 9 个业务页面：登录 / 项目总览 / 分项目设备预览 / 工作台 / 问题台账 / 问题详情 / 数据交换 / 统计报表 / 系统设置
-- [x] 桌面端 6 个独立弹窗：新建问题 / 推进阶段 / 删除确认 / 查看照片 / 导入确认 / 导出确认
-      （设计稿另 2 个桌面弹窗按实际形态落地：手机配对弹窗显示真实监听地址，配对码在设置页生成；分项目预览改为独立页面）
+- [x] 桌面端 7 个独立弹窗：新建问题 / 推进阶段 / 删除确认 / 查看照片 / 导入确认 / 导出确认 / 手机扫码配对
+      （配对弹窗直接显示当前监听地址与一次性 6 位码，手机扫码即完成配对；分项目预览改为独立页面）
 - [x] Excel 无损通道：`.xls` + `.xlsx`，36 条往返 0 新增 0 更新，冲突逐条决策
 - [x] 附件与演示照片：上传 / 查看 / 导出 ZIP + `manifest.csv`
 - [x] 手机端全部页面：登录 / 待办 / 项目 / 分项目 / 台账 / 详情 / 新建 / 选机台 / 同步 / 拍照 / 照片查看 / 设置，
       五槽底栏 + 离线 SQLite + outbox 记账；拍照与相册已接入 `image_picker`
-- [x] 手机端 Android 模拟器实机截图（7 张，`docs/images/mobile/`）：登录 / 待办 / 项目 / 台账 / 详情 / 新建 / 同步
-- [x] 桌面端自动化回归 210 条（`desktop/tests/Sinan.Tests`：仓储 / 统计口径 / 日期解析 /
+- [x] 手机端 Android 模拟器实机截图（10 张，`docs/images/mobile/`）：登录 / 待办 / 项目 / 台账 / 详情 / 新建 / 同步 / 扫码选机台 / 设置 / 待办暗色
+- [x] 桌面端自动化回归 214 条（`desktop/tests/Sinan.Tests`：仓储 / 统计口径 / 日期解析 /
       Excel 三种版式往返 / 导入冲突 / 局域网同步配对与冲突 / 权限 + 6 页 × 明暗双主题离屏渲染）
 - [x] 桌面端后台静默 UI 冒烟（`tools/ui_smoke`）：不抢焦点地登录、逐页截图、弹窗截图、圆角自检
 - [x] 手机端真机 UI 回归（`tools/mobile_e2e`）：adb + 无障碍树，15 条只读用例覆盖登录 / 四页 /
       待办 / 多总项目与切换 / 台账搜索筛选详情 / 同步 / 设置 / 刷新 / 新建表单，按模块几十秒跑完
-- [x] **局域网同步**：桌面端内嵌 Kestrel 配对服务（端口 5180，仅局域网），6 位一次性配对码 +
-      Bearer 令牌；手机端按 outbox 上行（问题 / 阶段 / 状态 / 评论 / 照片）、按游标下行快照，
+- [x] **局域网同步**：桌面端内嵌 Kestrel 配对服务（端口 5180，仅局域网），
+      手机端扫桌面端生成的配对二维码（手输 6 位码保留兜底）+ Bearer 令牌；
+      手机端按 outbox 上行（问题 / 阶段 / 状态 / 评论 / 照片）、按游标下行快照，
       冲突逐条人工选择"保留手机 / 保留桌面"
 - [x] 现场端附件上传（拍照落本机后按 outbox 补传，桌面端按 `attachmentId` 幂等归档）
 - [ ] iOS 构建（需 macOS）
@@ -361,8 +372,8 @@ due_raw   TEXT          -- "11.5" / "已下图" / "/"，用于原样导出
 
 | 项 | 现状 |
 | --- | --- |
-| 局域网同步 | 已实现，待现场多机联调。桌面端监听 5180（仅局域网），手机端用 6 位一次性码配对；不做外网穿透、不做双主库双向合并 |
-| 相机扫码 | 待真机接入。当前用「手输机台号 + 最近机台」，界面上明写这一点 |
+| 局域网同步 | 已实现，待现场多机联调。桌面端监听 5180（仅局域网），手机端扫桌面端二维码配对（手输 6 位码兜底）；不做外网穿透、不做双主库双向合并 |
+| 相机扫码 | 已接入：同步中心扫桌面端配对二维码；选机台扫机台标签条码/二维码（识别 `{项目号}+3 位序号`）。非本项目的码只提示、不误填；没有标签仍可手输 |
 | 手机端附件上传 | 已实现：拍照存本机 `attachments/{issueId}/`，同步时按 outbox 逐张上传；桌面端按 `attachmentId` 幂等归档 |
 | 手机端登录态 | 不持久化，冷启动需重新输工号密码（共享现场设备的默认口径） |
 | 传递依赖漏洞 | `SixLabors.ImageSharp` 2.1.10 中危（GHSA-rxmq-m78w-7wmc）。修复需 NPOI 升 2.8.x + OSMF 商业许可；本项目不调用 ImageSharp API，风险路径不走 |

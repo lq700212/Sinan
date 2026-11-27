@@ -4,6 +4,7 @@ import '../app_info.dart';
 import '../state/app_state.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
+import '../widgets/surface.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, required this.state});
@@ -257,20 +258,17 @@ class _ThemeOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
+    return SinanSurface(
+      radius: 12,
+      color: selected ? p.primaryDim : p.well,
+      border: Border.all(
+        color: selected ? p.primary : p.cardBorder,
+        width: selected ? 1.3 : 1,
+      ),
+      shadow: SinanShadow.none,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-        decoration: BoxDecoration(
-          color: selected ? p.primaryDim : p.well,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: selected ? p.primary : p.cardBorder,
-            width: selected ? 1.3 : 1,
-          ),
-        ),
-        child: Row(
+      child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 17, color: selected ? p.primary : p.muted),
@@ -289,7 +287,6 @@ class _ThemeOption extends StatelessWidget {
             ],
           ],
         ),
-      ),
     );
   }
 }

@@ -14,6 +14,10 @@ public sealed class UserRepository
 
     public UserRepository(Database database) => _database = database;
 
+    /// <summary>
+    /// 工号不区分大小写（现场常输 Engineer / ENGINEER），密码必须逐字一致。
+    /// SQLite 的 COLLATE NOCASE 只折叠 ASCII 大小写，工号是 ASCII，足够。
+    /// </summary>
     public User? Authenticate(string employeeNo, string password)
     {
         if (string.IsNullOrWhiteSpace(employeeNo) || string.IsNullOrEmpty(password)) return null;
@@ -21,7 +25,7 @@ public sealed class UserRepository
         using var command = connection.CreateCommand();
         command.CommandText = """
             SELECT * FROM users
-            WHERE employee_no=$no AND active=1
+            WHERE employee_no=$no COLLATE NOCASE AND active=1
             """;
         command.Parameters.AddWithValue("$no", employeeNo.Trim());
         using var reader = command.ExecuteReader();

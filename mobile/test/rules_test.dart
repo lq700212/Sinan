@@ -103,6 +103,20 @@ void main() {
       expect(Rules.isMachineCode(''), isFalse);
     });
 
+    test('从扫码原文提取机台号', () {
+      expect(Rules.extractMachineCode('P7391106'), 'P7391106');
+      expect(Rules.extractMachineCode(' p7391106 '), 'P7391106');
+      expect(Rules.extractMachineCode('MACHINE:P7391106'), 'P7391106');
+      expect(Rules.extractMachineCode('http://x/P7391106-2'), 'P7391106-2');
+      expect(Rules.extractMachineCode('P7391106/P7391107'), 'P7391106');
+    });
+
+    test('多一位的未知标签不误截', () {
+      expect(Rules.extractMachineCode('P73913118'), isNull);
+      expect(Rules.extractMachineCode('P73911061'), isNull);
+      expect(Rules.extractMachineCode('OTHER-ABC'), isNull);
+    });
+
     test('附件相对路径固定用正斜杠', () {
       expect(
         Rules.attachmentRelativePath('X1', '1700000000abc.jpg'),

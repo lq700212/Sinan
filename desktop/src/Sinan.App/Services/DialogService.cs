@@ -52,6 +52,12 @@ public interface IDialogService
 
     /// <summary>新建总项目：项目号/名称/客户，校验重复与格式后就地报错。返回 null 表示取消。</summary>
     ProjectCreateResult? CreateProject(ProjectCreateRequest request);
+
+    /// <summary>
+    /// 手机扫码配对二维码（顶栏手机图标直接打开）。二维码由 <see cref="PairingSession"/>
+    /// 统一持有，与设置页展示的是同一个未使用码，不各自生成。
+    /// </summary>
+    void ShowPairQr();
 }
 
 public sealed class DialogService : IDialogService
@@ -153,5 +159,14 @@ public sealed class DialogService : IDialogService
         var dialog = new ProjectCreateDialog { Owner = Application.Current?.MainWindow };
         dialog.Load(request);
         return dialog.ShowDialog() == true ? dialog.Result : null;
+    }
+
+    public void ShowPairQr()
+    {
+        // 组合根是唯一持有 PairingSession 的地方；弹窗与设置页共用它，避免两处各生成一个码。
+        if (Application.Current is not App app) return;
+        var dialog = new PairQrDialog { Owner = Application.Current?.MainWindow };
+        dialog.Load(app.Pairing);
+        dialog.ShowDialog();
     }
 }

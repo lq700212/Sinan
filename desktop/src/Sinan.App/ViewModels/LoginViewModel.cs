@@ -148,8 +148,9 @@ public sealed class LoginViewModel : ObservableObject
             : $"本机局域网 IP:{SyncServer.Port}";
         _app.Dialogs.Alert("手机端配对",
             "配对服务运行中，电脑与手机连同一局域网即可。\n\n" +
-            $"手机端「同步中心」填写桌面端地址：\n{addresses}\n\n" +
-            "登录后在「系统设置 → 移动端配对」生成 6 位一次性配对码（10 分钟有效）。\n\n" +
+            $"桌面端地址：\n{addresses}\n\n" +
+            "登录后点顶栏手机图标（或「系统设置 → 移动端配对」）显示配对二维码；\n" +
+            "手机端「同步中心 → 扫描二维码配对」扫一下即可，也可手输地址与 6 位码（10 分钟有效）。\n\n" +
             "本机数据不会上传到任何服务器。");
     }
 
@@ -185,7 +186,7 @@ public sealed class LoginViewModel : ObservableObject
 
             if (user == null)
             {
-                ErrorMessage = "工号或密码不正确。请确认大小写，或联系管理员重置。";
+                ErrorMessage = "工号或密码不正确。密码区分大小写，请确认或联系管理员重置。";
                 Password = "";
                 OnPropertyChanged(nameof(HintText));
                 return;
